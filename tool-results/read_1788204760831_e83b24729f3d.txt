@@ -1,0 +1,890 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useRef, useState } from "react";
+     4→import { motion, AnimatePresence } from "framer-motion";
+     5→import {
+     6→  X,
+     7→  ShoppingBag,
+     8→  Plus,
+     9→  Minus,
+    10→  Trash2,
+    11→  Truck,
+    12→  Gift,
+    13→  Lock,
+    14→  PartyPopper,
+    15→  Loader2,
+    16→  ArrowRight,
+    17→  TicketPercent,
+    18→  BadgeCheck,
+    19→  Radar,
+    20→  Flower2,
+    21→  Ribbon,
+    22→  Sparkles,
+    23→  Zap,
+    24→  MoonStar,
+    25→  Package,
+    26→  Check,
+    27→} from "lucide-react";
+    28→import { Lottie } from "lottie-react";
+    29→import celebrationAnim from "@/lib/lottie/celebration.json";
+    30→import {
+    31→  useShopStore,
+    32→  cartTotal,
+    33→  cartCount,
+    34→  FREE_SHIPPING_THRESHOLD,
+    35→  LOYALTY_TARGET,
+    36→  loyaltyRewardFor,
+    37→} from "@/lib/store";
+    38→import { resolveCoupon, couponDiscount } from "@/lib/coupons";
+    39→import { useMounted } from "@/hooks/use-mounted";
+    40→import { useIsMobile } from "@/hooks/use-mobile";
+    41→import { useFocusTrap } from "@/hooks/use-focus-trap";
+    42→import { formatINR } from "@/lib/format";
+    43→import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
+    44→import { useToast } from "@/hooks/use-toast";
+    45→import { cn } from "@/lib/utils";
+    46→import GiftMessageEditor from "@/components/shop/gift-message-editor";
+    47→import CartCrossSell from "@/components/shop/cart-cross-sell";
+    48→
+    49→type CheckoutResult = {
+    50→  orderId: string;
+    51→  total: number;
+    52→  etaHours: number;
+    53→  deliveryTo: string;
+    54→  estimatedDelivery: string;
+    55→  coupon: string | null;
+    56→  discount: number;
+    57→  freeShipping?: boolean;
+    58→  premiumWrap?: boolean;
+    59→  slot?: string;
+    60→  giftMessage?: string | null;
+    61→};
+    62→
+    63→const SLOTS = [
+    64→  { id: "same-day", label: "Same-day", hint: "in ~4 hrs", icon: Zap },
+    65→  { id: "midnight", label: "Midnight", hint: "by 12 AM", icon: MoonStar },
+    66→  { id: "standard", label: "Standard", hint: "in 2 days", icon: Package },
+    67→] as const;
+    68→
+    69→export default function CartDrawer() {
+    70→  const isOpen = useShopStore((s) => s.isCartOpen);
+    71→  const setOpen = useShopStore((s) => s.setCartOpen);
+    72→  const cart = useShopStore((s) => s.cart);
+    73→  const updateQty = useShopStore((s) => s.updateQty);
+    74→  const removeFromCart = useShopStore((s) => s.removeFromCart);
+    75→  const clearCart = useShopStore((s) => s.clearCart);
+    76→  const location = useShopStore((s) => s.location);
+    77→  const setLocationOpen = useShopStore((s) => s.setLocationOpen);
+    78→  const setLastOrderId = useShopStore((s) => s.setLastOrderId);
+    79→  const setTrackOpen = useShopStore((s) => s.setTrackOpen);
+    80→  /* upsells + loyalty */
+    81→  const premiumWrap = useShopStore((s) => s.premiumWrap);
+    82→  const setPremiumWrap = useShopStore((s) => s.setPremiumWrap);
+    83→  const deliverySlot = useShopStore((s) => s.deliverySlot);
+    84→  const setDeliverySlot = useShopStore((s) => s.setDeliverySlot);
+    85→  const stamps = useShopStore((s) => s.stamps);
+    86→  const rewardCoupon = useShopStore((s) => s.rewardCoupon);
+    87→  const recordOrder = useShopStore((s) => s.recordOrder);
+    88→  const dismissReward = useShopStore((s) => s.dismissReward);
+    89→  const giftMessage = useShopStore((s) => s.giftMessage);
+    90→  const setGiftMessage = useShopStore((s) => s.setGiftMessage);
+    91→  const { toast } = useToast();
+    92→  const isMobile = useIsMobile();
+    93→  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
+    94→
+    95→  const mounted = useMounted();
+    96→  const [checkingOut, setCheckingOut] = useState(false);
+    97→  const [result, setResult] = useState<CheckoutResult | null>(null);
+    98→  const [unlocked, setUnlocked] = useState<string | null>(null);
+    99→  const [couponInput, setCouponInput] = useState("");
+   100→  const [coupon, setCoupon] = useState<string | null>(null);
+   101→  const [couponError, setCouponError] = useState<string | null>(null);
+   102→  const appliedCoupon = resolveCoupon(coupon);
+   103→
+   104→  // Free-shipping crossing tracker
+   105→  const prevPct = useRef(0);
+   106→
+   107→  // Lock body scroll while open
+   108→  useEffect(() => {
+   109→    if (!isOpen) return;
+   110→    const original = document.body.style.overflow;
+   111→    document.body.style.overflow = "hidden";
+   112→    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+   113→    window.addEventListener("keydown", onKey);
+   114→    return () => {
+   115→      document.body.style.overflow = original;
+   116→      window.removeEventListener("keydown", onKey);
+   117→    };
+   118→  }, [isOpen, setOpen]);
+   119→
+   120→  const subtotal = mounted ? cartTotal(cart) : 0;
+   121→  const count = mounted ? cartCount(cart) : 0;
+   122→  const pct = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+   123→  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+   124→  const freeShipUnlocked = pct >= 100 || appliedCoupon?.kind === "shipping";
+   125→  const discount = appliedCoupon ? couponDiscount(appliedCoupon, subtotal) : 0;
+   126→  const deliveryFee = pct >= 100 || appliedCoupon?.kind === "shipping" ? 0 : 99;
+   127→  const wrapFee = premiumWrap ? 49 : 0;
+   128→  const grandTotal = subtotal - discount + deliveryFee + wrapFee;
+   129→
+   130→  /* tiered loyalty: the reward ladder climbs each completed 3-order cycle */
+   131→  const ordersCount = useShopStore((s) => s.ordersCount);
+   132→  const nextCycle = Math.floor(ordersCount / LOYALTY_TARGET) + 1;
+   133→  const nextRewardLabel =
+   134→    resolveCoupon(loyaltyRewardFor(nextCycle))?.label ?? "₹100 off";
+   135→
+   136→  const applyCoupon = () => {
+   137→    const code = couponInput.trim().toUpperCase();
+   138→    const matched = resolveCoupon(code);
+   139→    if (matched) {
+   140→      setCoupon(matched.code);
+   141→      setCouponError(null);
+   142→      toast({
+   143→        title: `${matched.code} applied! 🎊`,
+   144→        description:
+   145→          matched.kind === "shipping"
+   146→            ? "Your gifts ride for free."
+   147→            : `${matched.label} your gifts — nicely spotted.`,
+   148→      });
+   149→    } else {
+   150→      setCouponError("That code didn’t work — try BLISS10");
+   151→    }
+   152→  };
+   153→
+   154→  useEffect(() => {
+   155→    if (!isOpen) {
+   156→      prevPct.current = 0;
+   157→      return;
+   158→    }
+   159→    if (pct >= 100 && prevPct.current < 100 && prevPct.current > 0) {
+   160→      petalConfetti();
+   161→      toast({ title: "FREE shipping unlocked! 🎉", description: "Your gifts ride for free." });
+   162→    }
+   163→    prevPct.current = pct;
+   164→  }, [pct, isOpen, toast]);
+   165→
+   166→  const checkout = async () => {
+   167→    if (cart.length === 0) return;
+   168→    if (!location) {
+   169→      toast({
+   170→        title: "Where are we heading? 📍",
+   171→        description: "Pick a delivery city first.",
+   172→      });
+   173→      setOpen(false);
+   174→      setLocationOpen(true);
+   175→      return;
+   176→    }
+   177→    setCheckingOut(true);
+   178→    try {
+   179→      const res = await fetch("/api/checkout", {
+   180→        method: "POST",
+   181→        headers: { "Content-Type": "application/json" },
+   182→        body: JSON.stringify({
+   183→          items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
+   184→          location: { city: location.city, pincode: location.pincode },
+   185→          slot: deliverySlot,
+   186→          coupon: coupon ?? undefined,
+   187→          premiumWrap,
+   188→          message: giftMessage.trim() || undefined,
+   189→        }),
+   190→      });
+   191→      if (!res.ok) throw new Error("checkout failed");
+   192→      const data = await res.json();
+   193→      setResult(data);
+   194→      setLastOrderId(data.orderId);
+   195→      /* loyalty: stamp the card, maybe unlock the reward */
+   196→      const unlockedCode = recordOrder({
+   197→        id: data.orderId,
+   198→        total: data.total,
+   199→        at: Date.now(),
+   200→        items: count,
+   201→      });
+   202→      if (unlockedCode) {
+   203→        setUnlocked(unlockedCode);
+   204→        setTimeout(() => celebrationConfetti(), 650);
+   205→        toast({
+   206→          title: "Bloom Reward unlocked! 🌸",
+   207→          description: `${unlockedCode} — ${resolveCoupon(unlockedCode)?.label ?? "a treat"} on your next order, on us.`,
+   208→        });
+   209→      }
+   210→      celebrationConfetti();
+   211→    } catch {
+   212→      toast({ title: "Checkout hiccup 😢", description: "Please try again in a moment." });
+   213→    } finally {
+   214→      setCheckingOut(false);
+   215→    }
+   216→  };
+   217→
+   218→  const finish = () => {
+   219→    clearCart();
+   220→    setResult(null);
+   221→    setUnlocked(null);
+   222→    setPremiumWrap(false);
+   223→    setGiftMessage("");
+   224→    setCoupon(null);
+   225→    setCouponInput("");
+   226→    setCouponError(null);
+   227→    setOpen(false);
+   228→  };
+   229→
+   230→  return (
+   231→    <AnimatePresence>
+   232→      {isOpen && (
+   233→        <div ref={trapRef} className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Gift bag">
+   234→          {/* Backdrop */}
+   235→          <motion.div
+   236→            initial={{ opacity: 0 }}
+   237→            animate={{ opacity: 1 }}
+   238→            exit={{ opacity: 0 }}
+   239→            transition={{ duration: 0.2 }}
+   240→            onClick={() => setOpen(false)}
+   241→            className="absolute inset-0 bg-charcoal/50 backdrop-blur-sm"
+   242→          />
+   243→
+   244→          {/* Panel — bottom sheet on mobile (drag to dismiss) · slide-over on desktop */}
+   245→          <motion.aside
+   246→            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+   247→            animate={isMobile ? { y: 0 } : { x: 0 }}
+   248→            exit={isMobile ? { y: "100%" } : { x: "100%" }}
+   249→            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+   250→            drag={isMobile ? "y" : false}
+   251→            dragConstraints={{ top: 0, bottom: 0 }}
+   252→            dragElastic={{ top: 0, bottom: 0.6 }}
+   253→            onDragEnd={(_, info) => {
+   254→              if (info.offset.y > 110 || info.velocity.y > 600) setOpen(false);
+   255→            }}
+   256→            className={cn(
+   257→              "absolute flex w-full flex-col bg-background shadow-2xl",
+   258→              isMobile
+   259→                ? "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-[1.75rem]"
+   260→                : "inset-y-0 right-0 max-w-md"
+   261→            )}
+   262→          >
+   263→            {/* Header */}
+   264→            <div className="border-b border-rose-100 bg-card dark:border-stone-800">
+   265→              <div className="flex justify-center pt-2 md:hidden" aria-hidden>
+   266→                <span className="h-1.5 w-12 rounded-full bg-stone-300 dark:bg-stone-600" />
+   267→              </div>
+   268→              <div className="flex items-center justify-between px-5 py-4">
+   269→                <div className="flex items-center gap-2.5">
+   270→                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300">
+   271→                    <ShoppingBag className="h-4.5 w-4.5" aria-hidden />
+   272→                  </span>
+   273→                  <div>
+   274→                    <h2 className="text-base font-extrabold text-foreground">Your Gift Bag</h2>
+   275→                    <p className="text-xs text-stone-400">
+   276→                      {count} item{count === 1 ? "" : "s"} of joy
+   277→                    </p>
+   278→                  </div>
+   279→                </div>
+   280→                <button
+   281→                  onClick={() => setOpen(false)}
+   282→                  className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 text-stone-500 transition hover:border-rose-300 hover:text-brand dark:border-stone-700"
+   283→                  aria-label="Close gift bag"
+   284→                >
+   285→                  <X className="h-4.5 w-4.5" />
+   286→                </button>
+   287→              </div>
+   288→            </div>
+   289→
+   290→            {result ? (
+   291→              /* ---------- SUCCESS VIEW ---------- */
+   292→              <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 text-center scrollbar-slim">
+   293→                <motion.div
+   294→                  initial={{ scale: 0.6, opacity: 0 }}
+   295→                  animate={{ scale: 1, opacity: 1 }}
+   296→                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+   297→                >
+   298→                  <Lottie src={celebrationAnim} loop={false} className="h-44 w-44" />
+   299→                </motion.div>
+   300→                <motion.div
+   301→                  initial={{ y: 24, opacity: 0 }}
+   302→                  animate={{ y: 0, opacity: 1 }}
+   303→                  transition={{ delay: 0.15 }}
+   304→                >
+   305→                  <h3 className="text-xl font-extrabold text-foreground">Order confirmed! 🎉</h3>
+   306→                  <p className="mt-1 text-sm text-stone-500">
+   307→                    Order <span className="font-mono font-bold text-brand">{result.orderId}</span> is
+   308→                    being wrapped with love.
+   309→                  </p>
+   310→                  <div className="mt-4 w-full space-y-2 rounded-2xl border border-rose-100 bg-card p-4 text-left text-sm shadow-soft dark:border-stone-800">
+   311→                    {unlocked && (
+   312→                      <motion.div
+   313→                        initial={{ opacity: 0, scale: 0.9 }}
+   314→                        animate={{ opacity: 1, scale: 1 }}
+   315→                        transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 18 }}
+   316→                        className="flex flex-col gap-0.5 rounded-xl bg-gold-soft px-3 py-2 dark:bg-amber-950/40"
+   317→                      >
+   318→                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700 dark:text-amber-300">
+   319→                          <Flower2 className="h-4 w-4" aria-hidden />
+   320→                          Reward earned · {unlocked}
+   321→                        </span>
+   322→                        <span className="text-[11px] font-bold text-amber-700/90 dark:text-amber-300/90">
+   323→                          {resolveCoupon(unlocked)?.label ?? "₹100 off"} on your next order
+   324→                        </span>
+   325→                      </motion.div>
+   326→                    )}
+   327→                    <div className="flex justify-between">
+   328→                      <span className="text-stone-500">Paid</span>
+   329→                      <span className="font-extrabold text-foreground">{formatINR(result.total)}</span>
+   330→                    </div>
+   331→                    {result.coupon && result.discount > 0 && (
+   332→                      <div className="flex justify-between">
+   333→                        <span className="flex items-center gap-1 text-mint">
+   334→                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+   335→                          {result.coupon} saved
+   336→                        </span>
+   337→                        <span className="font-bold text-mint">−{formatINR(result.discount)}</span>
+   338→                      </div>
+   339→                    )}
+   340→                    {result.coupon && result.freeShipping && (
+   341→                      <div className="flex justify-between">
+   342→                        <span className="flex items-center gap-1 text-mint">
+   343→                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+   344→                          {result.coupon} · free shipping
+   345→                        </span>
+   346→                        <span className="font-bold text-mint">−{formatINR(99)}</span>
+   347→                      </div>
+   348→                    )}
+   349→                    <div className="flex justify-between">
+   350→                      <span className="text-stone-500">Delivering to</span>
+   351→                      <span className="font-bold text-foreground">{result.deliveryTo}</span>
+   352→                    </div>
+   353→                    <div className="flex justify-between">
+   354→                      <span className="text-stone-500">Slot</span>
+   355→                      <span className="font-bold capitalize text-foreground">
+   356→                        {result.slot?.replace("-", "·") ?? "Same·day"}
+   357→                      </span>
+   358→                    </div>
+   359→                    <div className="flex justify-between">
+   360→                      <span className="text-stone-500">Gift wrap</span>
+   361→                      <span className="font-bold text-foreground">
+   362→                        {result.premiumWrap ? "Premium velvet 🎀" : "Free classic 🎁"}
+   363→                      </span>
+   364→                    </div>
+   365→                    {result.giftMessage && (
+   366→                      <motion.div
+   367→                        initial={{ opacity: 0, height: 0 }}
+   368→                        animate={{ opacity: 1, height: "auto" }}
+   369→                        className="overflow-hidden"
+   370→                      >
+   371→                        <div className="rounded-xl border border-dashed border-rose-200 bg-cream/70 px-3 py-2 dark:border-stone-700 dark:bg-stone-900/70">
+   372→                          <span className="text-[9px] font-extrabold uppercase tracking-wide text-stone-400">
+   373→                            Your message card
+   374→                          </span>
+   375→                          <p
+   376→                            className="mt-0.5 line-clamp-3 text-[11px] italic leading-snug text-charcoal dark:text-stone-200"
+   377→                            style={{ fontFamily: "'Segoe Script', 'Bradley Hand', cursive" }}
+   378→                          >
+   379→                            “{result.giftMessage}”
+   380→                          </p>
+   381→                        </div>
+   382→                      </motion.div>
+   383→                    )}
+   384→                    <div className="flex justify-between">
+   385→                      <span className="text-stone-500">ETA</span>
+   386→                      <span className="font-bold text-mint">~{result.etaHours} hrs 🚀</span>
+   387→                    </div>
+   388→                  </div>
+   389→                  <div className="mt-5 flex w-full gap-2">
+   390→                    <button
+   391→                      onClick={finish}
+   392→                      className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-brand px-5 py-3 text-sm font-bold text-white shadow-lift transition hover:opacity-90"
+   393→                    >
+   394→                      Keep shopping <ArrowRight className="h-4 w-4" aria-hidden />
+   395→                    </button>
+   396→                    <motion.button
+   397→                      whileHover={{ scale: 1.03 }}
+   398→                      whileTap={{ scale: 0.96 }}
+   399→                      onClick={() => {
+   400→                        setOpen(false);
+   401→                        setTrackOpen(true);
+   402→                      }}
+   403→                      className="flex items-center justify-center gap-1.5 rounded-full border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-foreground transition hover:border-brand hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
+   404→                    >
+   405→                      <Radar className="h-4 w-4 text-brand" aria-hidden />
+   406→                      Track
+   407→                    </motion.button>
+   408→                  </div>
+   409→                </motion.div>
+   410→              </div>
+   411→            ) : cart.length === 0 ? (
+   412→              /* ---------- EMPTY VIEW ---------- */
+   413→              <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+   414→                <motion.div
+   415→                  animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
+   416→                  transition={{ repeat: Infinity, duration: 3.2 }}
+   417→                  className="grid h-24 w-24 place-items-center rounded-full bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300"
+   418→                >
+   419→                  <Gift className="h-10 w-10" aria-hidden />
+   420→                </motion.div>
+   421→                <h3 className="text-lg font-extrabold text-foreground">Your bag is feeling light</h3>
+   422→                <p className="max-w-60 text-sm text-stone-500">
+   423→                  Fill it with flowers, cakes & surprises — happiness ships free over{" "}
+   424→                  {formatINR(FREE_SHIPPING_THRESHOLD)}.
+   425→                </p>
+   426→                <button
+   427→                  onClick={() => setOpen(false)}
+   428→                  className="mt-2 rounded-full bg-brand px-6 py-3 text-sm font-bold text-white shadow-lift transition hover:bg-rose-700"
+   429→                >
+   430→                  Browse bestsellers
+   431→                </button>
+   432→              </div>
+   433→            ) : (
+   434→              <>
+   435→                {/* ---------- BLOOM REWARDS ---------- */}
+   436→                <div className="border-b border-rose-100 bg-card px-5 py-3 dark:border-stone-800">
+   437→                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 px-3.5 py-2.5 ring-1 ring-rose-100 dark:from-rose-950/40 dark:via-stone-900 dark:to-amber-950/30 dark:ring-stone-700/80">
+   438→                    <div className="flex items-center gap-2.5">
+   439→                      <motion.span
+   440→                        animate={{ rotate: [0, -8, 8, 0] }}
+   441→                        transition={{ repeat: Infinity, duration: 3.4, ease: "easeInOut" }}
+   442→                        className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-soft"
+   443→                        aria-hidden
+   444→                      >
+   445→                        <Flower2 className="h-4 w-4" />
+   446→                      </motion.span>
+   447→                      <div>
+   448→                        <p className="text-xs font-extrabold text-foreground">
+   449→                          Bloom Rewards{" "}
+   450→                          <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-brand dark:bg-rose-950/50 dark:text-rose-300">
+   451→                            {stamps}/{LOYALTY_TARGET} stamps
+   452→                          </span>
+   453→                        </p>
+   454→                        <p className="text-[10px] font-semibold text-stone-400">
+   455→                          {stamps > 0
+   456→                            ? `${LOYALTY_TARGET - stamps} more order${LOYALTY_TARGET - stamps === 1 ? "" : "s"} → ${nextRewardLabel}`
+   457→                            : `Every ${LOYALTY_TARGET}rd order earns ${nextRewardLabel}`}
+   458→                        </p>
+   459→                      </div>
+   460→                    </div>
+   461→                    <span className="flex items-center gap-1" aria-hidden>
+   462→                      {Array.from({ length: LOYALTY_TARGET }).map((_, i) => (
+   463→                        <motion.span
+   464→                          key={i}
+   465→                          initial={false}
+   466→                          animate={
+   467→                            i < stamps
+   468→                              ? { scale: [1, 1.35, 1], rotate: [0, 18, 0] }
+   469→                              : { scale: 1 }
+   470→                          }
+   471→                          transition={{ duration: 0.45, delay: i * 0.12 }}
+   472→                        >
+   473→                          <Flower2
+   474→                            className={cn(
+   475→                              "h-4.5 w-4.5",
+   476→                              i < stamps ? "fill-brand text-brand" : "text-rose-200 dark:text-rose-800"
+   477→                            )}
+   478→                          />
+   479→                        </motion.span>
+   480→                      ))}
+   481→                    </span>
+   482→                  </div>
+   483→                  {rewardCoupon && !coupon && (
+   484→                    <motion.div
+   485→                      initial={{ opacity: 0, y: 6 }}
+   486→                      animate={{ opacity: 1, y: 0 }}
+   487→                      className="mt-2 flex items-center justify-between rounded-2xl border border-dashed border-gold bg-gold-soft/70 px-3.5 py-2 dark:bg-amber-950/30"
+   488→                    >
+   489→                      <span className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-700 dark:text-amber-300">
+   490→                        <Sparkles className="h-3.5 w-3.5" aria-hidden />
+   491→                        Your reward · {rewardCoupon}
+   492→                      </span>
+   493→                      <span className="flex items-center gap-2">
+   494→                        <button
+   495→                          onClick={() => {
+   496→                            setCoupon(rewardCoupon);
+   497→                            setCouponInput(rewardCoupon);
+   498→                            miniConfetti();
+   499→                            toast({
+   500→                              title: "Reward applied! 🌸",
+   501→                              description: `${rewardCoupon} · ${resolveCoupon(rewardCoupon)?.label ?? "applied"} this order.`,
+   502→                            });
+   503→                          }}
+   504→                          className="rounded-full bg-charcoal px-3 py-1 text-[10px] font-extrabold text-cream transition hover:bg-stone-700"
+   505→                        >
+   506→                          Apply
+   507→                        </button>
+   508→                        <button
+   509→                          onClick={dismissReward}
+   510→                          aria-label="Dismiss reward"
+   511→                          className="text-stone-400 transition hover:text-brand"
+   512→                        >
+   513→                          <X className="h-3.5 w-3.5" />
+   514→                        </button>
+   515→                      </span>
+   516→                    </motion.div>
+   517→                  )}
+   518→                </div>
+   519→
+   520→                {/* ---------- FREE SHIPPING PROGRESS ---------- */}
+   521→                <div className="border-b border-rose-100 bg-card px-5 py-3.5 dark:border-stone-800">
+   522→                  <div className="mb-1.5 flex items-center gap-2 text-xs font-bold">
+   523→                    <Truck
+   524→                      className={cn("h-4 w-4", pct >= 100 ? "text-mint" : "text-brand")}
+   525→                      aria-hidden
+   526→                    />
+   527→                    {pct >= 100 ? (
+   528→                      <span className="text-mint">
+   529→                        Yay! You&apos;ve unlocked FREE shipping 🎉
+   530→                      </span>
+   531→                    ) : (
+   532→                      <span className="text-foreground">
+   533→                        Add {formatINR(remaining)} more for{" "}
+   534→                        <span className="text-brand">FREE shipping</span>
+   535→                      </span>
+   536→                    )}
+   537→                  </div>
+   538→                  <div className="h-2.5 overflow-hidden rounded-full bg-rose-100 dark:bg-stone-800">
+   539→                    <motion.div
+   540→                      className={cn(
+   541→                        "relative h-full rounded-full",
+   542→                        pct >= 100 ? "bg-mint" : "bg-gradient-brand"
+   543→                      )}
+   544→                      initial={false}
+   545→                      animate={{ width: `${pct}%` }}
+   546→                      transition={{ type: "spring", stiffness: 120, damping: 20 }}
+   547→                    >
+   548→                      <span className="absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 translate-x-1/2 rounded-full border-2 border-white bg-gold shadow-soft" aria-hidden />
+   549→                    </motion.div>
+   550→                  </div>
+   551→                </div>
+   552→
+   553→                {/* ---------- ITEMS ---------- */}
+   554→                <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4 scrollbar-slim">
+   555→                  <AnimatePresence mode="popLayout" initial={false}>
+   556→                    {cart.map((item) => (
+   557→                      <motion.article
+   558→                        layout
+   559→                        key={item.id}
+   560→                        initial={{ opacity: 0, x: 60 }}
+   561→                        animate={{ opacity: 1, x: 0 }}
+   562→                        exit={{ opacity: 0, x: 60, height: 0, marginBottom: 0, scale: 0.9 }}
+   563→                        transition={{ type: "spring", stiffness: 300, damping: 28 }}
+   564→                        className="flex gap-3 rounded-2xl border border-rose-100 bg-card p-3 shadow-soft dark:border-stone-800"
+   565→                      >
+   566→                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
+   567→                          <img
+   568→                            src={item.image}
+   569→                            alt={item.name}
+   570→                            className="h-full w-full object-cover"
+   571→                          />
+   572→                        </div>
+   573→                        <div className="flex min-w-0 flex-1 flex-col">
+   574→                          <div className="flex items-start justify-between gap-2">
+   575→                            <h4 className="line-clamp-2 text-sm font-bold text-foreground">
+   576→                              {item.name}
+   577→                            </h4>
+   578→                            <button
+   579→                              onClick={() => removeFromCart(item.id)}
+   580→                              className="text-stone-300 transition hover:text-brand"
+   581→                              aria-label={`Remove ${item.name}`}
+   582→                            >
+   583→                              <Trash2 className="h-4 w-4" />
+   584→                            </button>
+   585→                          </div>
+   586→                          <p className="mt-0.5 text-xs font-semibold text-brand">
+   587→                            {formatINR(item.price)}
+   588→                          </p>
+   589→                          <div className="mt-auto flex items-center justify-between pt-2">
+   590→                            <div className="flex items-center gap-1 rounded-full border border-stone-200 bg-cream p-0.5 dark:border-stone-700 dark:bg-stone-800">
+   591→                              <button
+   592→                                onClick={() => updateQty(item.id, -1)}
+   593→                                className="grid h-6.5 w-6.5 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand"
+   594→                                aria-label={`Decrease quantity of ${item.name}`}
+   595→                              >
+   596→                                <Minus className="h-3.5 w-3.5" />
+   597→                              </button>
+   598→                              <span className="w-6 text-center text-sm font-extrabold text-foreground">
+   599→                                {item.qty}
+   600→                              </span>
+   601→                              <button
+   602→                                onClick={() => updateQty(item.id, 1)}
+   603→                                className="grid h-6.5 w-6.5 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand"
+   604→                                aria-label={`Increase quantity of ${item.name}`}
+   605→                              >
+   606→                                <Plus className="h-3.5 w-3.5" />
+   607→                              </button>
+   608→                            </div>
+   609→                            <span className="text-sm font-extrabold text-foreground">
+   610→                              {formatINR(item.price * item.qty)}
+   611→                            </span>
+   612→                          </div>
+   613→                        </div>
+   614→                      </motion.article>
+   615→                    ))}
+   616→                  </AnimatePresence>
+   617→
+   618→                  <div className="flex items-center gap-2 rounded-2xl bg-gold-soft px-4 py-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+   619→                    <Gift className="h-4 w-4 shrink-0" aria-hidden />
+   620→                    Every order ships with a free gift wrap & message card.
+   621→                  </div>
+   622→
+   623→                  {/* ---------- CROSS-SELL: COMPLETE THE MOMENT ---------- */}
+   624→                  <CartCrossSell />
+   625→
+   626→                  {/* ---------- FREE MESSAGE CARD EDITOR ---------- */}
+   627→                  <GiftMessageEditor />
+   628→
+   629→                  {/* ---------- DELIVERY SLOT ---------- */}
+   630→                  <div className="rounded-2xl border border-rose-100 bg-card p-3.5 shadow-soft dark:border-stone-800">
+   631→                    <p className="text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
+   632→                      Delivery slot
+   633→                    </p>
+   634→                    <div className="mt-2 grid grid-cols-3 gap-1.5">
+   635→                      {SLOTS.map((slot) => {
+   636→                        const active = deliverySlot === slot.id;
+   637→                        const Icon = slot.icon;
+   638→                        return (
+   639→                          <button
+   640→                            key={slot.id}
+   641→                            onClick={() => setDeliverySlot(slot.id)}
+   642→                            aria-pressed={active}
+   643→                            className={cn(
+   644→                              "relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-center transition",
+   645→                              active
+   646→                                ? "bg-brand text-white shadow-soft"
+   647→                                : "bg-cream text-stone-500 hover:bg-rose-50 hover:text-foreground dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+   648→                            )}
+   649→                          >
+   650→                            <Icon className="h-4 w-4" aria-hidden />
+   651→                            <span className="text-[11px] font-extrabold leading-none">{slot.label}</span>
+   652→                            <span
+   653→                              className={cn(
+   654→                                "text-[9px] font-semibold leading-none",
+   655→                                active ? "text-white/75" : "text-stone-400"
+   656→                              )}
+   657→                            >
+   658→                              {slot.hint}
+   659→                            </span>
+   660→                          </button>
+   661→                        );
+   662→                      })}
+   663→                    </div>
+   664→                  </div>
+   665→
+   666→                  {/* ---------- PREMIUM WRAP UPSELL ---------- */}
+   667→                  <motion.div
+   668→                    animate={premiumWrap ? { scale: [1, 1.01, 1] } : {}}
+   669→                    className={cn(
+   670→                      "flex items-center gap-3 rounded-2xl border-2 border-dashed p-3.5 transition-colors",
+   671→                      premiumWrap
+   672→                        ? "border-gold bg-gold-soft/50 dark:bg-amber-950/30"
+   673→                        : "border-rose-200 bg-card dark:border-stone-700"
+   674→                    )}
+   675→                  >
+   676→                    <motion.span
+   677→                      animate={premiumWrap ? { rotate: [0, -12, 12, 0] } : {}}
+   678→                      transition={{ duration: 0.6 }}
+   679→                      className={cn(
+   680→                        "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
+   681→                        premiumWrap ? "bg-gold text-white" : "bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300"
+   682→                      )}
+   683→                      aria-hidden
+   684→                    >
+   685→                      <Ribbon className="h-4.5 w-4.5" />
+   686→                    </motion.span>
+   687→                    <div className="min-w-0 flex-1">
+   688→                      <p className="text-xs font-extrabold text-foreground">
+   689→                        Premium velvet wrap
+   690→                        <span className="ml-1.5 rounded-full bg-gold-soft px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+   691→                          +{formatINR(49)}
+   692→                        </span>
+   693→                      </p>
+   694→                      <p className="text-[10px] font-semibold text-stone-400">
+   695→                        Satin ribbon, velvet box & handwritten card — basic wrap stays free.
+   696→                      </p>
+   697→                    </div>
+   698→                    <button
+   699→                      role="switch"
+   700→                      aria-checked={premiumWrap}
+   701→                      aria-label="Toggle premium velvet gift wrap"
+   702→                      onClick={() => setPremiumWrap(!premiumWrap)}
+   703→                      className={cn(
+   704→                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+   705→                        premiumWrap ? "bg-gold" : "bg-stone-200 dark:bg-stone-700"
+   706→                      )}
+   707→                    >
+   708→                      <motion.span
+   709→                        layout
+   710→                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+   711→                        className={cn(
+   712→                          "absolute top-0.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow-soft",
+   713→                          premiumWrap ? "right-0.5" : "left-0.5"
+   714→                        )}
+   715→                      >
+   716→                        {premiumWrap && <Check className="h-3 w-3 text-gold" aria-hidden />}
+   717→                      </motion.span>
+   718→                    </button>
+   719→                  </motion.div>
+   720→                </div>
+   721→
+   722→                {/* ---------- FOOTER ---------- */}
+   723→                <div className="border-t border-rose-100 bg-card px-5 py-4 dark:border-stone-800">
+   724→                  {/* Coupon */}
+   725→                  <AnimatePresence mode="wait" initial={false}>
+   726→                    {coupon ? (
+   727→                      <motion.div
+   728→                        key="coupon-applied"
+   729→                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
+   730→                        animate={{ opacity: 1, y: 0, scale: 1 }}
+   731→                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+   732→                        transition={{ type: "spring", stiffness: 380, damping: 24 }}
+   733→                        className="mb-3 flex items-center justify-between rounded-2xl border border-dashed border-mint/60 bg-mint/10 px-3.5 py-2.5"
+   734→                      >
+   735→                        <span className="flex items-center gap-2 text-xs font-extrabold text-mint">
+   736→                          <BadgeCheck className="h-4 w-4" aria-hidden />
+   737→                          {coupon} · {appliedCoupon?.label ?? "applied"}
+   738→                        </span>
+   739→                        <button
+   740→                          onClick={() => {
+   741→                            setCoupon(null);
+   742→                            setCouponInput("");
+   743→                          }}
+   744→                          className="text-[11px] font-bold text-stone-400 underline-offset-2 transition hover:text-brand hover:underline"
+   745→                          aria-label="Remove coupon"
+   746→                        >
+   747→                          Remove
+   748→                        </button>
+   749→                      </motion.div>
+   750→                    ) : (
+   751→                      <motion.div
+   752→                        key="coupon-input"
+   753→                        initial={{ opacity: 0, y: 8 }}
+   754→                        animate={{ opacity: 1, y: 0 }}
+   755→                        exit={{ opacity: 0, y: -8 }}
+   756→                        className="mb-3"
+   757→                      >
+   758→                        <div className="flex gap-2">
+   759→                          <div className="relative min-w-0 flex-1">
+   760→                            <TicketPercent
+   761→                              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold"
+   762→                              aria-hidden
+   763→                            />
+   764→                            <input
+   765→                              value={couponInput}
+   766→                              onChange={(e) => {
+   767→                                setCouponInput(e.target.value);
+   768→                                setCouponError(null);
+   769→                              }}
+   770→                              onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+   771→                              placeholder="Coupon code"
+   772→                              aria-label="Coupon code"
+   773→                              aria-invalid={!!couponError}
+   774→                              className={cn(
+   775→                                "h-10 w-full rounded-2xl border bg-cream pl-9 pr-3 text-xs font-bold uppercase tracking-wide text-foreground placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-stone-300 focus:outline-none focus:ring-2 dark:bg-stone-900 dark:placeholder:text-stone-600",
+   776→                                couponError
+   777→                                  ? "border-rose-400 focus:ring-rose-200"
+   778→                                  : "border-stone-200 focus:border-rose-300 focus:ring-rose-200 dark:border-stone-700"
+   779→                              )}
+   780→                            />
+   781→                          </div>
+   782→                          <motion.button
+   783→                            whileTap={{ scale: 0.94 }}
+   784→                            onClick={applyCoupon}
+   785→                            disabled={!couponInput.trim()}
+   786→                            className="h-10 shrink-0 rounded-2xl bg-charcoal px-4 text-xs font-extrabold text-cream transition hover:bg-stone-700 disabled:opacity-40"
+   787→                          >
+   788→                            Apply
+   789→                          </motion.button>
+   790→                        </div>
+   791→                        {couponError ? (
+   792→                          <motion.p
+   793→                            initial={{ opacity: 0, x: -6 }}
+   794→                            animate={{ opacity: 1, x: 0 }}
+   795→                            className="mt-1.5 text-[11px] font-bold text-brand"
+   796→                            role="alert"
+   797→                          >
+   798→                            {couponError}
+   799→                          </motion.p>
+   800→                        ) : (
+   801→                          <p className="mt-1.5 text-[11px] text-stone-400">
+   802→                            Psst… try{" "}
+   803→                            <button
+   804→                              onClick={() => setCouponInput("BLISS10")}
+   805→                              className="font-extrabold text-gold underline decoration-dashed underline-offset-2 hover:text-amber-600"
+   806→                            >
+   807→                              BLISS10
+   808→                            </button>{" "}
+   809→                            for 10% off · wheel wins work too 🎡
+   810→                          </p>
+   811→                        )}
+   812→                      </motion.div>
+   813→                    )}
+   814→                  </AnimatePresence>
+   815→
+   816→                  <div className="mb-1 flex justify-between text-sm">
+   817→                    <span className="text-stone-500">Subtotal</span>
+   818→                    <span className="font-extrabold text-foreground">{formatINR(subtotal)}</span>
+   819→                  </div>
+   820→                  {discount > 0 && (
+   821→                    <motion.div
+   822→                      initial={{ opacity: 0, height: 0 }}
+   823→                      animate={{ opacity: 1, height: "auto" }}
+   824→                      className="mb-1 flex justify-between text-sm"
+   825→                    >
+   826→                      <span className="text-mint">Coupon {coupon}</span>
+   827→                      <span className="font-bold text-mint">−{formatINR(discount)}</span>
+   828→                    </motion.div>
+   829→                  )}
+   830→                  <div className="mb-1 flex justify-between text-sm">
+   831→                    <span className="text-stone-500">Delivery</span>
+   832→                    <span className={cn("font-bold", freeShipUnlocked ? "text-mint" : "text-foreground")}>
+   833→                      {freeShipUnlocked ? "FREE" : formatINR(99)}
+   834→                    </span>
+   835→                  </div>
+   836→                  <AnimatePresence initial={false}>
+   837→                    {premiumWrap && (
+   838→                      <motion.div
+   839→                        initial={{ opacity: 0, height: 0 }}
+   840→                        animate={{ opacity: 1, height: "auto" }}
+   841→                        exit={{ opacity: 0, height: 0 }}
+   842→                        className="mb-1 flex justify-between overflow-hidden text-sm"
+   843→                      >
+   844→                        <span className="flex items-center gap-1 text-amber-700">
+   845→                          <Ribbon className="h-3.5 w-3.5" aria-hidden /> Premium wrap
+   846→                        </span>
+   847→                        <span className="font-bold text-foreground">{formatINR(49)}</span>
+   848→                      </motion.div>
+   849→                    )}
+   850→                  </AnimatePresence>
+   851→                  <motion.button
+   852→                    whileHover={{ scale: 1.02 }}
+   853→                    whileTap={{ scale: 0.97 }}
+   854→                    onClick={checkout}
+   855→                    disabled={checkingOut}
+   856→                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3.5 text-sm font-extrabold text-white shadow-lift transition hover:opacity-90 disabled:opacity-70"
+   857→                  >
+   858→                    {checkingOut ? (
+   859→                      <>
+   860→                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+   861→                        Wrapping your gifts…
+   862→                      </>
+   863→                    ) : (
+   864→                      <>
+   865→                        <Lock className="h-4 w-4" aria-hidden />
+   866→                        Checkout · {formatINR(grandTotal)}
+   867→                        {discount > 0 && (
+   868→                          <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]">
+   869→                            saved {formatINR(discount)}
+   870→                          </span>
+   871→                        )}
+   872→                      </>
+   873→                    )}
+   874→                  </motion.button>
+   875→                  <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-stone-400">
+   876→                    <PartyPopper className="h-3 w-3" aria-hidden />
+   877→                    {premiumWrap
+   878→                      ? "Premium wrap +₹49 shown above · 100% secure payments"
+   879→                      : "Free basic gift wrap · 100% secure payments"}
+   880→                  </p>
+   881→                </div>
+   882→              </>
+   883→            )}
+   884→          </motion.aside>
+   885→        </div>
+   886→      )}
+   887→    </AnimatePresence>
+   888→  );
+   889→}
+   890→

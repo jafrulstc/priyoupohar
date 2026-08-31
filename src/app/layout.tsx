@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import LiveAnnouncer from "@/components/shop/live-announcer";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -12,6 +13,13 @@ const jakarta = Plus_Jakarta_Sans({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+/** Handwritten flourish for the gift message card & notes. */
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -58,10 +66,11 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${jakarta.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${jakarta.variable} ${geistMono.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />
+        <LiveAnnouncer />
       </body>
     </html>
   );

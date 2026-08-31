@@ -18,6 +18,13 @@ const checkoutSchema = z.object({
     pincode: z.string().optional(),
   }),
   slot: z.enum(["same-day", "midnight", "standard", "fixed"]).default("same-day"),
+  /** Concrete delivery window chosen from the /api/slots availability engine. */
+  slotDetail: z
+    .object({
+      label: z.string().max(60),
+      dateISO: z.string().max(40),
+    })
+    .optional(),
   message: z.string().max(280).optional(),
   coupon: z.string().max(24).optional(),
   /** Optional ₹49 premium velvet wrap — basic wrap + message card are always free. */
@@ -35,7 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { items, location, slot, message, coupon, premiumWrap } = parsed.data;
+    const { items, location, slot, slotDetail, message, coupon, premiumWrap } = parsed.data;
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
     const matched = resolveCoupon(coupon);
     const couponCode = matched?.code ?? null;
@@ -48,7 +55,6 @@ export async function POST(req: NextRequest) {
 
     // Simulated payment + ETA logic
     const etaHours = slot === "midnight" ? 12 : slot === "same-day" ? 4 : 48;
-
     return NextResponse.json({
       orderId,
       status: "confirmed",
@@ -62,6 +68,7 @@ export async function POST(req: NextRequest) {
       total,
       etaHours,
       slot,
+      slotDetail: slotDetail ?? null,
       deliveryTo: location.city,
       giftMessage: message ?? null,
       estimatedDelivery: new Date(Date.now() + etaHours * 3600_000).toISOString(),

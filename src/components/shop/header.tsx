@@ -134,7 +134,7 @@ export default function Header() {
             : "bg-background/80"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:gap-2 md:px-6 lg:px-8 xl:gap-3 min-[1440px]:gap-4">
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -160,7 +160,7 @@ export default function Header() {
               <button
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
-                className="group relative whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400 lg:px-3.5"
+                className="group relative whitespace-nowrap rounded-full px-2 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400 min-[1440px]:px-3.5"
               >
                 {link.label}
                 <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100 dark:bg-rose-400" />
@@ -200,7 +200,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setSearchOpen(true)}
-              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-rose-500/50 md:flex"
+              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-rose-500/50 min-[1440px]:flex"
               aria-label="Search gifts"
             >
               <Search className="h-4 w-4" aria-hidden />
@@ -211,7 +211,7 @@ export default function Header() {
             </motion.button>
             <button
               onClick={() => setSearchOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 min-[1440px]:hidden"
               aria-label="Search gifts"
             >
               <Search className="h-4.5 w-4.5" aria-hidden />
@@ -225,7 +225,7 @@ export default function Header() {
             >
               <MapPin className="h-4 w-4 shrink-0 text-brand dark:text-rose-400" aria-hidden />
               <span className="min-w-0">
-                <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
+                <span className="hidden text-[10px] font-semibold uppercase tracking-wide text-stone-400 min-[1440px]:block dark:text-stone-500">
                   Deliver to
                 </span>
                 <span className="block truncate text-sm font-bold text-foreground">

@@ -240,8 +240,7 @@ export default function GiftMessageEditor() {
                       aria-hidden
                     />
                     <p
-                      className="relative px-2 text-center text-[13px] italic leading-relaxed text-charcoal dark:text-stone-200"
-                      style={{ fontFamily: "'Segoe Script', 'Bradley Hand', cursive" }}
+                      className="relative px-2 text-center font-handwriting text-lg font-semibold leading-relaxed text-charcoal dark:text-stone-200"
                     >
                       {previewText}
                     </p>

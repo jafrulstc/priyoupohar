@@ -20,9 +20,6 @@ import {
   Flower2,
   Ribbon,
   Sparkles,
-  Zap,
-  MoonStar,
-  Package,
   Check,
 } from "lucide-react";
 import { Lottie } from "lottie-react";
@@ -45,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import GiftMessageEditor from "@/components/shop/gift-message-editor";
 import CartCrossSell from "@/components/shop/cart-cross-sell";
+import DeliverySlotPicker from "@/components/shop/delivery-slot-picker";
 
 type CheckoutResult = {
   orderId: string;
@@ -57,14 +55,9 @@ type CheckoutResult = {
   freeShipping?: boolean;
   premiumWrap?: boolean;
   slot?: string;
+  slotDetail?: { label: string; dateISO: string } | null;
   giftMessage?: string | null;
 };
-
-const SLOTS = [
-  { id: "same-day", label: "Same-day", hint: "in ~4 hrs", icon: Zap },
-  { id: "midnight", label: "Midnight", hint: "by 12 AM", icon: MoonStar },
-  { id: "standard", label: "Standard", hint: "in 2 days", icon: Package },
-] as const;
 
 export default function CartDrawer() {
   const isOpen = useShopStore((s) => s.isCartOpen);
@@ -88,6 +81,8 @@ export default function CartDrawer() {
   const dismissReward = useShopStore((s) => s.dismissReward);
   const giftMessage = useShopStore((s) => s.giftMessage);
   const setGiftMessage = useShopStore((s) => s.setGiftMessage);
+  const chosenSlot = useShopStore((s) => s.chosenSlot);
+  const setChosenSlot = useShopStore((s) => s.setChosenSlot);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
@@ -183,6 +178,12 @@ export default function CartDrawer() {
           items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
           location: { city: location.city, pincode: location.pincode },
           slot: deliverySlot,
+          slotDetail: chosenSlot
+            ? {
+                label: `${chosenSlot.dayLabel} · ${chosenSlot.window}`,
+                dateISO: chosenSlot.dateISO,
+              }
+            : undefined,
           coupon: coupon ?? undefined,
           premiumWrap,
           message: giftMessage.trim() || undefined,
@@ -221,6 +222,7 @@ export default function CartDrawer() {
     setUnlocked(null);
     setPremiumWrap(false);
     setGiftMessage("");
+    setChosenSlot(null);
     setCoupon(null);
     setCouponInput("");
     setCouponError(null);
@@ -352,8 +354,10 @@ export default function CartDrawer() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">Slot</span>
-                      <span className="font-bold capitalize text-foreground">
-                        {result.slot?.replace("-", "·") ?? "Same·day"}
+                      <span className="text-right font-bold text-foreground">
+                        {result.slotDetail?.label ??
+                          result.slot?.replace("-", "·") ??
+                          "Same·day"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -373,8 +377,7 @@ export default function CartDrawer() {
                             Your message card
                           </span>
                           <p
-                            className="mt-0.5 line-clamp-3 text-[11px] italic leading-snug text-charcoal dark:text-stone-200"
-                            style={{ fontFamily: "'Segoe Script', 'Bradley Hand', cursive" }}
+                            className="mt-0.5 line-clamp-3 font-handwriting text-sm font-semibold leading-snug text-charcoal dark:text-stone-200"
                           >
                             “{result.giftMessage}”
                           </p>
@@ -418,7 +421,7 @@ export default function CartDrawer() {
                 >
                   <Gift className="h-10 w-10" aria-hidden />
                 </motion.div>
-                <h3 className="text-lg font-extrabold text-foreground">Your bag is feeling light</h3>
+                <h3 className="font-handwriting text-2xl font-bold text-foreground">Your bag is feeling light</h3>
                 <p className="max-w-60 text-sm text-stone-500">
                   Fill it with flowers, cakes & surprises — happiness ships free over{" "}
                   {formatINR(FREE_SHIPPING_THRESHOLD)}.
@@ -626,42 +629,8 @@ export default function CartDrawer() {
                   {/* ---------- FREE MESSAGE CARD EDITOR ---------- */}
                   <GiftMessageEditor />
 
-                  {/* ---------- DELIVERY SLOT ---------- */}
-                  <div className="rounded-2xl border border-rose-100 bg-card p-3.5 shadow-soft dark:border-stone-800">
-                    <p className="text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
-                      Delivery slot
-                    </p>
-                    <div className="mt-2 grid grid-cols-3 gap-1.5">
-                      {SLOTS.map((slot) => {
-                        const active = deliverySlot === slot.id;
-                        const Icon = slot.icon;
-                        return (
-                          <button
-                            key={slot.id}
-                            onClick={() => setDeliverySlot(slot.id)}
-                            aria-pressed={active}
-                            className={cn(
-                              "relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-center transition",
-                              active
-                                ? "bg-brand text-white shadow-soft"
-                                : "bg-cream text-stone-500 hover:bg-rose-50 hover:text-foreground dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
-                            )}
-                          >
-                            <Icon className="h-4 w-4" aria-hidden />
-                            <span className="text-[11px] font-extrabold leading-none">{slot.label}</span>
-                            <span
-                              className={cn(
-                                "text-[9px] font-semibold leading-none",
-                                active ? "text-white/75" : "text-stone-400"
-                              )}
-                            >
-                              {slot.hint}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {/* ---------- DELIVERY SLOT (live availability engine) ---------- */}
+                  <DeliverySlotPicker />
 
                   {/* ---------- PREMIUM WRAP UPSELL ---------- */}
                   <motion.div

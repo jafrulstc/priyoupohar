@@ -35,6 +35,18 @@ export type DeliveryLocation = {
   pincode?: string;
 };
 
+/** A concrete delivery window chosen from /api/slots for the current pincode. */
+export type DeliverySlot = {
+  id: string;
+  dateISO: string;
+  dayLabel: string;
+  window: string;
+  cutoff: string;
+  cutoffAt: string;
+  kind: "same-day" | "midnight" | "standard";
+  left: number;
+};
+
 export const FREE_SHIPPING_THRESHOLD = 999;
 /** Loyalty: every 3rd order unlocks a reward; the reward tiers up each cycle. */
 export const LOYALTY_TARGET = 3;
@@ -106,6 +118,10 @@ type ShopState = {
   setLocation: (loc: DeliveryLocation) => void;
   isLocationOpen: boolean;
   setLocationOpen: (open: boolean) => void;
+
+  /* ---------- delivery slots (availability engine) ---------- */
+  chosenSlot: DeliverySlot | null;
+  setChosenSlot: (slot: DeliverySlot | null) => void;
 
   /* ---------- wishlist ---------- */
   wishlist: ProductSnapshot[];
@@ -210,9 +226,23 @@ export const useShopStore = create<ShopState>()(
       setTheme: (t) => set({ theme: t }),
 
       location: null,
-      setLocation: (loc) => set({ location: loc, isLocationOpen: false }),
+      setLocation: (loc) =>
+        set((state) => ({
+          location: loc,
+          isLocationOpen: false,
+          /* slot availability is zone-specific — drop the choice when the city changes */
+          chosenSlot:
+            state.chosenSlot &&
+            state.location?.pincode &&
+            state.location.pincode === loc.pincode
+              ? state.chosenSlot
+              : null,
+        })),
       isLocationOpen: false,
       setLocationOpen: (open) => set({ isLocationOpen: open }),
+
+      chosenSlot: null,
+      setChosenSlot: (slot) => set({ chosenSlot: slot }),
 
       wishlist: [],
       toggleWishlist: (p) =>
@@ -243,11 +273,12 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: "bloom-bliss-shop",
-      version: 6,
+      version: 7,
       // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
       // v4 adds order history + loyalty stamps + cart upsell prefs;
       // v5 adds theme + lifetime ordersCount for tiered loyalty rewards;
-      // v6 adds the free gift-message card (persisted draft).
+      // v6 adds the free gift-message card (persisted draft);
+      // v7 adds the chosen delivery slot (availability engine).
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -265,6 +296,7 @@ export const useShopStore = create<ShopState>()(
           deliverySlot?: ShopState["deliverySlot"];
           theme?: Theme;
           giftMessage?: string;
+          chosenSlot?: DeliverySlot | null;
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -300,6 +332,13 @@ export const useShopStore = create<ShopState>()(
               : "same-day",
           theme: s.theme === "dark" ? "dark" : "light",
           giftMessage: typeof s.giftMessage === "string" ? s.giftMessage.slice(0, 280) : "",
+          chosenSlot:
+            s.chosenSlot &&
+            typeof s.chosenSlot === "object" &&
+            typeof (s.chosenSlot as DeliverySlot).id === "string" &&
+            typeof (s.chosenSlot as DeliverySlot).dateISO === "string"
+              ? (s.chosenSlot as DeliverySlot)
+              : null,
         };
       },
       partialize: (state) => ({
@@ -318,6 +357,7 @@ export const useShopStore = create<ShopState>()(
         deliverySlot: state.deliverySlot,
         theme: state.theme,
         giftMessage: state.giftMessage,
+        chosenSlot: state.chosenSlot,
       }),
     }
   )

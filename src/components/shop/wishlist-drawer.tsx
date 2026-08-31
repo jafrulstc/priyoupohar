@@ -10,13 +10,14 @@ import {
   Check,
   Sparkles,
   ArrowRight,
+  Share2,
 } from "lucide-react";
 import { useShopStore, type ProductSnapshot } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useToast } from "@/hooks/use-toast";
 import { formatINR, discountPct } from "@/lib/format";
-import { miniConfetti } from "@/lib/confetti";
+import { miniConfetti, petalConfetti } from "@/lib/confetti";
 import { cn } from "@/lib/utils";
 
 /* ---------- single wishlist row ---------- */
@@ -205,6 +206,79 @@ export default function WishlistDrawer() {
     setCartOpen(true);
   };
 
+  /* share the whole wishlist — Web Share API with a clipboard fallback;
+     every gift links to its own /gift/slug page with a real OG card */
+  const shareWishlist = async () => {
+    if (items.length === 0) return;
+    const origin = window.location.origin;
+    const lines = items
+      .map(
+        (i) =>
+          `🌸 ${i.name} — ${formatINR(i.price)}\n   ${origin}/gift/${i.slug}`
+      )
+      .join("\n\n");
+    const text = `My Bloom & Bliss wishlist 💐\n\n${lines}\n\nSurprise me? 🎁`;
+
+    /* legacy copy path — works even when the async Clipboard API is denied */
+    const legacyCopy = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch {
+        ok = false;
+      }
+      document.body.removeChild(ta);
+      return ok;
+    };
+
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({
+          title: "My Bloom & Bliss wishlist 💐",
+          text,
+        });
+        petalConfetti();
+        toast({
+          title: "Wishlist shared! 💐",
+          description: "Fingers crossed for the perfect surprise.",
+        });
+        return;
+      }
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      } catch {
+        copied = legacyCopy();
+      }
+      if (copied) {
+        miniConfetti();
+        toast({
+          title: "Wishlist copied! 📋",
+          description: "Paste it in any chat to drop the perfect hint.",
+        });
+      } else {
+        toast({
+          title: "Sharing hiccup 😅",
+          description: "Couldn’t share just now — please try again.",
+        });
+      }
+    } catch (e) {
+      if ((e as Error)?.name === "AbortError") return; // user closed the share sheet
+      toast({
+        title: "Sharing hiccup 😅",
+        description: "Couldn’t share just now — please try again.",
+      });
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -295,7 +369,7 @@ export default function WishlistDrawer() {
                 >
                   <Heart className="h-10 w-10 fill-brand" aria-hidden />
                 </motion.div>
-                <h3 className="relative text-lg font-extrabold text-foreground">
+                <h3 className="relative font-handwriting text-2xl font-bold text-foreground">
                   No wishes yet
                 </h3>
                 <p className="relative max-w-64 text-sm text-stone-500">
@@ -336,6 +410,13 @@ export default function WishlistDrawer() {
                       {formatINR(subtotal)}
                     </span>
                   </div>
+                  <button
+                    onClick={shareWishlist}
+                    className="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-rose-200 py-3 text-sm font-extrabold text-brand transition hover:border-brand hover:bg-rose-50 dark:border-stone-700 dark:text-rose-300 dark:hover:border-rose-500/60 dark:hover:bg-stone-800"
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden />
+                    Share wishlist
+                  </button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
