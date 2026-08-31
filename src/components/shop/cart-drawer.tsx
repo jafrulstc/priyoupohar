@@ -43,6 +43,8 @@ import { formatINR } from "@/lib/format";
 import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import GiftMessageEditor from "@/components/shop/gift-message-editor";
+import CartCrossSell from "@/components/shop/cart-cross-sell";
 
 type CheckoutResult = {
   orderId: string;
@@ -55,6 +57,7 @@ type CheckoutResult = {
   freeShipping?: boolean;
   premiumWrap?: boolean;
   slot?: string;
+  giftMessage?: string | null;
 };
 
 const SLOTS = [
@@ -83,6 +86,8 @@ export default function CartDrawer() {
   const rewardCoupon = useShopStore((s) => s.rewardCoupon);
   const recordOrder = useShopStore((s) => s.recordOrder);
   const dismissReward = useShopStore((s) => s.dismissReward);
+  const giftMessage = useShopStore((s) => s.giftMessage);
+  const setGiftMessage = useShopStore((s) => s.setGiftMessage);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
@@ -180,6 +185,7 @@ export default function CartDrawer() {
           slot: deliverySlot,
           coupon: coupon ?? undefined,
           premiumWrap,
+          message: giftMessage.trim() || undefined,
         }),
       });
       if (!res.ok) throw new Error("checkout failed");
@@ -214,6 +220,7 @@ export default function CartDrawer() {
     setResult(null);
     setUnlocked(null);
     setPremiumWrap(false);
+    setGiftMessage("");
     setCoupon(null);
     setCouponInput("");
     setCouponError(null);
@@ -355,6 +362,25 @@ export default function CartDrawer() {
                         {result.premiumWrap ? "Premium velvet 🎀" : "Free classic 🎁"}
                       </span>
                     </div>
+                    {result.giftMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="rounded-xl border border-dashed border-rose-200 bg-cream/70 px-3 py-2 dark:border-stone-700 dark:bg-stone-900/70">
+                          <span className="text-[9px] font-extrabold uppercase tracking-wide text-stone-400">
+                            Your message card
+                          </span>
+                          <p
+                            className="mt-0.5 line-clamp-3 text-[11px] italic leading-snug text-charcoal dark:text-stone-200"
+                            style={{ fontFamily: "'Segoe Script', 'Bradley Hand', cursive" }}
+                          >
+                            “{result.giftMessage}”
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-stone-500">ETA</span>
                       <span className="font-bold text-mint">~{result.etaHours} hrs 🚀</span>
@@ -593,6 +619,12 @@ export default function CartDrawer() {
                     <Gift className="h-4 w-4 shrink-0" aria-hidden />
                     Every order ships with a free gift wrap & message card.
                   </div>
+
+                  {/* ---------- CROSS-SELL: COMPLETE THE MOMENT ---------- */}
+                  <CartCrossSell />
+
+                  {/* ---------- FREE MESSAGE CARD EDITOR ---------- */}
+                  <GiftMessageEditor />
 
                   {/* ---------- DELIVERY SLOT ---------- */}
                   <div className="rounded-2xl border border-rose-100 bg-card p-3.5 shadow-soft dark:border-stone-800">

@@ -125,6 +125,9 @@ type ShopState = {
   setPremiumWrap: (v: boolean) => void;
   deliverySlot: "standard" | "same-day" | "midnight";
   setDeliverySlot: (slot: ShopState["deliverySlot"]) => void;
+  /** Free handwritten message card — persisted so it survives drawer closes. */
+  giftMessage: string;
+  setGiftMessage: (msg: string) => void;
 };
 
 export const useShopStore = create<ShopState>()(
@@ -235,13 +238,16 @@ export const useShopStore = create<ShopState>()(
       setPremiumWrap: (v) => set({ premiumWrap: v }),
       deliverySlot: "same-day",
       setDeliverySlot: (slot) => set({ deliverySlot: slot }),
+      giftMessage: "",
+      setGiftMessage: (msg) => set({ giftMessage: msg.slice(0, 280) }),
     }),
     {
       name: "bloom-bliss-shop",
-      version: 5,
+      version: 6,
       // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
       // v4 adds order history + loyalty stamps + cart upsell prefs;
-      // v5 adds theme + lifetime ordersCount for tiered loyalty rewards.
+      // v5 adds theme + lifetime ordersCount for tiered loyalty rewards;
+      // v6 adds the free gift-message card (persisted draft).
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -258,6 +264,7 @@ export const useShopStore = create<ShopState>()(
           premiumWrap?: boolean;
           deliverySlot?: ShopState["deliverySlot"];
           theme?: Theme;
+          giftMessage?: string;
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -292,6 +299,7 @@ export const useShopStore = create<ShopState>()(
               ? s.deliverySlot
               : "same-day",
           theme: s.theme === "dark" ? "dark" : "light",
+          giftMessage: typeof s.giftMessage === "string" ? s.giftMessage.slice(0, 280) : "",
         };
       },
       partialize: (state) => ({
@@ -309,6 +317,7 @@ export const useShopStore = create<ShopState>()(
         premiumWrap: state.premiumWrap,
         deliverySlot: state.deliverySlot,
         theme: state.theme,
+        giftMessage: state.giftMessage,
       }),
     }
   )

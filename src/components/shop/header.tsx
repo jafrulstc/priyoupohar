@@ -134,7 +134,7 @@ export default function Header() {
             : "bg-background/80"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:px-8">
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -148,7 +148,7 @@ export default function Header() {
             >
               <Flower2 className="h-5 w-5" aria-hidden />
             </motion.span>
-            <span className="whitespace-nowrap text-base font-extrabold tracking-tight text-foreground sm:text-lg">
+            <span className="hidden whitespace-nowrap text-[15px] font-extrabold tracking-tight text-foreground min-[360px]:block sm:text-lg">
               Bloom <span className="text-gold">&amp;</span>{" "}
               <span className="text-brand dark:text-rose-400">Bliss</span>
             </span>
@@ -168,13 +168,13 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2 md:gap-3">
-            {/* Theme toggle */}
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:gap-3">
+            {/* Theme toggle — hidden on phones (mobile menu has a Dark mode row) */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={onToggleTheme}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-gold transition-all hover:border-gold/60 hover:shadow-glow dark:border-stone-700 dark:bg-stone-900 dark:text-amber-300"
+              className="hidden h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-gold transition-all hover:border-gold/60 hover:shadow-glow sm:grid dark:border-stone-700 dark:bg-stone-900 dark:text-amber-300"
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -211,7 +211,7 @@ export default function Header() {
             </motion.button>
             <button
               onClick={() => setSearchOpen(true)}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
               aria-label="Search gifts"
             >
               <Search className="h-4.5 w-4.5" aria-hidden />
@@ -238,7 +238,7 @@ export default function Header() {
             {/* Wishlist — compact icon on mobile */}
             <button
               onClick={() => setWishlistOpen(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
+              className="relative grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
               aria-label={`Open wishlist, ${wishCount} items`}
             >
               <Heart className="h-4.5 w-4.5" aria-hidden />
@@ -282,7 +282,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setCartOpen(true)}
-              className="relative grid h-11 w-11 place-items-center rounded-2xl bg-brand text-white shadow-lift transition-colors hover:bg-rose-700"
+              className="relative grid h-10 w-10 place-items-center rounded-2xl bg-brand text-white shadow-lift transition-colors hover:bg-rose-700 sm:h-11 sm:w-11"
               aria-label={`Open gift bag, ${count} items`}
             >
               <ShoppingBag className="h-5 w-5" aria-hidden />
@@ -314,7 +314,7 @@ export default function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground dark:border-stone-700 dark:bg-stone-900 xl:hidden"
+              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 xl:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
             >
