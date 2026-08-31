@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatINR, discountPct } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
 import PincodeChecker from "@/components/shop/pincode-checker";
+import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type QuickProduct = NonNullable<
@@ -272,6 +273,9 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           {product.description}
         </p>
 
+        {/* Pairs beautifully with — data-driven add-on rail */}
+        <PairsRail product={product} />
+
         {/* Delivery info */}
         <div className="mt-4 grid gap-1.5 rounded-2xl bg-cream p-3 text-xs font-semibold text-stone-600 dark:bg-stone-900 dark:text-stone-300">
           <span className="flex items-center gap-2">
@@ -358,6 +362,117 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           <Sparkles className="h-3 w-3 text-gold" aria-hidden />
           Personalise your gift message at the combo builder or checkout
         </p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- "Pairs beautifully with" — companion add-ons ---------- */
+
+function PairsRail({ product }: { product: QuickProduct }) {
+  const addToCart = useShopStore((s) => s.addToCart);
+  const { toast } = useToast();
+  const [pairsData, setPairsData] = useState<{ key: string; items: Product[] }>({
+    key: "",
+    items: [],
+  });
+  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
+
+  const pairSlugs = product.pairsWith?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+  const pairKey = pairSlugs.join(",");
+
+  /* derived: pairs only render when the cached data belongs to THIS product */
+  const pairs = pairKey && pairsData.key === pairKey ? pairsData.items : [];
+
+  useEffect(() => {
+    if (!pairKey) return;
+    const ctrl = new AbortController();
+    fetch(`/api/products?slugs=${encodeURIComponent(pairKey)}&limit=4`, {
+      signal: ctrl.signal,
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { products?: Product[] }) => {
+        setPairsData({ key: pairKey, items: data.products ?? [] });
+      })
+      .catch(() => {
+        /* bonus rail — stay silent on failure */
+      });
+    return () => ctrl.abort();
+  }, [pairKey]);
+
+  if (pairs.length === 0) return null;
+
+  return (
+    <div className="mt-3.5 rounded-2xl border border-dashed border-rose-200 bg-rose-50/40 p-3 dark:border-stone-700 dark:bg-stone-900/60">
+      <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-brand dark:text-rose-300">
+        <Heart className="h-3 w-3 fill-brand text-brand dark:fill-rose-400 dark:text-rose-400" aria-hidden />
+        Pairs beautifully with
+      </p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {pairs.map((p, i) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 * i, type: "spring", stiffness: 280, damping: 24 }}
+            className="group flex items-center gap-2 rounded-xl bg-card p-1.5 shadow-soft dark:bg-stone-800"
+          >
+            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg">
+              <img
+                src={p.image}
+                alt={p.name}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-1 text-[11px] font-bold leading-tight text-foreground">
+                {p.name}
+              </p>
+              <p className="text-[11px] font-extrabold text-brand dark:text-rose-400">
+                {formatINR(p.price)}
+              </p>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => {
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                miniConfetti({
+                  x: (rect.left + rect.width / 2) / window.innerWidth,
+                  y: rect.top / window.innerHeight,
+                });
+                addToCart({
+                  id: p.id,
+                  name: p.name,
+                  price: p.price,
+                  mrp: p.mrp,
+                  image: p.image,
+                  category: p.category,
+                });
+                setAddedIds((m) => ({ ...m, [p.id]: true }));
+                toast({
+                  title: `${p.name} added 🛍️`,
+                  description: "Perfect match — your gift just got better.",
+                });
+                window.setTimeout(
+                  () => setAddedIds((m) => ({ ...m, [p.id]: false })),
+                  1500
+                );
+              }}
+              aria-label={`Add ${p.name} to bag`}
+              className={cn(
+                "grid h-7 w-7 shrink-0 place-items-center rounded-full text-white shadow-lift transition-colors",
+                addedIds[p.id] ? "bg-mint" : "bg-brand hover:bg-rose-700"
+              )}
+            >
+              {addedIds[p.id] ? (
+                <Check className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+              )}
+            </motion.button>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

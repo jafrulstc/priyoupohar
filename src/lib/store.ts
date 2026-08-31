@@ -17,6 +17,7 @@ export type ProductSnapshot = {
   tag?: string | null;
   sameDay: boolean;
   description: string;
+  pairsWith?: string | null;
 };
 
 export type CartItem = {
@@ -27,6 +28,8 @@ export type CartItem = {
   image: string;
   category: string;
   qty: number;
+  /** Catalogue slug when the item came from a real product (hero adds etc.). */
+  slug?: string;
 };
 
 export type DeliveryLocation = {
@@ -58,11 +61,21 @@ export const loyaltyRewardFor = (completedCycles: number) =>
 
 export type Theme = "light" | "dark";
 
+/** Gift-card design — washi tape strip + wax seal colours (ids, styled in the editor). */
+export const WASHI_OPTIONS = ["rose", "gold", "mint", "lilac"] as const;
+export const SEAL_OPTIONS = ["rose", "gold", "charcoal"] as const;
+export type WashiId = (typeof WASHI_OPTIONS)[number];
+export type SealId = (typeof SEAL_OPTIONS)[number];
+export type CardDesign = { washi: WashiId; seal: SealId };
+export const DEFAULT_CARD_DESIGN: CardDesign = { washi: "rose", seal: "rose" };
+
 export type OrderRecord = {
   id: string;
   total: number;
   at: number;
   items: number;
+  /** Human delivery window chosen at checkout, e.g. "Today · 11 PM–1 AM". */
+  slot?: string;
 };
 
 type ShopState = {
@@ -144,6 +157,9 @@ type ShopState = {
   /** Free handwritten message card — persisted so it survives drawer closes. */
   giftMessage: string;
   setGiftMessage: (msg: string) => void;
+  /** Card designer — washi tape + wax seal colours for the message card. */
+  cardDesign: CardDesign;
+  setCardDesign: (d: Partial<CardDesign>) => void;
 };
 
 export const useShopStore = create<ShopState>()(
@@ -270,15 +286,19 @@ export const useShopStore = create<ShopState>()(
       setDeliverySlot: (slot) => set({ deliverySlot: slot }),
       giftMessage: "",
       setGiftMessage: (msg) => set({ giftMessage: msg.slice(0, 280) }),
+      cardDesign: DEFAULT_CARD_DESIGN,
+      setCardDesign: (d) =>
+        set((state) => ({ cardDesign: { ...state.cardDesign, ...d } })),
     }),
     {
       name: "bloom-bliss-shop",
-      version: 7,
+      version: 8,
       // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
       // v4 adds order history + loyalty stamps + cart upsell prefs;
       // v5 adds theme + lifetime ordersCount for tiered loyalty rewards;
       // v6 adds the free gift-message card (persisted draft);
-      // v7 adds the chosen delivery slot (availability engine).
+      // v7 adds the chosen delivery slot (availability engine);
+      // v8 adds the card designer (washi tape + wax seal colours).
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -297,6 +317,7 @@ export const useShopStore = create<ShopState>()(
           theme?: Theme;
           giftMessage?: string;
           chosenSlot?: DeliverySlot | null;
+          cardDesign?: Partial<CardDesign>;
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -339,6 +360,14 @@ export const useShopStore = create<ShopState>()(
             typeof (s.chosenSlot as DeliverySlot).dateISO === "string"
               ? (s.chosenSlot as DeliverySlot)
               : null,
+          cardDesign: {
+            washi: WASHI_OPTIONS.includes(s.cardDesign?.washi as WashiId)
+              ? (s.cardDesign!.washi as WashiId)
+              : DEFAULT_CARD_DESIGN.washi,
+            seal: SEAL_OPTIONS.includes(s.cardDesign?.seal as SealId)
+              ? (s.cardDesign!.seal as SealId)
+              : DEFAULT_CARD_DESIGN.seal,
+          },
         };
       },
       partialize: (state) => ({
@@ -358,6 +387,7 @@ export const useShopStore = create<ShopState>()(
         theme: state.theme,
         giftMessage: state.giftMessage,
         chosenSlot: state.chosenSlot,
+        cardDesign: state.cardDesign,
       }),
     }
   )

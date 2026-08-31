@@ -11,6 +11,7 @@ export type Product = {
   tag?: string | null;
   sameDay: boolean;
   description: string;
+  pairsWith?: string | null;
 };
 
 export const CATEGORIES = [

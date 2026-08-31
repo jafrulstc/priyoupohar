@@ -13,9 +13,10 @@ import {
   PartyPopper,
   Sun,
   Heart,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
-import { useShopStore } from "@/lib/store";
+import { useShopStore, type WashiId, type SealId } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 type Template = { id: string; label: string; icon: LucideIcon; text: string };
@@ -55,6 +56,19 @@ const TEMPLATES: Template[] = [
 
 const MAX_LEN = 280;
 
+/* ---------- card designer palettes (exported for the checkout success view) ---------- */
+export const WASHI_STYLES: Record<WashiId, { label: string; strip: string; dot: string }> = {
+  rose: { label: "Rose", strip: "from-rose-300 via-rose-200 to-rose-300", dot: "bg-rose-300" },
+  gold: { label: "Gold", strip: "from-amber-300 via-yellow-200 to-amber-300", dot: "bg-amber-300" },
+  mint: { label: "Mint", strip: "from-emerald-300 via-teal-100 to-emerald-300", dot: "bg-emerald-300" },
+  lilac: { label: "Lilac", strip: "from-purple-300 via-fuchsia-200 to-purple-300", dot: "bg-purple-300" },
+};
+export const SEAL_STYLES: Record<SealId, { label: string; cls: string; dot: string }> = {
+  rose: { label: "Rose", cls: "from-brand to-rose-700", dot: "bg-rose-500" },
+  gold: { label: "Gold", cls: "from-amber-400 to-amber-600", dot: "bg-amber-500" },
+  charcoal: { label: "Charcoal", cls: "from-stone-500 to-charcoal", dot: "bg-stone-600" },
+};
+
 /**
  * Free handwritten message card — collapsible editor with occasion templates,
  * a 280-char counter and a live paper preview. Stored in the shop store and
@@ -63,8 +77,13 @@ const MAX_LEN = 280;
 export default function GiftMessageEditor() {
   const giftMessage = useShopStore((s) => s.giftMessage);
   const setGiftMessage = useShopStore((s) => s.setGiftMessage);
+  const cardDesign = useShopStore((s) => s.cardDesign);
+  const setCardDesign = useShopStore((s) => s.setCardDesign);
   const [open, setOpen] = useState(false);
   const [activeTpl, setActiveTpl] = useState<string | null>(null);
+
+  const washi = WASHI_STYLES[cardDesign.washi];
+  const seal = SEAL_STYLES[cardDesign.seal];
 
   const remaining = MAX_LEN - giftMessage.length;
   const counterTone =
@@ -219,6 +238,75 @@ export default function GiftMessageEditor() {
                 </div>
               </div>
 
+              {/* Card designer — washi + wax seal */}
+              <div className="rounded-xl border border-stone-200/70 bg-cream/60 p-2.5 dark:border-stone-700 dark:bg-stone-900/60">
+                <p className="mb-1.5 flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
+                  <Palette className="h-3 w-3 text-brand" aria-hidden />
+                  Design your card
+                  <span className="ml-auto text-[9px] font-bold normal-case tracking-normal text-stone-400/80">
+                    free · changes live
+                  </span>
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 shrink-0 text-[10px] font-bold text-stone-500 dark:text-stone-400">
+                      Washi
+                    </span>
+                    <div className="flex gap-1.5" role="radiogroup" aria-label="Washi tape colour">
+                      {(Object.keys(WASHI_STYLES) as WashiId[]).map((id) => {
+                        const active = cardDesign.washi === id;
+                        return (
+                          <motion.button
+                            key={id}
+                            whileTap={{ scale: 0.85 }}
+                            onClick={() => setCardDesign({ washi: id })}
+                            role="radio"
+                            aria-checked={active}
+                            aria-label={`${WASHI_STYLES[id].label} washi tape`}
+                            className={cn(
+                              "grid h-7 w-7 place-items-center rounded-full transition",
+                              active
+                                ? "ring-2 ring-brand ring-offset-2 ring-offset-cream dark:ring-rose-400 dark:ring-offset-stone-900"
+                                : "ring-1 ring-stone-200 dark:ring-stone-700"
+                            )}
+                          >
+                            <span className={cn("h-4 w-4 rounded-full", WASHI_STYLES[id].dot)} />
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-16 shrink-0 text-[10px] font-bold text-stone-500 dark:text-stone-400">
+                      Wax seal
+                    </span>
+                    <div className="flex gap-1.5" role="radiogroup" aria-label="Wax seal colour">
+                      {(Object.keys(SEAL_STYLES) as SealId[]).map((id) => {
+                        const active = cardDesign.seal === id;
+                        return (
+                          <motion.button
+                            key={id}
+                            whileTap={{ scale: 0.85 }}
+                            onClick={() => setCardDesign({ seal: id })}
+                            role="radio"
+                            aria-checked={active}
+                            aria-label={`${SEAL_STYLES[id].label} wax seal`}
+                            className={cn(
+                              "grid h-7 w-7 place-items-center rounded-full transition",
+                              active
+                                ? "ring-2 ring-brand ring-offset-2 ring-offset-cream dark:ring-rose-400 dark:ring-offset-stone-900"
+                                : "ring-1 ring-stone-200 dark:ring-stone-700"
+                            )}
+                          >
+                            <span className={cn("h-4 w-4 rounded-full", SEAL_STYLES[id].dot)} />
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Live paper preview */}
               <AnimatePresence mode="wait" initial={false}>
                 {previewText ? (
@@ -235,8 +323,16 @@ export default function GiftMessageEditor() {
                       className="pointer-events-none absolute inset-1.5 rounded-lg border border-dashed border-rose-200 dark:border-stone-700"
                       aria-hidden
                     />
-                    <span
-                      className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-200 via-amber-200 to-rose-200 dark:via-stone-700"
+                    {/* washi tape strip — swaps with the chosen colour */}
+                    <motion.span
+                      key={`washi-${cardDesign.washi}`}
+                      initial={{ scaleX: 0.6, opacity: 0.4 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                      className={cn(
+                        "pointer-events-none absolute inset-x-0 top-0 h-1.5 origin-left bg-gradient-to-r",
+                        washi.strip
+                      )}
                       aria-hidden
                     />
                     <p
@@ -248,12 +344,16 @@ export default function GiftMessageEditor() {
                       <Flower2 className="h-2.5 w-2.5 text-brand" aria-hidden />
                       Bloom &amp; Bliss
                     </p>
-                    {/* wax seal */}
+                    {/* wax seal — chosen colour */}
                     <motion.span
+                      key={`seal-${cardDesign.seal}`}
                       initial={{ scale: 0, rotate: -30 }}
                       animate={{ scale: 1, rotate: -8 }}
                       transition={{ type: "spring", stiffness: 320, damping: 16, delay: 0.15 }}
-                      className="absolute -right-1.5 -top-1.5 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand to-rose-700 shadow-lift ring-2 ring-white dark:ring-stone-900"
+                      className={cn(
+                        "absolute -right-1.5 -top-1.5 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br shadow-lift ring-2 ring-white dark:ring-stone-900",
+                        seal.cls
+                      )}
                       aria-hidden
                     >
                       <Flower2 className="h-3.5 w-3.5 text-white" />

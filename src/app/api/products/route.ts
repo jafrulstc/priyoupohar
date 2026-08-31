@@ -8,9 +8,17 @@ export async function GET(req: NextRequest) {
     const limit = Number(searchParams.get("limit") ?? 40);
     const query = searchParams.get("q");
     const slug = searchParams.get("slug");
+    const slugs = searchParams.get("slugs");
 
     const where: Record<string, unknown> = {};
     if (slug) where.slug = slug;
+    if (slugs) {
+      const list = slugs
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (list.length > 0) where.slug = { in: list };
+    }
     if (category && category !== "all") where.category = category;
     if (query) {
       where.OR = [

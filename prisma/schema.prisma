@@ -20,6 +20,8 @@ model Product {
   tag         String? // Bestseller | New | Premium ...
   sameDay     Boolean  @default(true)
   description String
+  /** Comma-separated slugs of products that pair well as add-ons. */
+  pairsWith   String?
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 

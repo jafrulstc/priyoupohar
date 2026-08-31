@@ -17,6 +17,7 @@ import {
   Loader2,
   Radar,
   History,
+  CalendarClock,
 } from "lucide-react";
 import { useShopStore } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
@@ -99,6 +100,12 @@ export default function OrderTrackModal() {
   };
 
   const done = phase === STEPS.length - 1;
+
+  /* real checkout context: the tracked order's chosen delivery window */
+  const trackedRecord = mounted
+    ? orderHistory.find((o) => o.id === orderId.trim().toUpperCase())
+    : undefined;
+  const slotLabel = trackedRecord?.slot;
 
   return (
     <Dialog
@@ -252,6 +259,19 @@ export default function OrderTrackModal() {
                 </span>
               </div>
 
+              {/* chosen delivery window — real data from checkout */}
+              {slotLabel && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-gold/70 bg-gold-soft/60 px-3 py-2 text-[11px] font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
+                >
+                  <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  Delivery window · <b className="font-extrabold">{slotLabel}</b>
+                </motion.div>
+              )}
+
               {/* timeline */}
               <ol className="relative mt-5 space-y-5 pl-1">
                 {/* track line */}
@@ -329,7 +349,11 @@ export default function OrderTrackModal() {
                             />
                           )}
                         </p>
-                        <p className="text-xs text-stone-400">{step.hint}</p>
+                        <p className="text-xs text-stone-400">
+                          {i === 2 && slotLabel
+                            ? `Arriving ${slotLabel} 🛵`
+                            : step.hint}
+                        </p>
                       </div>
                     </motion.li>
                   );

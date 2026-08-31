@@ -40,7 +40,7 @@ import { formatINR } from "@/lib/format";
 import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import GiftMessageEditor from "@/components/shop/gift-message-editor";
+import GiftMessageEditor, { WASHI_STYLES, SEAL_STYLES } from "@/components/shop/gift-message-editor";
 import CartCrossSell from "@/components/shop/cart-cross-sell";
 import DeliverySlotPicker from "@/components/shop/delivery-slot-picker";
 
@@ -57,6 +57,7 @@ type CheckoutResult = {
   slot?: string;
   slotDetail?: { label: string; dateISO: string } | null;
   giftMessage?: string | null;
+  cardDesign?: { washi: string; seal: string } | null;
 };
 
 export default function CartDrawer() {
@@ -81,6 +82,7 @@ export default function CartDrawer() {
   const dismissReward = useShopStore((s) => s.dismissReward);
   const giftMessage = useShopStore((s) => s.giftMessage);
   const setGiftMessage = useShopStore((s) => s.setGiftMessage);
+  const cardDesign = useShopStore((s) => s.cardDesign);
   const chosenSlot = useShopStore((s) => s.chosenSlot);
   const setChosenSlot = useShopStore((s) => s.setChosenSlot);
   const { toast } = useToast();
@@ -187,6 +189,10 @@ export default function CartDrawer() {
           coupon: coupon ?? undefined,
           premiumWrap,
           message: giftMessage.trim() || undefined,
+          cardDesign:
+            giftMessage.trim()
+              ? { washi: cardDesign.washi, seal: cardDesign.seal }
+              : undefined,
         }),
       });
       if (!res.ok) throw new Error("checkout failed");
@@ -199,6 +205,9 @@ export default function CartDrawer() {
         total: data.total,
         at: Date.now(),
         items: count,
+        slot: chosenSlot
+          ? `${chosenSlot.dayLabel} · ${chosenSlot.window}`
+          : undefined,
       });
       if (unlockedCode) {
         setUnlocked(unlockedCode);
@@ -372,8 +381,23 @@ export default function CartDrawer() {
                         animate={{ opacity: 1, height: "auto" }}
                         className="overflow-hidden"
                       >
-                        <div className="rounded-xl border border-dashed border-rose-200 bg-cream/70 px-3 py-2 dark:border-stone-700 dark:bg-stone-900/70">
-                          <span className="text-[9px] font-extrabold uppercase tracking-wide text-stone-400">
+                        <div className="relative overflow-hidden rounded-xl border border-dashed border-rose-200 bg-cream/70 px-3 py-2 dark:border-stone-700 dark:bg-stone-900/70">
+                          {/* chosen washi tape strip */}
+                          <span
+                            className={cn(
+                              "absolute inset-x-0 top-0 h-1 bg-gradient-to-r",
+                              WASHI_STYLES[(result.cardDesign?.washi ?? "rose") as keyof typeof WASHI_STYLES]?.strip ?? WASHI_STYLES.rose.strip
+                            )}
+                            aria-hidden
+                          />
+                          <span className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-wide text-stone-400">
+                            <span
+                              className={cn(
+                                "inline-block h-2 w-2 rounded-full bg-gradient-to-br",
+                                SEAL_STYLES[(result.cardDesign?.seal ?? "rose") as keyof typeof SEAL_STYLES]?.cls ?? SEAL_STYLES.rose.cls
+                              )}
+                              aria-hidden
+                            />
                             Your message card
                           </span>
                           <p

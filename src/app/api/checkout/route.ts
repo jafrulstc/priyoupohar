@@ -29,6 +29,13 @@ const checkoutSchema = z.object({
   coupon: z.string().max(24).optional(),
   /** Optional ₹49 premium velvet wrap — basic wrap + message card are always free. */
   premiumWrap: z.boolean().default(false),
+  /** Card designer choices — only meaningful when a message is present. */
+  cardDesign: z
+    .object({
+      washi: z.enum(["rose", "gold", "mint", "lilac"]),
+      seal: z.enum(["rose", "gold", "charcoal"]),
+    })
+    .optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -42,7 +49,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { items, location, slot, slotDetail, message, coupon, premiumWrap } = parsed.data;
+    const { items, location, slot, slotDetail, message, coupon, premiumWrap, cardDesign } =
+      parsed.data;
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
     const matched = resolveCoupon(coupon);
     const couponCode = matched?.code ?? null;
@@ -71,6 +79,7 @@ export async function POST(req: NextRequest) {
       slotDetail: slotDetail ?? null,
       deliveryTo: location.city,
       giftMessage: message ?? null,
+      cardDesign: cardDesign ?? null,
       estimatedDelivery: new Date(Date.now() + etaHours * 3600_000).toISOString(),
     });
   } catch (error) {

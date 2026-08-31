@@ -9,12 +9,13 @@ import { miniConfetti } from "@/lib/confetti";
 import { useMounted } from "@/hooks/use-mounted";
 import { cn } from "@/lib/utils";
 
-/** Slugs that pair well as add-ons (chocolates, mug, teddy, succulents…). */
+/** Fallback add-ons when nothing in the bag declares a pairing. */
 const ADDON_SLUGS = ["chocolate-box", "photo-mug", "cuddle-teddy", "succulent-garden"];
 
 /**
  * "Complete the moment" — up to 3 curated add-ons that are NOT already in the
  * bag, with one-tap quick add. Rendered inside the cart drawer items area.
+ * Ranking is data-driven: slugs listed in the bag items' `pairsWith` always win.
  */
 export default function CartCrossSell() {
   const mounted = useMounted();
@@ -46,12 +47,32 @@ export default function CartCrossSell() {
     if (!mounted || products.length === 0) return [];
     const cartCats = new Set(cart.map((c) => c.category));
     const available = products.filter((p) => !inCart.has(p.id));
-    // rank: curated add-on slugs first, then complementary categories, then price
+
+    /* union of pairings declared by everything already in the bag,
+       in declaration order (first item's pairs rank highest).
+       Items may carry a slug (hero adds) — fall back to slug lookup. */
+    const productById = new Map(products.map((p) => [p.id, p]));
+    const productBySlug = new Map(products.map((p) => [p.slug, p]));
+    const pairedSlugs: string[] = [];
+    cart.forEach((c) => {
+      const src = productById.get(c.id) ?? productBySlug.get(c.slug ?? "");
+      src?.pairsWith
+        ?.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .forEach((slug) => {
+          if (!pairedSlugs.includes(slug)) pairedSlugs.push(slug);
+        });
+    });
+
+    // rank: bag items' declared pairs → curated add-on slugs → complementary categories → price
     const score = (p: ProductSnapshot) => {
+      const pairIdx = pairedSlugs.indexOf(p.slug);
+      if (pairIdx >= 0) return pairIdx; // declared pairing order
       const slugIdx = ADDON_SLUGS.indexOf(p.slug);
-      if (slugIdx >= 0) return slugIdx; // curated order
+      if (slugIdx >= 0) return 100 + slugIdx; // curated order
       const complement = cartCats.size > 0 && !cartCats.has(p.category) ? 0 : 1;
-      return 100 + complement * 10 + p.price / 1000;
+      return 200 + complement * 10 + p.price / 1000;
     };
     return [...available].sort((a, b) => score(a) - score(b)).slice(0, 3);
   }, [mounted, products, cart, inCart]);

@@ -14,6 +14,7 @@ type SeedProduct = {
   tag?: string;
   sameDay: boolean;
   description: string;
+  pairsWith?: string;
 };
 
 const PRODUCTS: SeedProduct[] = [
@@ -30,6 +31,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Bestseller",
     sameDay: true,
     description: "20 hand-tied velvety red roses wrapped in premium craft paper with a satin ribbon.",
+    pairsWith: "chocolate-box,cuddle-teddy",
   },
   {
     name: "Sunshine Gerbera Bunch",
@@ -42,6 +44,7 @@ const PRODUCTS: SeedProduct[] = [
     reviews: 1205,
     sameDay: true,
     description: "10 radiant mixed gerberas that turn any ordinary day into a festival of colours.",
+    pairsWith: "photo-mug,chocolate-box",
   },
   {
     name: "Blushing Pink Lilies",
@@ -55,6 +58,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "New",
     sameDay: true,
     description: "Fragrant Asiatic pink lilies arranged with lush greens in a chic wrap.",
+    pairsWith: "cuddle-teddy,chocolate-box",
   },
   {
     name: "Royal Orchid Vase Arrangement",
@@ -68,6 +72,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Premium",
     sameDay: false,
     description: "Elegant white phalaenopsis orchids in a glass vase — luxury that lasts.",
+    pairsWith: "chocolate-box,jade-plant-duo",
   },
 
   // ---------- CAKES ----------
@@ -83,6 +88,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Bestseller",
     sameDay: true,
     description: "Half-kg Belgian chocolate truffle crowned with glossy ganache & cherries.",
+    pairsWith: "eternal-red-roses,cuddle-teddy",
   },
   {
     name: "Black Forest Classic",
@@ -95,6 +101,7 @@ const PRODUCTS: SeedProduct[] = [
     reviews: 2210,
     sameDay: true,
     description: "Timeless layers of chocolate sponge, whipped cream, cherries & shavings.",
+    pairsWith: "sunshine-gerbera,photo-mug",
   },
   {
     name: "Red Velvet Bliss Cake",
@@ -108,6 +115,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "New",
     sameDay: true,
     description: "Velvety crimson sponge with silky cream-cheese frosting — pure romance.",
+    pairsWith: "eternal-red-roses,chocolate-box",
   },
 
   // ---------- PERSONALISED ----------
@@ -122,6 +130,7 @@ const PRODUCTS: SeedProduct[] = [
     reviews: 986,
     sameDay: true,
     description: "Relive favourite moments every morning — print any photo on a glossy ceramic mug.",
+    pairsWith: "succulent-garden,chocolate-box",
   },
   {
     name: "Heartfelt Chocolates Box",
@@ -135,6 +144,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Bestseller",
     sameDay: true,
     description: "12 hand-rolled truffles & pralines nestled in a keepsake gold-embossed box.",
+    pairsWith: "eternal-red-roses,red-velvet-cake",
   },
   {
     name: "Cuddle Buddy Teddy — 2ft",
@@ -148,6 +158,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Bestseller",
     sameDay: true,
     description: "Cloud-soft huggable teddy in a blushing scarf — hugs included, free forever.",
+    pairsWith: "eternal-red-roses,black-forest-cake",
   },
 
   // ---------- PLANTS ----------
@@ -163,6 +174,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "New",
     sameDay: false,
     description: "Twin jade plants in pastel ceramic pots — prosperity, delivered to the doorstep.",
+    pairsWith: "photo-mug,chocolate-box",
   },
   {
     name: "Serene Succulent Garden",
@@ -175,6 +187,7 @@ const PRODUCTS: SeedProduct[] = [
     reviews: 368,
     sameDay: false,
     description: "A tabletop garden of five easy-love succulents for the plant parent in your life.",
+    pairsWith: "photo-mug,chocolate-box",
   },
 
   // ---------- COMBOS ----------
@@ -190,6 +203,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Bestseller",
     sameDay: true,
     description: "10 red roses with a half-kg choco truffle cake — the classic 'you're special' move.",
+    pairsWith: "cuddle-teddy,photo-mug",
   },
   {
     name: "Grand Celebration Hamper",
@@ -203,6 +217,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "Premium",
     sameDay: true,
     description: "Roses, red velvet cake, chocolates & a 2ft teddy in one show-stopping hamper.",
+    pairsWith: "photo-mug",
   },
   {
     name: "Teddy & Lilies Duo",
@@ -215,6 +230,7 @@ const PRODUCTS: SeedProduct[] = [
     reviews: 615,
     sameDay: true,
     description: "Blushing lilies with a plush teddy — soft, sweet & absolutely adorable.",
+    pairsWith: "chocolate-box,photo-mug",
   },
   {
     name: "Midnight Surprise Box",
@@ -228,6 +244,7 @@ const PRODUCTS: SeedProduct[] = [
     tag: "New",
     sameDay: true,
     description: "Cake, roses, ferrero & fairy lights — delivered right when the clock strikes 12.",
+    pairsWith: "cuddle-teddy,photo-mug",
   },
 ];
 

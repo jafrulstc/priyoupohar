@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useShopStore } from "@/lib/store";
+import type { Product } from "@/lib/types";
 import { miniConfetti, petalConfetti } from "@/lib/confetti";
 import { formatINR } from "@/lib/format";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 const SHOWCASE = [
   {
     tab: "Flowers 🌸",
+    slug: "eternal-red-roses",
     name: "Eternal Red Roses",
     price: 549,
     mrp: 899,
@@ -35,6 +37,7 @@ const SHOWCASE = [
   },
   {
     tab: "Cakes 🍰",
+    slug: "choco-truffle-cake",
     name: "Choco Truffle Dream",
     price: 599,
     mrp: 899,
@@ -45,6 +48,7 @@ const SHOWCASE = [
   },
   {
     tab: "Gifts 🎁",
+    slug: "photo-mug",
     name: "Photo Memory Mug",
     price: 399,
     mrp: 599,
@@ -131,6 +135,30 @@ export default function Hero() {
     return () => clearInterval(t);
   }, [paused]);
 
+  /* Resolve showcase items to REAL catalogue products so hero adds merge
+     with grid adds of the same gift (same cart id) and carry pairsWith. */
+  const [realBySlug, setRealBySlug] = useState<Record<string, Product>>({});
+  useEffect(() => {
+    const slugs = SHOWCASE.map((s) => s.slug).join(",");
+    let alive = true;
+    fetch(`/api/products?slugs=${encodeURIComponent(slugs)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { products?: Product[] }) => {
+        if (!alive) return;
+        const map: Record<string, Product> = {};
+        (data.products ?? []).forEach((p) => {
+          map[p.slug] = p;
+        });
+        setRealBySlug(map);
+      })
+      .catch(() => {
+        /* fall back to showcase snapshot ids */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const product = SHOWCASE[tab];
 
   const checkDelivery = () => {
@@ -156,13 +184,15 @@ export default function Hero() {
           }
         : undefined
     );
+    const real = realBySlug[product.slug];
     addToCart({
-      id: `showcase-${product.name.toLowerCase().replace(/\s+/g, "-")}`,
-      name: product.name,
-      price: product.price,
-      mrp: product.mrp,
-      image: product.image,
-      category: TAB_CATEGORY[tab],
+      id: real?.id ?? `showcase-${product.slug}`,
+      name: real?.name ?? product.name,
+      price: real?.price ?? product.price,
+      mrp: real?.mrp ?? product.mrp,
+      image: real?.image ?? product.image,
+      category: TAB_CATEGORY[SHOWCASE.indexOf(product)],
+      slug: product.slug,
     });
     toast({ title: "Added to your gift bag! 🛍️", description: product.name });
   };
