@@ -18,6 +18,7 @@ const checkoutSchema = z.object({
   }),
   slot: z.enum(["same-day", "midnight", "standard", "fixed"]).default("same-day"),
   message: z.string().max(280).optional(),
+  coupon: z.string().max(24).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,11 +32,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { items, location, slot, message } = parsed.data;
+    const { items, location, slot, message, coupon } = parsed.data;
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
     const deliveryFee = subtotal >= 999 ? 0 : 99;
     const giftWrap = 49;
-    const total = subtotal + deliveryFee + giftWrap;
+    const couponCode = (coupon ?? "").toUpperCase() === "BLISS10" ? "BLISS10" : null;
+    const discount = couponCode ? Math.round(subtotal * 0.1) : 0;
+    const total = subtotal + deliveryFee + giftWrap - discount;
     const orderId = `BB${Date.now().toString(36).toUpperCase()}`;
 
     // Simulated payment + ETA logic
@@ -47,6 +50,8 @@ export async function POST(req: NextRequest) {
       subtotal,
       deliveryFee,
       giftWrap,
+      coupon: couponCode,
+      discount,
       total,
       etaHours,
       slot,

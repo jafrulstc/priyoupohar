@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -67,13 +67,21 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
   const addToCart = useShopStore((s) => s.addToCart);
   const wishlist = useShopStore((s) => s.wishlist);
   const toggleWishlist = useShopStore((s) => s.toggleWishlist);
+  const pushRecentlyViewed = useShopStore((s) => s.pushRecentlyViewed);
   const { toast } = useToast();
   const mounted = useMounted();
 
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const wishlisted = mounted ? wishlist.includes(product.id) : false;
+  const wishlisted = mounted
+    ? wishlist.some((w) => w.id === product.id)
+    : false;
+
+  /* Remember this product in the recently-viewed rail (zustand set, not React state) */
+  useEffect(() => {
+    pushRecentlyViewed(product);
+  }, [product, pushRecentlyViewed]);
 
   const add = (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -126,7 +134,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           </motion.span>
         )}
         <button
-          onClick={() => toggleWishlist(product.id)}
+          onClick={() => toggleWishlist(product)}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 shadow-soft transition hover:scale-110 active:scale-90"
         >

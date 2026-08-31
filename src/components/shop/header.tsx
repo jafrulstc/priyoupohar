@@ -38,6 +38,7 @@ export default function Header() {
   const setSearchOpen = useShopStore((s) => s.setSearchOpen);
   const location = useShopStore((s) => s.location);
   const wishlist = useShopStore((s) => s.wishlist);
+  const setWishlistOpen = useShopStore((s) => s.setWishlistOpen);
 
   const { scrollYProgress } = useScroll();
   const progressBar = useSpring(scrollYProgress, { stiffness: 140, damping: 28 });
@@ -193,11 +194,33 @@ export default function Header() {
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-stone-400" aria-hidden />
             </button>
 
-            {/* Wishlist */}
+            {/* Wishlist — compact icon on mobile */}
             <button
-              onClick={() => scrollTo("#bestsellers")}
+              onClick={() => setWishlistOpen(true)}
+              className="relative grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:hidden"
+              aria-label={`Open wishlist, ${wishCount} items`}
+            >
+              <Heart className="h-4.5 w-4.5" aria-hidden />
+              {wishCount > 0 && (
+                <motion.span
+                  key={`m-${wishCount}`}
+                  initial={{ scale: 0.4 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                  className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-0.5 text-[9px] font-extrabold text-white"
+                >
+                  {wishCount}
+                </motion.span>
+              )}
+            </button>
+
+            {/* Wishlist — desktop */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => setWishlistOpen(true)}
               className="relative hidden h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:grid"
-              aria-label={`Wishlist, ${wishCount} items`}
+              aria-label={`Open wishlist, ${wishCount} items`}
             >
               <Heart className="h-4.5 w-4.5" aria-hidden />
               {wishCount > 0 && (
@@ -211,7 +234,7 @@ export default function Header() {
                   {wishCount}
                 </motion.span>
               )}
-            </button>
+            </motion.button>
 
             {/* Cart */}
             <motion.button

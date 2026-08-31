@@ -1,9 +1,12 @@
 "use client";
 
-import { type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import OccasionDialog, {
+  type OccasionSelection,
+} from "@/components/shop/occasion-dialog";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 24 } as const;
 const SPRING_OPTS = { stiffness: 300, damping: 24 };
@@ -37,7 +40,7 @@ function OccasionTile({
 }: {
   occasion: Occasion;
   index: number;
-  onSelect: (label: string) => void;
+  onSelect: (occasion: Occasion) => void;
 }) {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -74,7 +77,7 @@ function OccasionTile({
           type="button"
           onMouseMove={handleMove}
           onMouseLeave={resetMagnet}
-          onClick={() => onSelect(occasion.label)}
+          onClick={() => onSelect(occasion)}
           aria-label={`Shop ${occasion.label} gifts`}
           className="group relative block aspect-[4/5] w-full cursor-pointer overflow-hidden rounded-[calc(1.5rem-2px)] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand md:aspect-square"
         >
@@ -114,7 +117,7 @@ function OccasionTile({
               style={{ x: springX, y: springY }}
               onClick={(e) => {
                 e.stopPropagation();
-                onSelect(occasion.label);
+                onSelect(occasion);
               }}
               className="shadow-lift mt-2 inline-flex cursor-pointer items-center whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold text-charcoal md:text-xs"
             >
@@ -129,11 +132,17 @@ function OccasionTile({
 
 export default function OccasionGrid() {
   const { toast } = useToast();
+  const [selection, setSelection] = useState<OccasionSelection | null>(null);
 
-  const handleSelect = (label: string) => {
+  const handleSelect = (occasion: Occasion) => {
+    setSelection({
+      label: occasion.label,
+      emoji: occasion.emoji,
+      midnight: occasion.midnight,
+    });
     toast({
-      title: `${label} collection 🎁`,
-      description: "Curating the happiest picks for you…",
+      title: `${occasion.label} collection ${occasion.emoji}`,
+      description: "Hand-curated picks, one tap away.",
     });
   };
 
@@ -164,6 +173,12 @@ export default function OccasionGrid() {
           ))}
         </div>
       </div>
+
+      {/* Curated picks dialog */}
+      <OccasionDialog
+        selection={selection}
+        onClose={() => setSelection(null)}
+      />
     </section>
   );
 }

@@ -15,6 +15,9 @@ import MobileNav from "@/components/shop/mobile-nav";
 import SearchOverlay from "@/components/shop/search-overlay";
 import ProductQuickView from "@/components/shop/product-quick-view";
 import BackToTop from "@/components/shop/back-to-top";
+import WishlistDrawer from "@/components/shop/wishlist-drawer";
+import OrderTrackModal from "@/components/shop/order-track-modal";
+import RecentlyViewed from "@/components/shop/recently-viewed";
 
 export default function Home() {
   return (
@@ -29,15 +32,18 @@ export default function Home() {
         <OccasionGrid />
         <StatsBar />
         <Testimonials />
+        <RecentlyViewed />
         <Newsletter />
       </main>
       <Footer />
 
       {/* Overlays */}
       <CartDrawer />
+      <WishlistDrawer />
       <LocationModal />
       <SearchOverlay />
       <ProductQuickView />
+      <OrderTrackModal />
       <BackToTop />
       <MobileNav />
     </div>

@@ -14,6 +14,9 @@ import {
   PartyPopper,
   Loader2,
   ArrowRight,
+  TicketPercent,
+  BadgeCheck,
+  Radar,
 } from "lucide-react";
 import { Lottie } from "lottie-react";
 import celebrationAnim from "@/lib/lottie/celebration.json";
@@ -24,12 +27,16 @@ import { celebrationConfetti, petalConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+const COUPON_CODE = "BLISS10";
+
 type CheckoutResult = {
   orderId: string;
   total: number;
   etaHours: number;
   deliveryTo: string;
   estimatedDelivery: string;
+  coupon: string | null;
+  discount: number;
 };
 
 export default function CartDrawer() {
@@ -41,11 +48,16 @@ export default function CartDrawer() {
   const clearCart = useShopStore((s) => s.clearCart);
   const location = useShopStore((s) => s.location);
   const setLocationOpen = useShopStore((s) => s.setLocationOpen);
+  const setLastOrderId = useShopStore((s) => s.setLastOrderId);
+  const setTrackOpen = useShopStore((s) => s.setTrackOpen);
   const { toast } = useToast();
 
   const mounted = useMounted();
   const [checkingOut, setCheckingOut] = useState(false);
   const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   // Free-shipping crossing tracker
   const prevPct = useRef(0);
@@ -67,6 +79,22 @@ export default function CartDrawer() {
   const count = mounted ? cartCount(cart) : 0;
   const pct = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
   const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const discount = coupon ? Math.round(subtotal * 0.1) : 0;
+  const grandTotal = subtotal - discount + (pct >= 100 ? 0 : 99) + 49;
+
+  const applyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (code === COUPON_CODE) {
+      setCoupon(COUPON_CODE);
+      setCouponError(null);
+      toast({
+        title: "BLISS10 applied! 🎊",
+        description: "10% off your gifts — nicely spotted.",
+      });
+    } else {
+      setCouponError("That code didn’t work — try BLISS10");
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -100,11 +128,13 @@ export default function CartDrawer() {
           items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
           location: { city: location.city, pincode: location.pincode },
           slot: "same-day",
+          coupon: coupon ?? undefined,
         }),
       });
       if (!res.ok) throw new Error("checkout failed");
       const data = await res.json();
       setResult(data);
+      setLastOrderId(data.orderId);
       celebrationConfetti();
     } catch {
       toast({ title: "Checkout hiccup 😢", description: "Please try again in a moment." });
@@ -116,6 +146,9 @@ export default function CartDrawer() {
   const finish = () => {
     clearCart();
     setResult(null);
+    setCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
     setOpen(false);
   };
 
@@ -186,6 +219,15 @@ export default function CartDrawer() {
                       <span className="text-stone-500">Paid</span>
                       <span className="font-extrabold text-charcoal">{formatINR(result.total)}</span>
                     </div>
+                    {result.coupon && result.discount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1 text-mint">
+                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                          {result.coupon} saved
+                        </span>
+                        <span className="font-bold text-mint">−{formatINR(result.discount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-stone-500">Delivering to</span>
                       <span className="font-bold text-charcoal">{result.deliveryTo}</span>
@@ -195,12 +237,26 @@ export default function CartDrawer() {
                       <span className="font-bold text-mint">~{result.etaHours} hrs 🚀</span>
                     </div>
                   </div>
-                  <button
-                    onClick={finish}
-                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-brand px-6 py-3 text-sm font-bold text-white shadow-lift transition hover:opacity-90"
-                  >
-                    Start a new celebration <ArrowRight className="h-4 w-4" aria-hidden />
-                  </button>
+                  <div className="mt-5 flex w-full gap-2">
+                    <button
+                      onClick={finish}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-brand px-5 py-3 text-sm font-bold text-white shadow-lift transition hover:opacity-90"
+                    >
+                      Keep shopping <ArrowRight className="h-4 w-4" aria-hidden />
+                    </button>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => {
+                        setOpen(false);
+                        setTrackOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-1.5 rounded-full border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-charcoal transition hover:border-brand hover:text-brand"
+                    >
+                      <Radar className="h-4 w-4 text-brand" aria-hidden />
+                      Track
+                    </motion.button>
+                  </div>
                 </motion.div>
               </div>
             ) : cart.length === 0 ? (
@@ -333,10 +389,112 @@ export default function CartDrawer() {
 
                 {/* ---------- FOOTER ---------- */}
                 <div className="border-t border-rose-100 bg-white px-5 py-4">
+                  {/* Coupon */}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {coupon ? (
+                      <motion.div
+                        key="coupon-applied"
+                        initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 24 }}
+                        className="mb-3 flex items-center justify-between rounded-2xl border border-dashed border-mint/60 bg-mint/10 px-3.5 py-2.5"
+                      >
+                        <span className="flex items-center gap-2 text-xs font-extrabold text-mint">
+                          <BadgeCheck className="h-4 w-4" aria-hidden />
+                          {coupon} · 10% off applied
+                        </span>
+                        <button
+                          onClick={() => {
+                            setCoupon(null);
+                            setCouponInput("");
+                          }}
+                          className="text-[11px] font-bold text-stone-400 underline-offset-2 transition hover:text-brand hover:underline"
+                          aria-label="Remove coupon"
+                        >
+                          Remove
+                        </button>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="coupon-input"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="mb-3"
+                      >
+                        <div className="flex gap-2">
+                          <div className="relative min-w-0 flex-1">
+                            <TicketPercent
+                              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold"
+                              aria-hidden
+                            />
+                            <input
+                              value={couponInput}
+                              onChange={(e) => {
+                                setCouponInput(e.target.value);
+                                setCouponError(null);
+                              }}
+                              onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                              placeholder="Coupon code"
+                              aria-label="Coupon code"
+                              aria-invalid={!!couponError}
+                              className={cn(
+                                "h-10 w-full rounded-2xl border bg-cream pl-9 pr-3 text-xs font-bold uppercase tracking-wide text-charcoal placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-stone-300 focus:outline-none focus:ring-2",
+                                couponError
+                                  ? "border-rose-400 focus:ring-rose-200"
+                                  : "border-stone-200 focus:border-rose-300 focus:ring-rose-200"
+                              )}
+                            />
+                          </div>
+                          <motion.button
+                            whileTap={{ scale: 0.94 }}
+                            onClick={applyCoupon}
+                            disabled={!couponInput.trim()}
+                            className="h-10 shrink-0 rounded-2xl bg-charcoal px-4 text-xs font-extrabold text-cream transition hover:bg-stone-700 disabled:opacity-40"
+                          >
+                            Apply
+                          </motion.button>
+                        </div>
+                        {couponError ? (
+                          <motion.p
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="mt-1.5 text-[11px] font-bold text-brand"
+                            role="alert"
+                          >
+                            {couponError}
+                          </motion.p>
+                        ) : (
+                          <p className="mt-1.5 text-[11px] text-stone-400">
+                            Psst… try{" "}
+                            <button
+                              onClick={() => setCouponInput(COUPON_CODE)}
+                              className="font-extrabold text-gold underline decoration-dashed underline-offset-2 hover:text-amber-600"
+                            >
+                              BLISS10
+                            </button>{" "}
+                            for 10% off
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div className="mb-1 flex justify-between text-sm">
                     <span className="text-stone-500">Subtotal</span>
                     <span className="font-extrabold text-charcoal">{formatINR(subtotal)}</span>
                   </div>
+                  {discount > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mb-1 flex justify-between text-sm"
+                    >
+                      <span className="text-mint">Coupon {coupon}</span>
+                      <span className="font-bold text-mint">−{formatINR(discount)}</span>
+                    </motion.div>
+                  )}
                   <div className="mb-3 flex justify-between text-sm">
                     <span className="text-stone-500">Delivery</span>
                     <span className={cn("font-bold", pct >= 100 ? "text-mint" : "text-charcoal")}>
@@ -358,7 +516,12 @@ export default function CartDrawer() {
                     ) : (
                       <>
                         <Lock className="h-4 w-4" aria-hidden />
-                        Checkout · {formatINR(subtotal + (pct >= 100 ? 0 : 99) + 49)}
+                        Checkout · {formatINR(grandTotal)}
+                        {discount > 0 && (
+                          <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]">
+                            saved {formatINR(discount)}
+                          </span>
+                        )}
                       </>
                     )}
                   </motion.button>

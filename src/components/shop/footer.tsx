@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, type Transition } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useShopStore } from "@/lib/store";
 
 const SPRING: Transition = { type: "spring", stiffness: 300, damping: 24 };
 
@@ -54,6 +55,7 @@ const linkClass =
 /** Site footer: brand, link columns, payments — reveals on scroll. */
 export default function Footer() {
   const { toast } = useToast();
+  const setTrackOpen = useShopStore((s) => s.setTrackOpen);
 
   const reveal = (delay: number) => ({
     initial: { opacity: 0, y: 24 },
@@ -62,11 +64,16 @@ export default function Footer() {
     transition: { ...SPRING, delay },
   });
 
-  const helpClick = (label: string) =>
+  const helpClick = (label: string) => {
+    if (label === "Track Order") {
+      setTrackOpen(true);
+      return;
+    }
     toast({
       title: "We're a demo shop — but real helpful! 💝",
       description: `${label} would open right here in the full store.`,
     });
+  };
 
   return (
     <footer className="mt-auto bg-charcoal text-stone-300">

@@ -486,6 +486,9 @@ export default function Hero() {
                     <img
                       src={product.image}
                       alt={product.name}
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="sync"
                       className="h-full w-full object-cover"
                     />
                     {/* ribbon badge */}

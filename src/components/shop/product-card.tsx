@@ -49,7 +49,7 @@ export default function ProductCard({
   const wishlist = useShopStore((s) => s.wishlist);
   const toggleWishlist = useShopStore((s) => s.toggleWishlist);
   const setQuickView = useShopStore((s) => s.setQuickViewProduct);
-  const isWishlisted = mounted && wishlist.includes(product.id);
+  const isWishlisted = mounted && wishlist.some((w) => w.id === product.id);
 
   const openQuickView = () => setQuickView(product);
 
@@ -134,7 +134,7 @@ export default function ProductCard({
         <motion.button
           type="button"
           whileTap={{ scale: 0.8 }}
-          onClick={() => toggleWishlist(product.id)}
+          onClick={() => toggleWishlist(product)}
           aria-pressed={isWishlisted}
           aria-label={
             isWishlisted
