@@ -22,6 +22,7 @@ import { useShopStore } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
 import { useToast } from "@/hooks/use-toast";
 import { miniConfetti } from "@/lib/confetti";
+import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -51,6 +52,7 @@ export default function OrderTrackModal() {
   const isOpen = useShopStore((s) => s.isTrackOpen);
   const setOpen = useShopStore((s) => s.setTrackOpen);
   const lastOrderId = useShopStore((s) => s.lastOrderId);
+  const orderHistory = useShopStore((s) => s.orderHistory);
   const mounted = useMounted();
   const { toast } = useToast();
 
@@ -175,6 +177,41 @@ export default function OrderTrackModal() {
                   Use last order ·{" "}
                   <span className="font-mono">{lastOrderId}</span>
                 </motion.button>
+              )}
+
+              {mounted && orderHistory.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="rounded-2xl border border-stone-200 bg-cream p-3"
+                >
+                  <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
+                    <History className="h-3 w-3" aria-hidden />
+                    Recent orders · {orderHistory.length}
+                  </p>
+                  <div className="mt-2 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto scrollbar-slim">
+                    {orderHistory.slice(0, 6).map((o) => (
+                      <motion.button
+                        key={o.id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => startTracking(o.id)}
+                        className="flex items-center gap-1.5 rounded-full border border-rose-100 bg-white px-2.5 py-1 text-[10px] font-bold text-charcoal transition hover:border-brand hover:text-brand"
+                        aria-label={`Track order ${o.id}`}
+                      >
+                        <span className="font-mono">{o.id}</span>
+                        <span className="text-brand">{formatINR(o.total)}</span>
+                        <span className="text-stone-300">
+                          {new Date(o.at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
               )}
 
               <p className="pt-1 text-[11px] leading-relaxed text-stone-400">

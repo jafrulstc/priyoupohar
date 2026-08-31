@@ -17,14 +17,28 @@ import {
   TicketPercent,
   BadgeCheck,
   Radar,
+  Flower2,
+  Ribbon,
+  Sparkles,
+  Zap,
+  MoonStar,
+  Package,
+  Check,
 } from "lucide-react";
 import { Lottie } from "lottie-react";
 import celebrationAnim from "@/lib/lottie/celebration.json";
-import { useShopStore, cartTotal, cartCount, FREE_SHIPPING_THRESHOLD } from "@/lib/store";
+import {
+  useShopStore,
+  cartTotal,
+  cartCount,
+  FREE_SHIPPING_THRESHOLD,
+  LOYALTY_TARGET,
+  LOYALTY_COUPON,
+} from "@/lib/store";
 import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 import { useMounted } from "@/hooks/use-mounted";
 import { formatINR } from "@/lib/format";
-import { celebrationConfetti, petalConfetti } from "@/lib/confetti";
+import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +51,15 @@ type CheckoutResult = {
   coupon: string | null;
   discount: number;
   freeShipping?: boolean;
+  premiumWrap?: boolean;
+  slot?: string;
 };
+
+const SLOTS = [
+  { id: "same-day", label: "Same-day", hint: "in ~4 hrs", icon: Zap },
+  { id: "midnight", label: "Midnight", hint: "by 12 AM", icon: MoonStar },
+  { id: "standard", label: "Standard", hint: "in 2 days", icon: Package },
+] as const;
 
 export default function CartDrawer() {
   const isOpen = useShopStore((s) => s.isCartOpen);
@@ -50,11 +72,21 @@ export default function CartDrawer() {
   const setLocationOpen = useShopStore((s) => s.setLocationOpen);
   const setLastOrderId = useShopStore((s) => s.setLastOrderId);
   const setTrackOpen = useShopStore((s) => s.setTrackOpen);
+  /* upsells + loyalty */
+  const premiumWrap = useShopStore((s) => s.premiumWrap);
+  const setPremiumWrap = useShopStore((s) => s.setPremiumWrap);
+  const deliverySlot = useShopStore((s) => s.deliverySlot);
+  const setDeliverySlot = useShopStore((s) => s.setDeliverySlot);
+  const stamps = useShopStore((s) => s.stamps);
+  const rewardCoupon = useShopStore((s) => s.rewardCoupon);
+  const recordOrder = useShopStore((s) => s.recordOrder);
+  const dismissReward = useShopStore((s) => s.dismissReward);
   const { toast } = useToast();
 
   const mounted = useMounted();
   const [checkingOut, setCheckingOut] = useState(false);
   const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [unlocked, setUnlocked] = useState<string | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
@@ -83,7 +115,8 @@ export default function CartDrawer() {
   const freeShipUnlocked = pct >= 100 || appliedCoupon?.kind === "shipping";
   const discount = appliedCoupon ? couponDiscount(appliedCoupon, subtotal) : 0;
   const deliveryFee = pct >= 100 || appliedCoupon?.kind === "shipping" ? 0 : 99;
-  const grandTotal = subtotal - discount + deliveryFee + 49;
+  const wrapFee = premiumWrap ? 49 : 0;
+  const grandTotal = subtotal - discount + deliveryFee + wrapFee;
 
   const applyCoupon = () => {
     const code = couponInput.trim().toUpperCase();
@@ -134,14 +167,30 @@ export default function CartDrawer() {
         body: JSON.stringify({
           items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
           location: { city: location.city, pincode: location.pincode },
-          slot: "same-day",
+          slot: deliverySlot,
           coupon: coupon ?? undefined,
+          premiumWrap,
         }),
       });
       if (!res.ok) throw new Error("checkout failed");
       const data = await res.json();
       setResult(data);
       setLastOrderId(data.orderId);
+      /* loyalty: stamp the card, maybe unlock the reward */
+      const unlockedCode = recordOrder({
+        id: data.orderId,
+        total: data.total,
+        at: Date.now(),
+        items: count,
+      });
+      if (unlockedCode) {
+        setUnlocked(unlockedCode);
+        setTimeout(() => celebrationConfetti(), 650);
+        toast({
+          title: "Bloom Reward unlocked! 🌸",
+          description: `${unlockedCode} — ₹100 off your next order, on us.`,
+        });
+      }
       celebrationConfetti();
     } catch {
       toast({ title: "Checkout hiccup 😢", description: "Please try again in a moment." });
@@ -153,6 +202,8 @@ export default function CartDrawer() {
   const finish = () => {
     clearCart();
     setResult(null);
+    setUnlocked(null);
+    setPremiumWrap(false);
     setCoupon(null);
     setCouponInput("");
     setCouponError(null);
@@ -222,6 +273,20 @@ export default function CartDrawer() {
                     being wrapped with love.
                   </p>
                   <div className="mt-4 w-full space-y-2 rounded-2xl border border-rose-100 bg-white p-4 text-left text-sm shadow-soft">
+                    {unlocked && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 18 }}
+                        className="flex items-center justify-between rounded-xl bg-gold-soft px-3 py-2"
+                      >
+                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700">
+                          <Flower2 className="h-4 w-4" aria-hidden />
+                          Reward earned · {unlocked}
+                        </span>
+                        <span className="text-xs font-extrabold text-amber-700">₹100 off next</span>
+                      </motion.div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-stone-500">Paid</span>
                       <span className="font-extrabold text-charcoal">{formatINR(result.total)}</span>
@@ -247,6 +312,18 @@ export default function CartDrawer() {
                     <div className="flex justify-between">
                       <span className="text-stone-500">Delivering to</span>
                       <span className="font-bold text-charcoal">{result.deliveryTo}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Slot</span>
+                      <span className="font-bold capitalize text-charcoal">
+                        {result.slot?.replace("-", "·") ?? "Same·day"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Gift wrap</span>
+                      <span className="font-bold text-charcoal">
+                        {result.premiumWrap ? "Premium velvet 🎀" : "Free classic 🎁"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">ETA</span>
@@ -299,6 +376,91 @@ export default function CartDrawer() {
               </div>
             ) : (
               <>
+                {/* ---------- BLOOM REWARDS ---------- */}
+                <div className="border-b border-rose-100 bg-white px-5 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 px-3.5 py-2.5 ring-1 ring-rose-100">
+                    <div className="flex items-center gap-2.5">
+                      <motion.span
+                        animate={{ rotate: [0, -8, 8, 0] }}
+                        transition={{ repeat: Infinity, duration: 3.4, ease: "easeInOut" }}
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-brand text-white shadow-soft"
+                        aria-hidden
+                      >
+                        <Flower2 className="h-4 w-4" />
+                      </motion.span>
+                      <div>
+                        <p className="text-xs font-extrabold text-charcoal">
+                          Bloom Rewards{" "}
+                          <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-brand">
+                            {stamps}/{LOYALTY_TARGET} stamps
+                          </span>
+                        </p>
+                        <p className="text-[10px] font-semibold text-stone-400">
+                          {stamps > 0
+                            ? `${LOYALTY_TARGET - stamps} more order${LOYALTY_TARGET - stamps === 1 ? "" : "s"} → ₹100 off`
+                            : "Every 3rd order earns ₹100 off"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="flex items-center gap-1" aria-hidden>
+                      {Array.from({ length: LOYALTY_TARGET }).map((_, i) => (
+                        <motion.span
+                          key={i}
+                          initial={false}
+                          animate={
+                            i < stamps
+                              ? { scale: [1, 1.35, 1], rotate: [0, 18, 0] }
+                              : { scale: 1 }
+                          }
+                          transition={{ duration: 0.45, delay: i * 0.12 }}
+                        >
+                          <Flower2
+                            className={cn(
+                              "h-4.5 w-4.5",
+                              i < stamps ? "fill-brand text-brand" : "text-rose-200"
+                            )}
+                          />
+                        </motion.span>
+                      ))}
+                    </span>
+                  </div>
+                  {rewardCoupon && !coupon && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2 flex items-center justify-between rounded-2xl border border-dashed border-gold bg-gold-soft/70 px-3.5 py-2"
+                    >
+                      <span className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-700">
+                        <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                        Your ₹100 reward · {rewardCoupon}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setCoupon(rewardCoupon);
+                            setCouponInput(rewardCoupon);
+                            miniConfetti();
+                            toast({
+                              title: "Reward applied! 🌸",
+                              description: "BLOOM100 · ₹100 off this order.",
+                            });
+                          }}
+                          className="rounded-full bg-charcoal px-3 py-1 text-[10px] font-extrabold text-cream transition hover:bg-stone-700"
+                        >
+                          Apply
+                        </button>
+                        <button
+                          onClick={dismissReward}
+                          aria-label="Dismiss reward"
+                          className="text-stone-400 transition hover:text-brand"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </motion.div>
+                  )}
+                </div>
+
                 {/* ---------- FREE SHIPPING PROGRESS ---------- */}
                 <div className="border-b border-rose-100 bg-white px-5 py-3.5">
                   <div className="mb-1.5 flex items-center gap-2 text-xs font-bold">
@@ -401,6 +563,98 @@ export default function CartDrawer() {
                     <Gift className="h-4 w-4 shrink-0" aria-hidden />
                     Every order ships with a free gift wrap & message card.
                   </div>
+
+                  {/* ---------- DELIVERY SLOT ---------- */}
+                  <div className="rounded-2xl border border-rose-100 bg-white p-3.5 shadow-soft">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
+                      Delivery slot
+                    </p>
+                    <div className="mt-2 grid grid-cols-3 gap-1.5">
+                      {SLOTS.map((slot) => {
+                        const active = deliverySlot === slot.id;
+                        const Icon = slot.icon;
+                        return (
+                          <button
+                            key={slot.id}
+                            onClick={() => setDeliverySlot(slot.id)}
+                            aria-pressed={active}
+                            className={cn(
+                              "relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-center transition",
+                              active
+                                ? "bg-brand text-white shadow-soft"
+                                : "bg-cream text-stone-500 hover:bg-rose-50 hover:text-charcoal"
+                            )}
+                          >
+                            <Icon className="h-4 w-4" aria-hidden />
+                            <span className="text-[11px] font-extrabold leading-none">{slot.label}</span>
+                            <span
+                              className={cn(
+                                "text-[9px] font-semibold leading-none",
+                                active ? "text-white/75" : "text-stone-400"
+                              )}
+                            >
+                              {slot.hint}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* ---------- PREMIUM WRAP UPSELL ---------- */}
+                  <motion.div
+                    animate={premiumWrap ? { scale: [1, 1.01, 1] } : {}}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border-2 border-dashed p-3.5 transition-colors",
+                      premiumWrap
+                        ? "border-gold bg-gold-soft/50"
+                        : "border-rose-200 bg-white"
+                    )}
+                  >
+                    <motion.span
+                      animate={premiumWrap ? { rotate: [0, -12, 12, 0] } : {}}
+                      transition={{ duration: 0.6 }}
+                      className={cn(
+                        "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
+                        premiumWrap ? "bg-gold text-white" : "bg-brand-soft text-brand"
+                      )}
+                      aria-hidden
+                    >
+                      <Ribbon className="h-4.5 w-4.5" />
+                    </motion.span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold text-charcoal">
+                        Premium velvet wrap
+                        <span className="ml-1.5 rounded-full bg-gold-soft px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700">
+                          +{formatINR(49)}
+                        </span>
+                      </p>
+                      <p className="text-[10px] font-semibold text-stone-400">
+                        Satin ribbon, velvet box & handwritten card — basic wrap stays free.
+                      </p>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={premiumWrap}
+                      aria-label="Toggle premium velvet gift wrap"
+                      onClick={() => setPremiumWrap(!premiumWrap)}
+                      className={cn(
+                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                        premiumWrap ? "bg-gold" : "bg-stone-200"
+                      )}
+                    >
+                      <motion.span
+                        layout
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        className={cn(
+                          "absolute top-0.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow-soft",
+                          premiumWrap ? "right-0.5" : "left-0.5"
+                        )}
+                      >
+                        {premiumWrap && <Check className="h-3 w-3 text-gold" aria-hidden />}
+                      </motion.span>
+                    </button>
+                  </motion.div>
                 </div>
 
                 {/* ---------- FOOTER ---------- */}
@@ -511,18 +765,33 @@ export default function CartDrawer() {
                       <span className="font-bold text-mint">−{formatINR(discount)}</span>
                     </motion.div>
                   )}
-                  <div className="mb-3 flex justify-between text-sm">
+                  <div className="mb-1 flex justify-between text-sm">
                     <span className="text-stone-500">Delivery</span>
                     <span className={cn("font-bold", freeShipUnlocked ? "text-mint" : "text-charcoal")}>
                       {freeShipUnlocked ? "FREE" : formatINR(99)}
                     </span>
                   </div>
+                  <AnimatePresence initial={false}>
+                    {premiumWrap && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-1 flex justify-between overflow-hidden text-sm"
+                      >
+                        <span className="flex items-center gap-1 text-amber-700">
+                          <Ribbon className="h-3.5 w-3.5" aria-hidden /> Premium wrap
+                        </span>
+                        <span className="font-bold text-charcoal">{formatINR(49)}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={checkout}
                     disabled={checkingOut}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3.5 text-sm font-extrabold text-white shadow-lift transition hover:opacity-90 disabled:opacity-70"
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3.5 text-sm font-extrabold text-white shadow-lift transition hover:opacity-90 disabled:opacity-70"
                   >
                     {checkingOut ? (
                       <>
@@ -543,7 +812,9 @@ export default function CartDrawer() {
                   </motion.button>
                   <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-stone-400">
                     <PartyPopper className="h-3 w-3" aria-hidden />
-                    Includes ₹49 gift wrap · 100% secure payments
+                    {premiumWrap
+                      ? "Premium wrap +₹49 shown above · 100% secure payments"
+                      : "Free basic gift wrap · 100% secure payments"}
                   </p>
                 </div>
               </>

@@ -248,7 +248,7 @@ export default function Hero() {
             className="mt-5 max-w-md text-base font-medium leading-relaxed text-stone-600 md:text-lg"
           >
             Fresh flowers, decadent cakes &amp; personalised surprises — hand-delivered
-            same-day across 400+ cities. Gifts that arrive with a heartbeat. 💝
+            same-day across 400+ cities. Gifts that arrive with a heartbeat.&nbsp;💝
           </motion.p>
 
           {/* CTAs */}
@@ -278,6 +278,48 @@ export default function Hero() {
             >
               🎀 Build a Combo
             </motion.button>
+          </motion.div>
+
+          {/* Social-proof avatar cluster */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.82, duration: 0.45 }}
+            className="mt-6 flex items-center gap-3"
+          >
+            <div className="flex -space-x-2.5" aria-hidden>
+              {[
+                { bg: "bg-gradient-to-br from-rose-400 to-brand", ch: "A" },
+                { bg: "bg-gradient-to-br from-amber-300 to-gold", ch: "R" },
+                { bg: "bg-gradient-to-br from-emerald-300 to-mint", ch: "S" },
+                { bg: "bg-gradient-to-br from-pink-300 to-rose-400", ch: "K" },
+                { bg: "bg-gradient-to-br from-stone-300 to-stone-400", ch: "M" },
+              ].map((a, i) => (
+                <motion.span
+                  key={a.ch}
+                  initial={{ scale: 0, x: -6 }}
+                  animate={{ scale: 1, x: 0 }}
+                  transition={{ delay: 0.85 + i * 0.07, type: "spring", stiffness: 400, damping: 18 }}
+                  className={`grid h-8 w-8 place-items-center rounded-full text-[10px] font-extrabold text-white ring-2 ring-white ${a.bg}`}
+                >
+                  {a.ch}
+                </motion.span>
+              ))}
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.22, type: "spring", stiffness: 400, damping: 16 }}
+                className="grid h-8 w-8 place-items-center rounded-full bg-charcoal text-[9px] font-extrabold text-gold ring-2 ring-white"
+              >
+                50k+
+              </motion.span>
+            </div>
+            <p className="text-[11px] font-bold leading-tight text-stone-500">
+              <span className="block text-xs font-extrabold text-charcoal">
+                12,480 gifts delivered this week
+              </span>
+              Joined by 50,000+ happy gifters across India
+            </p>
           </motion.div>
 
           {/* Trust row */}

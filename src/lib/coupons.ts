@@ -18,6 +18,8 @@ export const COUPONS: Record<string, Coupon> = {
   SPIN15: { code: "SPIN15", label: "15% off", kind: "percent", value: 15 },
   JOY50: { code: "JOY50", label: "₹50 off", kind: "flat", value: 50 },
   SHIPFREE: { code: "SHIPFREE", label: "Free shipping", kind: "shipping", value: 0 },
+  /** Bloom Rewards loyalty unlock — every 3rd order earns this. */
+  BLOOM100: { code: "BLOOM100", label: "₹100 off", kind: "flat", value: 100 },
 };
 
 export function resolveCoupon(code: string | null | undefined): Coupon | null {

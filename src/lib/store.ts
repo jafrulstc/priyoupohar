@@ -36,6 +36,16 @@ export type DeliveryLocation = {
 };
 
 export const FREE_SHIPPING_THRESHOLD = 999;
+/** Every 3rd order unlocks this loyalty coupon (₹100 flat). */
+export const LOYALTY_TARGET = 3;
+export const LOYALTY_COUPON = "BLOOM100";
+
+export type OrderRecord = {
+  id: string;
+  total: number;
+  at: number;
+  items: number;
+};
 
 type ShopState = {
   /* ---------- cart ---------- */
@@ -71,6 +81,14 @@ type ShopState = {
   lastOrderId: string | null;
   setLastOrderId: (id: string) => void;
 
+  /* ---------- order history + loyalty ---------- */
+  orderHistory: OrderRecord[];
+  stamps: number;
+  rewardCoupon: string | null;
+  /** Records a completed order, advances loyalty stamps (returns unlocked coupon or null). */
+  recordOrder: (order: OrderRecord) => string | null;
+  dismissReward: () => void;
+
   /* ---------- location ---------- */
   location: DeliveryLocation | null;
   setLocation: (loc: DeliveryLocation) => void;
@@ -89,6 +107,12 @@ type ShopState = {
   spinPrize: { code: string; label: string } | null;
   spinAt: number;
   setSpinResult: (prize: { code: string; label: string } | null, at: number) => void;
+
+  /* ---------- cart upsells (session prefs) ---------- */
+  premiumWrap: boolean;
+  setPremiumWrap: (v: boolean) => void;
+  deliverySlot: "standard" | "same-day" | "midnight";
+  setDeliverySlot: (slot: ShopState["deliverySlot"]) => void;
 };
 
 export const useShopStore = create<ShopState>()(
@@ -140,6 +164,26 @@ export const useShopStore = create<ShopState>()(
       lastOrderId: null,
       setLastOrderId: (id) => set({ lastOrderId: id }),
 
+      orderHistory: [],
+      stamps: 0,
+      rewardCoupon: null,
+      recordOrder: (order) => {
+        const { orderHistory, stamps, rewardCoupon } = get();
+        const nextHistory = [order, ...orderHistory].slice(0, 8);
+        if (stamps + 1 >= LOYALTY_TARGET) {
+          const fresh = rewardCoupon ? null : LOYALTY_COUPON;
+          set({
+            orderHistory: nextHistory,
+            stamps: 0,
+            rewardCoupon: rewardCoupon ?? LOYALTY_COUPON,
+          });
+          return fresh;
+        }
+        set({ orderHistory: nextHistory, stamps: stamps + 1 });
+        return null;
+      },
+      dismissReward: () => set({ rewardCoupon: null }),
+
       location: null,
       setLocation: (loc) => set({ location: loc, isLocationOpen: false }),
       isLocationOpen: false,
@@ -164,11 +208,17 @@ export const useShopStore = create<ShopState>()(
       spinPrize: null,
       spinAt: 0,
       setSpinResult: (prize, at) => set({ spinPrize: prize, spinAt: at }),
+
+      premiumWrap: false,
+      setPremiumWrap: (v) => set({ premiumWrap: v }),
+      deliverySlot: "same-day",
+      setDeliverySlot: (slot) => set({ deliverySlot: slot }),
     }),
     {
       name: "bloom-bliss-shop",
-      version: 3,
-      // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields.
+      version: 4,
+      // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
+      // v4 adds order history + loyalty stamps + cart upsell prefs.
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -178,6 +228,11 @@ export const useShopStore = create<ShopState>()(
           lastOrderId?: string | null;
           spinPrize?: { code: string; label: string } | null;
           spinAt?: number;
+          orderHistory?: OrderRecord[];
+          stamps?: number;
+          rewardCoupon?: string | null;
+          premiumWrap?: boolean;
+          deliverySlot?: ShopState["deliverySlot"];
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -197,6 +252,14 @@ export const useShopStore = create<ShopState>()(
               ? s.spinPrize
               : null,
           spinAt: typeof s.spinAt === "number" ? s.spinAt : 0,
+          orderHistory: Array.isArray(s.orderHistory) ? s.orderHistory.slice(0, 8) : [],
+          stamps: typeof s.stamps === "number" ? Math.min(Math.max(s.stamps, 0), LOYALTY_TARGET) : 0,
+          rewardCoupon: typeof s.rewardCoupon === "string" ? s.rewardCoupon : null,
+          premiumWrap: typeof s.premiumWrap === "boolean" ? s.premiumWrap : false,
+          deliverySlot:
+            s.deliverySlot === "standard" || s.deliverySlot === "midnight"
+              ? s.deliverySlot
+              : "same-day",
         };
       },
       partialize: (state) => ({
@@ -207,6 +270,11 @@ export const useShopStore = create<ShopState>()(
         lastOrderId: state.lastOrderId,
         spinPrize: state.spinPrize,
         spinAt: state.spinAt,
+        orderHistory: state.orderHistory,
+        stamps: state.stamps,
+        rewardCoupon: state.rewardCoupon,
+        premiumWrap: state.premiumWrap,
+        deliverySlot: state.deliverySlot,
       }),
     }
   )
