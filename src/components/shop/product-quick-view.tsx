@@ -19,6 +19,8 @@ import {
   MoonStar,
   ShieldCheck,
   Sparkles,
+  Share2,
+  Link2,
 } from "lucide-react";
 import { useShopStore } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
@@ -41,6 +43,19 @@ const TAG_STYLES: Record<string, string> = {
 export default function ProductQuickView() {
   const product = useShopStore((s) => s.quickViewProduct);
   const setProduct = useShopStore((s) => s.setQuickViewProduct);
+
+  /* Keep the URL in sync so ?gift=slug links are shareable/bookmarkable */
+  useEffect(() => {
+    if (!product) {
+      if (window.location.search.includes("gift=")) {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("gift", product.slug);
+    window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+  }, [product]);
 
   return (
     <Dialog
@@ -74,6 +89,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
 
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const wishlisted = mounted
     ? wishlist.some((w) => w.id === product.id)
@@ -83,6 +99,32 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
   useEffect(() => {
     pushRecentlyViewed(product);
   }, [product, pushRecentlyViewed]);
+
+  /* Share via Web Share API, falling back to a copied deep-link */
+  const share = async () => {
+    const url = `${window.location.origin}/?gift=${product.slug}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${product.name} — Bloom & Bliss`,
+          text: `Look at this lovely gift: ${product.name} 🎁`,
+          url,
+        });
+        return;
+      }
+      throw new Error("no native share");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        setLinkCopied(true);
+        toast({ title: "Link copied! 🔗", description: "Share the joy with anyone." });
+        window.setTimeout(() => setLinkCopied(false), 2000);
+      } catch {
+        toast({ title: "Couldn't share", description: url });
+      }
+    }
+  };
 
   const add = (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -165,30 +207,45 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           {product.description}
         </DialogDescription>
 
-        <div className="mt-1.5 flex items-center gap-2">
-          <span
-            className="flex items-center gap-0.5"
-            aria-label={`Rated ${product.rating} out of 5`}
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              className="flex items-center gap-0.5"
+              aria-label={`Rated ${product.rating} out of 5`}
+            >
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    i < Math.round(product.rating)
+                      ? "fill-gold text-gold"
+                      : "text-stone-300"
+                  )}
+                  aria-hidden
+                />
+              ))}
+            </span>
+            <span className="text-xs font-bold text-charcoal">
+              {product.rating.toFixed(1)}
+            </span>
+            <span className="truncate text-xs text-stone-400">
+              · {product.reviews.toLocaleString("en-IN")} reviews
+            </span>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={share}
+            aria-label={`Share ${product.name}`}
+            className="flex shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 py-1 text-[11px] font-bold text-stone-500 transition hover:border-rose-300 hover:text-brand"
           >
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  "h-3.5 w-3.5",
-                  i < Math.round(product.rating)
-                    ? "fill-gold text-gold"
-                    : "text-stone-300"
-                )}
-                aria-hidden
-              />
-            ))}
-          </span>
-          <span className="text-xs font-bold text-charcoal">
-            {product.rating.toFixed(1)}
-          </span>
-          <span className="text-xs text-stone-400">
-            · {product.reviews.toLocaleString("en-IN")} reviews
-          </span>
+            {linkCopied ? (
+              <Link2 className="h-3 w-3 text-mint" aria-hidden />
+            ) : (
+              <Share2 className="h-3 w-3" aria-hidden />
+            )}
+            {linkCopied ? "Copied" : "Share"}
+          </motion.button>
         </div>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-2">

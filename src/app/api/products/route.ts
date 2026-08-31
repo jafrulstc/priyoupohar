@@ -7,8 +7,10 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const limit = Number(searchParams.get("limit") ?? 40);
     const query = searchParams.get("q");
+    const slug = searchParams.get("slug");
 
     const where: Record<string, unknown> = {};
+    if (slug) where.slug = slug;
     if (category && category !== "all") where.category = category;
     if (query) {
       where.OR = [

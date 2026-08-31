@@ -84,6 +84,11 @@ type ShopState = {
   clearWishlist: () => void;
   isWishlistOpen: boolean;
   setWishlistOpen: (open: boolean) => void;
+
+  /* ---------- spin-to-win wheel ---------- */
+  spinPrize: { code: string; label: string } | null;
+  spinAt: number;
+  setSpinResult: (prize: { code: string; label: string } | null, at: number) => void;
 };
 
 export const useShopStore = create<ShopState>()(
@@ -155,11 +160,15 @@ export const useShopStore = create<ShopState>()(
 
       isWishlistOpen: false,
       setWishlistOpen: (open) => set({ isWishlistOpen: open }),
+
+      spinPrize: null,
+      spinAt: 0,
+      setSpinResult: (prize, at) => set({ spinPrize: prize, spinAt: at }),
     }),
     {
       name: "bloom-bliss-shop",
-      version: 2,
-      // v1 stored wishlist as string[] — v2 stores full snapshots; drop legacy ids.
+      version: 3,
+      // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields.
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -167,6 +176,8 @@ export const useShopStore = create<ShopState>()(
           wishlist?: unknown;
           recentlyViewed?: ProductSnapshot[];
           lastOrderId?: string | null;
+          spinPrize?: { code: string; label: string } | null;
+          spinAt?: number;
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -181,6 +192,11 @@ export const useShopStore = create<ShopState>()(
             ? s.recentlyViewed
             : [],
           lastOrderId: typeof s.lastOrderId === "string" ? s.lastOrderId : null,
+          spinPrize:
+            s.spinPrize && typeof s.spinPrize === "object" && "code" in s.spinPrize
+              ? s.spinPrize
+              : null,
+          spinAt: typeof s.spinAt === "number" ? s.spinAt : 0,
         };
       },
       partialize: (state) => ({
@@ -189,6 +205,8 @@ export const useShopStore = create<ShopState>()(
         wishlist: state.wishlist,
         recentlyViewed: state.recentlyViewed,
         lastOrderId: state.lastOrderId,
+        spinPrize: state.spinPrize,
+        spinAt: state.spinAt,
       }),
     }
   )

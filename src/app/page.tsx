@@ -19,6 +19,8 @@ import BackToTop from "@/components/shop/back-to-top";
 import WishlistDrawer from "@/components/shop/wishlist-drawer";
 import OrderTrackModal from "@/components/shop/order-track-modal";
 import RecentlyViewed from "@/components/shop/recently-viewed";
+import SocialProofTicker from "@/components/shop/social-proof-ticker";
+import DeepLinkOpener from "@/components/shop/deep-link-opener";
 
 export default function Home() {
   return (
@@ -48,6 +50,8 @@ export default function Home() {
       <OrderTrackModal />
       <BackToTop />
       <MobileNav />
+      <SocialProofTicker />
+      <DeepLinkOpener />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { Lottie } from "lottie-react";
 import celebrationAnim from "@/lib/lottie/celebration.json";
 import { celebrationConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
+import SpinToWin from "@/components/shop/spin-to-win";
 
 type Status = "idle" | "loading" | "success";
 
@@ -75,10 +76,10 @@ export default function Newsletter() {
 
   return (
     <section
-      aria-label="Newsletter signup"
+      aria-label="Newsletter signup and rewards wheel"
       className="py-16 max-w-6xl mx-auto px-4 md:px-8"
     >
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-charcoal text-cream p-8 md:p-14 text-center shadow-lift">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-charcoal text-cream p-8 md:p-12 text-center shadow-lift">
         {/* Decorative blobs + dotted texture */}
         <motion.div
           aria-hidden="true"
@@ -91,7 +92,9 @@ export default function Newsletter() {
         />
         <div aria-hidden="true" className="absolute inset-0 bg-dotted opacity-[0.07]" />
 
-        <div className="relative z-10">
+        <div className="relative z-10 grid items-center gap-12 md:grid-cols-[1.05fr_auto_1fr] md:gap-0">
+          {/* LEFT — Celebration Club signup */}
+          <div className="min-w-0">
           <AnimatePresence mode="wait">
             {status !== "success" ? (
               <motion.div
@@ -206,6 +209,22 @@ export default function Newsletter() {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
+
+          {/* MIDDLE — hairline divider (desktop) */}
+          <div
+            aria-hidden="true"
+            className="hidden md:block relative mx-6 h-72 w-px self-center bg-gradient-to-b from-transparent via-white/20 to-transparent"
+          >
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-charcoal text-lg">
+              💝
+            </span>
+          </div>
+
+          {/* RIGHT — Spin-to-win reward wheel */}
+          <div className="min-w-0">
+            <SpinToWin />
+          </div>
         </div>
       </div>
     </section>

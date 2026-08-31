@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 
 const checkoutSchema = z.object({
   items: z
@@ -34,10 +35,12 @@ export async function POST(req: NextRequest) {
 
     const { items, location, slot, message, coupon } = parsed.data;
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-    const deliveryFee = subtotal >= 999 ? 0 : 99;
+    const matched = resolveCoupon(coupon);
+    const couponCode = matched?.code ?? null;
+    const discount = matched ? couponDiscount(matched, subtotal) : 0;
+    const freeShipping = matched?.kind === "shipping";
+    const deliveryFee = subtotal >= 999 || freeShipping ? 0 : 99;
     const giftWrap = 49;
-    const couponCode = (coupon ?? "").toUpperCase() === "BLISS10" ? "BLISS10" : null;
-    const discount = couponCode ? Math.round(subtotal * 0.1) : 0;
     const total = subtotal + deliveryFee + giftWrap - discount;
     const orderId = `BB${Date.now().toString(36).toUpperCase()}`;
 
@@ -52,6 +55,7 @@ export async function POST(req: NextRequest) {
       giftWrap,
       coupon: couponCode,
       discount,
+      freeShipping,
       total,
       etaHours,
       slot,

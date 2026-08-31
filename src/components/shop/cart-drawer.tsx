@@ -21,13 +21,12 @@ import {
 import { Lottie } from "lottie-react";
 import celebrationAnim from "@/lib/lottie/celebration.json";
 import { useShopStore, cartTotal, cartCount, FREE_SHIPPING_THRESHOLD } from "@/lib/store";
+import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 import { useMounted } from "@/hooks/use-mounted";
 import { formatINR } from "@/lib/format";
 import { celebrationConfetti, petalConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-const COUPON_CODE = "BLISS10";
 
 type CheckoutResult = {
   orderId: string;
@@ -37,6 +36,7 @@ type CheckoutResult = {
   estimatedDelivery: string;
   coupon: string | null;
   discount: number;
+  freeShipping?: boolean;
 };
 
 export default function CartDrawer() {
@@ -58,6 +58,7 @@ export default function CartDrawer() {
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const appliedCoupon = resolveCoupon(coupon);
 
   // Free-shipping crossing tracker
   const prevPct = useRef(0);
@@ -79,17 +80,23 @@ export default function CartDrawer() {
   const count = mounted ? cartCount(cart) : 0;
   const pct = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
   const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
-  const discount = coupon ? Math.round(subtotal * 0.1) : 0;
-  const grandTotal = subtotal - discount + (pct >= 100 ? 0 : 99) + 49;
+  const freeShipUnlocked = pct >= 100 || appliedCoupon?.kind === "shipping";
+  const discount = appliedCoupon ? couponDiscount(appliedCoupon, subtotal) : 0;
+  const deliveryFee = pct >= 100 || appliedCoupon?.kind === "shipping" ? 0 : 99;
+  const grandTotal = subtotal - discount + deliveryFee + 49;
 
   const applyCoupon = () => {
     const code = couponInput.trim().toUpperCase();
-    if (code === COUPON_CODE) {
-      setCoupon(COUPON_CODE);
+    const matched = resolveCoupon(code);
+    if (matched) {
+      setCoupon(matched.code);
       setCouponError(null);
       toast({
-        title: "BLISS10 applied! 🎊",
-        description: "10% off your gifts — nicely spotted.",
+        title: `${matched.code} applied! 🎊`,
+        description:
+          matched.kind === "shipping"
+            ? "Your gifts ride for free."
+            : `${matched.label} your gifts — nicely spotted.`,
       });
     } else {
       setCouponError("That code didn’t work — try BLISS10");
@@ -226,6 +233,15 @@ export default function CartDrawer() {
                           {result.coupon} saved
                         </span>
                         <span className="font-bold text-mint">−{formatINR(result.discount)}</span>
+                      </div>
+                    )}
+                    {result.coupon && result.freeShipping && (
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1 text-mint">
+                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                          {result.coupon} · free shipping
+                        </span>
+                        <span className="font-bold text-mint">−{formatINR(99)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
@@ -402,7 +418,7 @@ export default function CartDrawer() {
                       >
                         <span className="flex items-center gap-2 text-xs font-extrabold text-mint">
                           <BadgeCheck className="h-4 w-4" aria-hidden />
-                          {coupon} · 10% off applied
+                          {coupon} · {appliedCoupon?.label ?? "applied"}
                         </span>
                         <button
                           onClick={() => {
@@ -469,12 +485,12 @@ export default function CartDrawer() {
                           <p className="mt-1.5 text-[11px] text-stone-400">
                             Psst… try{" "}
                             <button
-                              onClick={() => setCouponInput(COUPON_CODE)}
+                              onClick={() => setCouponInput("BLISS10")}
                               className="font-extrabold text-gold underline decoration-dashed underline-offset-2 hover:text-amber-600"
                             >
                               BLISS10
                             </button>{" "}
-                            for 10% off
+                            for 10% off · wheel wins work too 🎡
                           </p>
                         )}
                       </motion.div>
@@ -497,8 +513,8 @@ export default function CartDrawer() {
                   )}
                   <div className="mb-3 flex justify-between text-sm">
                     <span className="text-stone-500">Delivery</span>
-                    <span className={cn("font-bold", pct >= 100 ? "text-mint" : "text-charcoal")}>
-                      {pct >= 100 ? "FREE" : formatINR(99)}
+                    <span className={cn("font-bold", freeShipUnlocked ? "text-mint" : "text-charcoal")}>
+                      {freeShipUnlocked ? "FREE" : formatINR(99)}
                     </span>
                   </div>
                   <motion.button
