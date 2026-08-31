@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import {
   Flower2,
   MapPin,
@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   Sparkles,
+  Search,
+  MoonStar,
 } from "lucide-react";
 import { useShopStore, cartCount } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
@@ -26,14 +28,41 @@ const NAV_LINKS = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
   const mounted = useMounted();
 
   const cart = useShopStore((s) => s.cart);
   const lastAddedAt = useShopStore((s) => s.lastAddedAt);
   const setCartOpen = useShopStore((s) => s.setCartOpen);
   const setLocationOpen = useShopStore((s) => s.setLocationOpen);
+  const setSearchOpen = useShopStore((s) => s.setSearchOpen);
   const location = useShopStore((s) => s.location);
   const wishlist = useShopStore((s) => s.wishlist);
+
+  const { scrollYProgress } = useScroll();
+  const progressBar = useSpring(scrollYProgress, { stiffness: 140, damping: 28 });
+
+  /* live countdown to the midnight-delivery cutoff (23:59 local) */
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const initial = setTimeout(tick, 0);
+    const t = setInterval(tick, 30_000);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(t);
+    };
+  }, []);
+
+  const countdown = useMemo(() => {
+    if (now === null) return null;
+    const cutoff = new Date();
+    cutoff.setHours(23, 59, 0, 0);
+    const diff = cutoff.getTime() - now;
+    if (diff <= 0) return "ended for tonight";
+    const h = Math.floor(diff / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return `${h}h ${m}m left`;
+  }, [now]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 14);
@@ -52,6 +81,13 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50">
+      {/* Scroll progress bar */}
+      <motion.div
+        style={{ scaleX: progressBar }}
+        className="absolute inset-x-0 top-0 z-[60] h-[3px] origin-left bg-gradient-brand"
+        aria-hidden
+      />
+
       {/* Announcement bar — collapses on scroll */}
       <motion.div
         animate={{ height: scrolled ? 0 : "auto", opacity: scrolled ? 0 : 1 }}
@@ -61,7 +97,15 @@ export default function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-[11px] font-semibold md:text-xs">
           <Sparkles className="h-3.5 w-3.5 animate-wiggle" aria-hidden />
           <span className="truncate">
-            Midnight delivery available tonight · Free shipping over ₹999
+            {mounted && countdown ? (
+              <>
+                <MoonStar className="mr-1 inline h-3 w-3" aria-hidden />
+                Midnight delivery: <b className="font-extrabold">{countdown}</b> · Free shipping over
+                ₹999
+              </>
+            ) : (
+              "Midnight delivery available tonight · Free shipping over ₹999"
+            )}
           </span>
           <Sparkles className="h-3.5 w-3.5 animate-wiggle" aria-hidden />
         </div>
@@ -109,6 +153,28 @@ export default function Header() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 md:gap-3">
+            {/* Search trigger */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={() => setSearchOpen(true)}
+              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand md:flex"
+              aria-label="Search gifts"
+            >
+              <Search className="h-4 w-4" aria-hidden />
+              <span className="text-sm font-semibold">Search…</span>
+              <kbd className="ml-2 rounded-md border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-400">
+                ⌘K
+              </kbd>
+            </motion.button>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:hidden"
+              aria-label="Search gifts"
+            >
+              <Search className="h-4.5 w-4.5" aria-hidden />
+            </button>
+
             {/* Location selector */}
             <button
               onClick={() => setLocationOpen(true)}

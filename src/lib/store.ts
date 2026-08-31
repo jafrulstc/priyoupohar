@@ -34,6 +34,29 @@ type ShopState = {
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
 
+  /* ---------- search ---------- */
+  isSearchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
+
+  /* ---------- quick view ---------- */
+  quickViewProduct: {
+    id: string;
+    name: string;
+    slug: string;
+    category: string;
+    price: number;
+    mrp: number;
+    image: string;
+    rating: number;
+    reviews: number;
+    tag?: string | null;
+    sameDay: boolean;
+    description: string;
+  } | null;
+  setQuickViewProduct: (
+    p: ShopState["quickViewProduct"]
+  ) => void;
+
   /* ---------- location ---------- */
   location: DeliveryLocation | null;
   setLocation: (loc: DeliveryLocation) => void;
@@ -72,6 +95,12 @@ export const useShopStore = create<ShopState>()(
 
       isCartOpen: false,
       setCartOpen: (open) => set({ isCartOpen: open }),
+
+      isSearchOpen: false,
+      setSearchOpen: (open) => set({ isSearchOpen: open }),
+
+      quickViewProduct: null,
+      setQuickViewProduct: (p) => set({ quickViewProduct: p }),
 
       location: null,
       setLocation: (loc) => set({ location: loc, isLocationOpen: false }),

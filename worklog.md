@@ -150,3 +150,23 @@ Stage Summary:
 - Site is COMPLETE and verified: all required animation features implemented (glass sticky header, badge pulse, location modal, staggered hero text, date/city picker, autoplay showcase stack, product card confetti add, combo builder with rolling counter, occasion grid with magnetic buttons, spring cart drawer with free-shipping progress, mobile bottom nav). 
 - Known minor notes: Lottie celebration plays once then rests (by design); category-rail arrows disabled when no overflow (by design).
 - Next phase (for cron reviewer): polish opportunities — product detail modal, search overlay, occasion-filtered product views, dark mode toggle, PWA-ish touches; keep lint green and check /api/products + /api/checkout health each round.
+
+---
+Task ID: cron-round-1 (2026-09-01 00:35 IST)
+Agent: Z.ai Code (main, webDevReview)
+Task: Status assessment + QA + new features (search, quick view, polish)
+
+Work Log:
+- STATUS ASSESSMENT: dev server healthy (page 200, /api/products 200), lint 0 problems, tsc clean, no runtime errors in dev.log. All previous flows re-smoke-tested OK (add-to-cart, persist store, badges).
+- QA findings: only next/image LCP hints (below-fold images flagged as LCP during scroll sessions) → fixed by adding priority to first 4 ProductCard images + first 4 OccasionGrid tiles.
+- FEATURE 1 — Search overlay (src/components/shop/search-overlay.tsx): shadcn CommandDialog (cmdk) with ⌘K/Ctrl+K global shortcut, debounced (250ms) live search against /api/products?q=, trending searches + category browse groups, animated result rows (thumb, category icon, Same-day chip, price), empty state, keyboard hints footer. Header got desktop "Search… ⌘K" pill + mobile icon trigger. Store extended: isSearchOpen/setSearchOpen.
+- FEATURE 2 — Product Quick View (src/components/shop/product-quick-view.tsx): Dialog with image side (scale-in motion, tag badge, wishlist heart syncing to header badge) + details side (stars, price/MRP/discount, description, delivery info rows, qty stepper with popLayout roll, add-to-cart with miniConfetti from button origin + "Added!" morph). Wired from: ProductCard image overlay ("Quick view" hover affordance, invalid button-in-button avoided via absolute overlay layer) + card title button + search results. Store extended: quickViewProduct/setQuickViewProduct. Qty/added state isolated in QuickViewBody (keyed remount — no setState-in-effect).
+- FEATURE 3 — Styling polish: brand-gradient scroll progress bar (spring scaleX) pinned atop header; BackToTop floating button (charcoal circle, gold SVG progress ring via motion pathLength, ArrowUp + sparkle, bottom-20/right-4 mobile above nav, md:bottom-6/right-6); announcement bar now shows LIVE midnight-delivery countdown ("Midnight delivery: 7h 7m left", 30s tick, hydration-safe via setTimeout(0) pattern).
+- Fixed react-hooks/set-state-in-effect errors introduced in new code (header countdown async initial tick; quick-view keyed-body instead of effect reset); removed unused eslint-disable directives.
+- VERIFIED in agent-browser (1440×900 + 390×844): search "rose" → 4 results → pick → quick view → qty 2 → Add → cart [combo x1, mug x1, roses x2] badge 4 ✓; wishlist heart in quick view fills + header wishlist badge 1 ✓; back-to-top renders after 700px scroll with progress ring ✓; countdown live ✓; no nested-button HTML violations ✓; console + page errors clean after fresh reload (prior entries were stale from an intermediate broken build).
+
+Stage Summary:
+- New capabilities: global search palette (⌘K), product quick view (cards + search + title), scroll progress bar, back-to-top with scroll ring, live midnight cutoff countdown, LCP-prioritised images.
+- All quality gates green: eslint 0 problems, tsc 0 errors (src), no runtime/console errors on fresh load, HTML nesting valid.
+- Unresolved/risks: (a) cmdk list virtualisation not needed at ≤8 results but keep an eye if limit raised; (b) cart drawer remains right-anchored on mobile (full-width) — consider bottom-sheet variant later; (c) wishlist has badge + quick-view toggle but no dedicated wishlist panel yet.
+- Next-round recommendations (priority order): 1) Wishlist drawer/panel (store already has wishlist[]) with move-to-cart; 2) Occasion tiles → filtered product dialog (map occasion→categories, reuse ProductCard); 3) Recently-viewed strip (persist last 8 quick-view ids); 4) Order-tracking modal stub from footer "Track Order"; 5) Consider SEO/OG image + favicon polish.

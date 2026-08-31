@@ -8,7 +8,7 @@ import {
 } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Clock, Heart, ShoppingBag, Star } from "lucide-react";
+import { Check, Clock, Eye, Heart, ShoppingBag, Star } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { discountPct, formatINR } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
@@ -48,7 +48,10 @@ export default function ProductCard({
   );
   const wishlist = useShopStore((s) => s.wishlist);
   const toggleWishlist = useShopStore((s) => s.toggleWishlist);
+  const setQuickView = useShopStore((s) => s.setQuickViewProduct);
   const isWishlisted = mounted && wishlist.includes(product.id);
+
+  const openQuickView = () => setQuickView(product);
 
   /* Clear any pending "Added!" timer on unmount */
   useEffect(
@@ -96,9 +99,22 @@ export default function ProductCard({
           src={product.image}
           alt={product.name}
           fill
+          priority={index < 4}
           sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
+
+        {/* Quick-view overlay (covers image, appears on hover) */}
+        <button
+          type="button"
+          onClick={openQuickView}
+          aria-label={`Quick view ${product.name}`}
+          className="absolute inset-0 z-[5] grid cursor-pointer place-items-center bg-charcoal/0 opacity-0 transition-all duration-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand group-hover:bg-charcoal/15 group-hover:opacity-100"
+        >
+          <span className="flex translate-y-2 items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-xs font-extrabold text-charcoal shadow-lift backdrop-blur transition-transform duration-300 group-hover:translate-y-0">
+            <Eye size={14} aria-hidden /> Quick view
+          </span>
+        </button>
 
         {/* Tag badge (top-left) */}
         {product.tag ? (
@@ -164,7 +180,14 @@ export default function ProductCard({
       <div className="flex flex-1 flex-col p-4">
         <div className="flex-1">
           <h3 className="line-clamp-1 text-sm font-bold text-charcoal md:text-base">
-            {product.name}
+            <button
+              type="button"
+              onClick={openQuickView}
+              className="text-left transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label={`View details for ${product.name}`}
+            >
+              {product.name}
+            </button>
           </h3>
           <p className="mt-1 line-clamp-2 text-xs text-stone-500">
             {product.description}

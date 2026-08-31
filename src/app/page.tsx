@@ -12,6 +12,9 @@ import Footer from "@/components/shop/footer";
 import CartDrawer from "@/components/shop/cart-drawer";
 import LocationModal from "@/components/shop/location-modal";
 import MobileNav from "@/components/shop/mobile-nav";
+import SearchOverlay from "@/components/shop/search-overlay";
+import ProductQuickView from "@/components/shop/product-quick-view";
+import BackToTop from "@/components/shop/back-to-top";
 
 export default function Home() {
   return (
@@ -33,6 +36,9 @@ export default function Home() {
       {/* Overlays */}
       <CartDrawer />
       <LocationModal />
+      <SearchOverlay />
+      <ProductQuickView />
+      <BackToTop />
       <MobileNav />
     </div>
   );
