@@ -25,6 +25,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { useToast } from "@/hooks/use-toast";
 import { formatINR, discountPct } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
+import PincodeChecker from "@/components/shop/pincode-checker";
 import { cn } from "@/lib/utils";
 
 type QuickProduct = NonNullable<
@@ -226,6 +227,11 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
             <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
             Freshness guaranteed · Free gift wrap
           </span>
+        </div>
+
+        {/* Pincode → live ETA checker */}
+        <div className="mt-2.5">
+          <PincodeChecker compact />
         </div>
 
         {/* Qty + CTA */}

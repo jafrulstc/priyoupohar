@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Bestsellers", href: "#bestsellers" },
+  { label: "Gift Finder", href: "#gift-finder" },
   { label: "Combo Builder", href: "#combo-builder" },
   { label: "Occasions", href: "#occasions" },
   { label: "Reviews", href: "#reviews" },
@@ -133,7 +134,7 @@ export default function Header() {
             >
               <Flower2 className="h-5 w-5" aria-hidden />
             </motion.span>
-            <span className="text-lg font-extrabold tracking-tight text-charcoal">
+            <span className="whitespace-nowrap text-base font-extrabold tracking-tight text-charcoal sm:text-lg">
               Bloom <span className="text-gold">&amp;</span>{" "}
               <span className="text-brand">Bliss</span>
             </span>

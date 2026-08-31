@@ -3,6 +3,7 @@ import Hero from "@/components/shop/hero";
 import UspMarquee from "@/components/shop/usp-marquee";
 import CategoryRail from "@/components/shop/category-rail";
 import Bestsellers from "@/components/shop/bestsellers";
+import GiftFinder from "@/components/shop/gift-finder";
 import ComboBuilder from "@/components/shop/combo-builder";
 import OccasionGrid from "@/components/shop/occasion-grid";
 import StatsBar from "@/components/shop/stats-bar";
@@ -28,6 +29,7 @@ export default function Home() {
         <UspMarquee />
         <CategoryRail />
         <Bestsellers />
+        <GiftFinder />
         <ComboBuilder />
         <OccasionGrid />
         <StatsBar />

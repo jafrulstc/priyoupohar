@@ -57,6 +57,9 @@ const SHOWCASE = [
 
 const TAB_DURATION = 4.2; // seconds per auto-play tab
 
+/* category per showcase tab (kept in sync with SHOWCASE order) */
+const TAB_CATEGORY = ["flowers", "cakes", "personalised"] as const;
+
 /* Deterministic floating particles (no Math.random at render → SSR safe) */
 const PARTICLES = [
   { x: "6%", y: "18%", s: 10, d: 7, delay: 0, c: "bg-rose-300/50" },
@@ -159,7 +162,7 @@ export default function Hero() {
       price: product.price,
       mrp: product.mrp,
       image: product.image,
-      category: "flowers",
+      category: TAB_CATEGORY[tab],
     });
     toast({ title: "Added to your gift bag! 🛍️", description: product.name });
   };

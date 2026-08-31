@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Home, Store, Gift, CalendarHeart, ShoppingBag } from "lucide-react";
+import { Home, Store, Wand2, CalendarHeart, ShoppingBag } from "lucide-react";
 import { useShopStore, cartCount } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { id: "home", label: "Home", icon: Home, action: "top" },
   { id: "shop", label: "Shop", icon: Store, action: "#bestsellers" },
-  { id: "combo", label: "Combo", icon: Gift, action: "#combo-builder" },
+  { id: "finder", label: "Finder", icon: Wand2, action: "#gift-finder" },
   { id: "occasions", label: "Occasions", icon: CalendarHeart, action: "#occasions" },
 ] as const;
 
