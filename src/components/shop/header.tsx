@@ -25,6 +25,7 @@ const NAV_LINKS = [
   { label: "Gift Finder", href: "#gift-finder" },
   { label: "Combo Builder", href: "#combo-builder" },
   { label: "Occasions", href: "#occasions" },
+  { label: "Bloom Club", href: "#bloom-club" },
   { label: "Reviews", href: "#reviews" },
 ];
 
@@ -154,12 +155,12 @@ export default function Header() {
           </button>
 
           {/* Desktop nav */}
-          <nav className="ml-6 hidden items-center gap-1 lg:flex" aria-label="Primary">
+          <nav className="ml-4 hidden items-center gap-1 xl:flex" aria-label="Primary">
             {NAV_LINKS.map((link) => (
               <button
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
-                className="group relative rounded-full px-3.5 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400"
+                className="group relative whitespace-nowrap rounded-full px-3 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400 lg:px-3.5"
               >
                 {link.label}
                 <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100 dark:bg-rose-400" />
@@ -313,7 +314,7 @@ export default function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground dark:border-stone-700 dark:bg-stone-900 lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground dark:border-stone-700 dark:bg-stone-900 xl:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
             >
@@ -330,7 +331,7 @@ export default function Header() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              className="overflow-hidden border-t border-rose-100 dark:border-stone-800 lg:hidden"
+              className="overflow-hidden border-t border-rose-100 dark:border-stone-800 xl:hidden"
               aria-label="Mobile"
             >
               <div className="space-y-1 px-4 py-3">

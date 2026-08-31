@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useShopStore, type ProductSnapshot } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useToast } from "@/hooks/use-toast";
 import { formatINR, discountPct } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
@@ -159,6 +160,7 @@ function WishRow({ item }: { item: ProductSnapshot }) {
 export default function WishlistDrawer() {
   const isOpen = useShopStore((s) => s.isWishlistOpen);
   const setOpen = useShopStore((s) => s.setWishlistOpen);
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
   const wishlist = useShopStore((s) => s.wishlist);
   const clearWishlist = useShopStore((s) => s.clearWishlist);
   const addToCart = useShopStore((s) => s.addToCart);
@@ -207,6 +209,7 @@ export default function WishlistDrawer() {
     <AnimatePresence>
       {isOpen && (
         <div
+          ref={trapRef}
           className="fixed inset-0 z-[70]"
           role="dialog"
           aria-modal="true"

@@ -103,7 +103,7 @@ export default function Testimonials() {
     <section
       id="reviews"
       aria-label="Customer testimonials"
-      className="relative py-16 md:py-20 max-w-5xl mx-auto px-4 md:px-8"
+      className="relative scroll-mt-24 py-16 md:py-20 max-w-5xl mx-auto px-4 md:px-8"
     >
       {/* Floating hearts */}
       {FLOATING_HEARTS.map((heart, i) => (

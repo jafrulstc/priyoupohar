@@ -56,7 +56,7 @@ export default function Bestsellers() {
   ];
 
   return (
-    <section id="bestsellers" className="relative py-16 md:py-20">
+    <section id="bestsellers" className="relative scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         {/* ---------- Header ---------- */}
         <motion.div

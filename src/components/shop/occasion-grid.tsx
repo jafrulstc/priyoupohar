@@ -147,7 +147,7 @@ export default function OccasionGrid() {
   };
 
   return (
-    <section id="occasions" className="py-16 md:py-20">
+    <section id="occasions" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="max-w-2xl">
           <p className="text-brand dark:text-rose-400 text-xs font-bold uppercase tracking-[0.2em] md:text-sm">

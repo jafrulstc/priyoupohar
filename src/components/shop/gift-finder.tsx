@@ -327,7 +327,7 @@ export default function GiftFinder() {
   return (
     <section
       id="gift-finder"
-      className="relative overflow-hidden py-14 sm:py-16"
+      className="relative scroll-mt-24 overflow-hidden py-14 sm:py-16"
       aria-label="Gift Finder quiz"
     >
       {/* backdrop */}

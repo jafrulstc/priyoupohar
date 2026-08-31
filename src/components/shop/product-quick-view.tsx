@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -44,14 +44,18 @@ export default function ProductQuickView() {
   const product = useShopStore((s) => s.quickViewProduct);
   const setProduct = useShopStore((s) => s.setQuickViewProduct);
 
-  /* Keep the URL in sync so ?gift=slug links are shareable/bookmarkable */
+  /* Keep the URL in sync so ?gift=slug links are shareable/bookmarkable.
+     Only strip on a product→null TRANSITION — never on first mount, or we'd
+     erase the deep-link before DeepLinkOpener gets a chance to read it. */
+  const hadProduct = useRef(false);
   useEffect(() => {
     if (!product) {
-      if (window.location.search.includes("gift=")) {
+      if (hadProduct.current && window.location.search.includes("gift=")) {
         window.history.replaceState(null, "", window.location.pathname);
       }
       return;
     }
+    hadProduct.current = true;
     const url = new URL(window.location.href);
     url.searchParams.set("gift", product.slug);
     window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
@@ -102,7 +106,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
 
   /* Share via Web Share API, falling back to a copied deep-link */
   const share = async () => {
-    const url = `${window.location.origin}/?gift=${product.slug}`;
+    const url = `${window.location.origin}/gift/${product.slug}`;
     try {
       if (navigator.share) {
         await navigator.share({

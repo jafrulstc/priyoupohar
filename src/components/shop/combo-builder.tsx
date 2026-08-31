@@ -237,7 +237,7 @@ export default function ComboBuilder() {
   return (
     <section
       id="combo-builder"
-      className="relative overflow-hidden bg-charcoal py-16 text-cream md:py-24"
+      className="relative scroll-mt-24 overflow-hidden bg-charcoal py-16 text-cream md:py-24"
     >
       {/* decorative blobs */}
       <motion.div

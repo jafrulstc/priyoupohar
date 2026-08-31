@@ -38,6 +38,7 @@ import {
 import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 import { useMounted } from "@/hooks/use-mounted";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { formatINR } from "@/lib/format";
 import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +85,7 @@ export default function CartDrawer() {
   const dismissReward = useShopStore((s) => s.dismissReward);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   const mounted = useMounted();
   const [checkingOut, setCheckingOut] = useState(false);
@@ -221,7 +223,7 @@ export default function CartDrawer() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Gift bag">
+        <div ref={trapRef} className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Gift bag">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
