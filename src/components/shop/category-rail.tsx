@@ -55,17 +55,17 @@ export default function CategoryRail() {
   };
 
   const arrowClass =
-    "grid h-9 w-9 place-items-center rounded-full border border-rose-100 bg-white text-charcoal shadow-soft transition cursor-pointer hover:border-brand hover:text-brand active:scale-90 disabled:cursor-default disabled:opacity-40 disabled:hover:border-rose-100 disabled:hover:text-charcoal";
+    "grid h-9 w-9 place-items-center rounded-full border border-rose-100 dark:border-stone-800 bg-white dark:bg-card text-charcoal dark:text-foreground shadow-soft transition cursor-pointer hover:border-brand hover:text-brand dark:hover:text-rose-400 active:scale-90 disabled:cursor-default disabled:opacity-40 disabled:hover:border-rose-100 dark:disabled:hover:border-stone-800 disabled:hover:text-charcoal dark:disabled:hover:text-foreground";
 
   return (
     <section className="py-10" aria-label="Shop by category">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-extrabold text-charcoal md:text-2xl">
+            <h2 className="text-xl font-extrabold text-foreground md:text-2xl">
               Shop by Category
             </h2>
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
               Fresh picks for every mood
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function CategoryRail() {
                 className="group w-full cursor-pointer rounded-2xl text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <div className="relative mx-auto w-fit">
-                  <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-rose-100 transition group-hover:ring-brand md:h-24 md:w-24">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-rose-100 dark:ring-stone-700 transition group-hover:ring-brand md:h-24 md:w-24">
                     <Image
                       src={cat.image}
                       alt={cat.label}
@@ -125,12 +125,12 @@ export default function CategoryRail() {
                   </div>
                   <span
                     aria-hidden
-                    className="absolute -bottom-1 -right-1 z-10 grid h-6 w-6 place-items-center rounded-full bg-white text-xs shadow-soft ring-1 ring-rose-100"
+                    className="absolute -bottom-1 -right-1 z-10 grid h-6 w-6 place-items-center rounded-full bg-white dark:bg-card text-xs shadow-soft ring-1 ring-rose-100 dark:ring-stone-800"
                   >
                     {cat.emoji}
                   </span>
                 </div>
-                <span className="mt-2 block text-xs font-bold text-charcoal">
+                <span className="mt-2 block text-xs font-bold text-foreground">
                   {cat.label}
                 </span>
               </motion.button>

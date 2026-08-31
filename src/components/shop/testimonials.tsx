@@ -119,13 +119,13 @@ export default function Testimonials() {
 
       {/* Header */}
       <div className="text-center mb-10 md:mb-12">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand">
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand dark:text-rose-400">
           💌 Wall of love
         </p>
-        <h2 className="mt-3 text-3xl md:text-5xl font-extrabold text-charcoal tracking-tight">
+        <h2 className="mt-3 text-3xl md:text-5xl font-extrabold text-foreground tracking-tight">
           50 lakh <span className="text-gradient-brand">hearts</span> say it best
         </h2>
-        <p className="mt-3 text-stone-500 text-base md:text-lg max-w-xl mx-auto">
+        <p className="mt-3 text-stone-500 dark:text-stone-400 text-base md:text-lg max-w-xl mx-auto">
           Real reviews from real celebrations — birthdays, anniversaries and
           12:01 AM surprises.
         </p>
@@ -137,7 +137,7 @@ export default function Testimonials() {
           type="button"
           onClick={goPrev}
           aria-label="Previous testimonial"
-          className="shrink-0 grid place-items-center h-11 w-11 rounded-full border border-rose-200 bg-white text-charcoal transition hover:bg-brand-soft hover:border-brand/40 active:scale-95"
+          className="shrink-0 grid place-items-center h-11 w-11 rounded-full border border-rose-200 dark:border-stone-700 bg-white dark:bg-card text-charcoal dark:text-foreground transition hover:bg-brand-soft dark:hover:bg-rose-950/50 hover:border-brand/40 active:scale-95"
         >
           <ChevronLeft size={20} />
         </button>
@@ -147,7 +147,7 @@ export default function Testimonials() {
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
-          <div className="relative bg-white rounded-3xl shadow-lift border border-rose-100 p-6 md:p-10 text-center overflow-hidden">
+          <div className="relative bg-white dark:bg-card rounded-3xl shadow-lift border border-rose-100 dark:border-stone-800 p-6 md:p-10 text-center overflow-hidden">
             <Quote
               size={40}
               aria-hidden="true"
@@ -185,7 +185,7 @@ export default function Testimonials() {
                   ))}
                 </div>
 
-                <p className="min-h-[132px] md:min-h-[96px] flex items-center justify-center text-lg md:text-xl font-medium text-charcoal leading-relaxed">
+                <p className="min-h-[132px] md:min-h-[96px] flex items-center justify-center text-lg md:text-xl font-medium text-foreground leading-relaxed">
                   {current.text}
                 </p>
 
@@ -197,9 +197,9 @@ export default function Testimonials() {
                   >
                     {initialsOf(current.name)}
                   </span>
-                  <span className="font-bold text-charcoal">{current.name}</span>
-                  <span className="text-stone-500">· {current.city}</span>
-                  <span className="bg-brand-soft text-brand text-xs rounded-full px-3 py-1 font-bold">
+                  <span className="font-bold text-foreground">{current.name}</span>
+                  <span className="text-stone-500 dark:text-stone-400">· {current.city}</span>
+                  <span className="bg-brand-soft dark:bg-rose-950/50 text-brand dark:text-rose-300 text-xs rounded-full px-3 py-1 font-bold">
                     {current.gift}
                   </span>
                 </footer>
@@ -212,7 +212,7 @@ export default function Testimonials() {
           type="button"
           onClick={goNext}
           aria-label="Next testimonial"
-          className="shrink-0 grid place-items-center h-11 w-11 rounded-full border border-rose-200 bg-white text-charcoal transition hover:bg-brand-soft hover:border-brand/40 active:scale-95"
+          className="shrink-0 grid place-items-center h-11 w-11 rounded-full border border-rose-200 dark:border-stone-700 bg-white dark:bg-card text-charcoal dark:text-foreground transition hover:bg-brand-soft dark:hover:bg-rose-950/50 hover:border-brand/40 active:scale-95"
         >
           <ChevronRight size={20} />
         </button>
@@ -232,7 +232,7 @@ export default function Testimonials() {
             className={`h-2.5 rounded-full transition-colors ${
               dotIdx === index
                 ? "w-6 bg-brand"
-                : "w-2.5 bg-stone-300 hover:bg-stone-400"
+                : "w-2.5 bg-stone-300 dark:bg-stone-700 hover:bg-stone-400 dark:hover:bg-stone-600"
             }`}
           />
         ))}

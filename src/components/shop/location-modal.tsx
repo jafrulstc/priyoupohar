@@ -101,7 +101,7 @@ export default function LocationModal() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search city or state…"
                 aria-label="Search city"
-                className="w-full rounded-2xl border border-white/20 bg-white/95 py-2.5 pl-10 pr-9 text-sm font-semibold text-charcoal placeholder:font-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-gold"
+                className="w-full rounded-2xl border border-white/20 bg-white/95 py-2.5 pl-10 pr-9 text-sm font-semibold text-foreground placeholder:font-normal placeholder:text-stone-400 dark:bg-stone-900/90 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-gold"
               />
               {query && (
                 <button
@@ -121,7 +121,7 @@ export default function LocationModal() {
             <button
               onClick={detect}
               disabled={detecting}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-rose-200 bg-brand-soft px-4 py-3 text-sm font-bold text-brand transition-all hover:border-brand hover:shadow-soft disabled:opacity-70"
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-rose-200 bg-brand-soft px-4 py-3 text-sm font-bold text-brand transition-all hover:border-brand hover:shadow-soft disabled:opacity-70 dark:border-stone-700 dark:bg-rose-950/50 dark:text-rose-300"
             >
               <motion.span
                 animate={detecting ? { rotate: 360 } : { rotate: 0 }}
@@ -158,13 +158,13 @@ export default function LocationModal() {
                         "rounded-2xl border px-3 py-2.5 text-left transition-all",
                         active
                           ? "border-brand bg-brand text-white shadow-lift"
-                          : "border-stone-200 bg-white hover:border-rose-300 hover:shadow-soft"
+                          : "border-stone-200 bg-card hover:border-rose-300 hover:shadow-soft dark:border-stone-700"
                       )}
                     >
                       <span
                         className={cn(
                           "block text-sm font-bold",
-                          active ? "text-white" : "text-charcoal"
+                          active ? "text-white" : "text-foreground"
                         )}
                       >
                         {c.city}

@@ -107,7 +107,7 @@ export default function SearchOverlay() {
         />
         {loading && (
           <Loader2
-            className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-brand"
+            className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-brand dark:text-rose-400"
             aria-hidden
           />
         )}
@@ -121,7 +121,7 @@ export default function SearchOverlay() {
                   key={t}
                   value={`trending-${t}`}
                   onSelect={() => setQuery(t)}
-                  className="gap-2.5 rounded-xl aria-selected:bg-brand-soft"
+                  className="gap-2.5 rounded-xl aria-selected:bg-brand-soft dark:aria-selected:bg-rose-950/50"
                 >
                   <TrendingUp className="h-4 w-4 text-gold" aria-hidden />
                   <span className="font-semibold">{t}</span>
@@ -137,9 +137,9 @@ export default function SearchOverlay() {
                     key={c.id}
                     value={`cat-${c.id}`}
                     onSelect={() => browseCategory(c.id, c.label)}
-                    className="gap-2.5 rounded-xl aria-selected:bg-brand-soft"
+                    className="gap-2.5 rounded-xl aria-selected:bg-brand-soft dark:aria-selected:bg-rose-950/50"
                   >
-                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-soft text-brand">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300">
                       <Icon className="h-3.5 w-3.5" aria-hidden />
                     </span>
                     <span className="font-semibold">{c.label}</span>
@@ -155,7 +155,7 @@ export default function SearchOverlay() {
           <CommandEmpty>
             <div className="py-8 text-center">
               <Search className="mx-auto mb-2 h-8 w-8 text-stone-300" aria-hidden />
-              <p className="text-sm font-bold text-charcoal">No gifts matched “{query}”</p>
+              <p className="text-sm font-bold text-foreground">No gifts matched “{query}”</p>
               <p className="mt-1 text-xs text-stone-400">Try “roses”, “cake” or “teddy” 🌸</p>
             </div>
           </CommandEmpty>
@@ -177,13 +177,13 @@ export default function SearchOverlay() {
                     <CommandItem
                       value={`${p.name}-${p.id}`}
                       onSelect={() => pick(p)}
-                      className="gap-3 rounded-xl py-2 aria-selected:bg-brand-soft"
+                      className="gap-3 rounded-xl py-2 aria-selected:bg-brand-soft dark:aria-selected:bg-rose-950/50"
                     >
                       <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl">
                         <img src={p.image} alt="" className="h-full w-full object-cover" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold text-charcoal">
+                        <span className="block truncate text-sm font-bold text-foreground">
                           {p.name}
                         </span>
                         <span className="flex items-center gap-1.5 text-[11px] text-stone-400">
@@ -196,7 +196,7 @@ export default function SearchOverlay() {
                           )}
                         </span>
                       </span>
-                      <span className="text-sm font-extrabold text-brand">{formatINR(p.price)}</span>
+                      <span className="text-sm font-extrabold text-brand dark:text-rose-400">{formatINR(p.price)}</span>
                     </CommandItem>
                   </motion.div>
                 );
@@ -205,19 +205,19 @@ export default function SearchOverlay() {
           </CommandGroup>
         )}
       </CommandList>
-      <div className="flex items-center justify-between border-t border-stone-100 px-4 py-2.5 text-[11px] text-stone-400">
+      <div className="flex items-center justify-between border-t border-stone-100 px-4 py-2.5 text-[11px] text-stone-400 dark:border-stone-800">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500 dark:border-stone-700 dark:bg-stone-800/60">
             ↑↓
           </kbd>
           navigate
-          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500 dark:border-stone-700 dark:bg-stone-800/60">
             ↵
           </kbd>
           open
         </span>
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500">
+          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-500 dark:border-stone-700 dark:bg-stone-800/60">
             ESC
           </kbd>
           close

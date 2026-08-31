@@ -24,7 +24,7 @@ import DeepLinkOpener from "@/components/shop/deep-link-opener";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-cream pb-[72px] md:pb-0">
+    <div className="flex min-h-screen flex-col bg-background pb-[72px] md:pb-0">
       <Header />
       <main className="flex-1">
         <Hero />

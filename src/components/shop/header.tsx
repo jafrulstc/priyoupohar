@@ -13,6 +13,8 @@ import {
   Sparkles,
   Search,
   MoonStar,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useShopStore, cartCount } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
@@ -40,6 +42,8 @@ export default function Header() {
   const location = useShopStore((s) => s.location);
   const wishlist = useShopStore((s) => s.wishlist);
   const setWishlistOpen = useShopStore((s) => s.setWishlistOpen);
+  const theme = useShopStore((s) => s.theme);
+  const toggleTheme = useShopStore((s) => s.toggleTheme);
 
   const { scrollYProgress } = useScroll();
   const progressBar = useSpring(scrollYProgress, { stiffness: 140, damping: 28 });
@@ -81,6 +85,13 @@ export default function Header() {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const isDark = mounted && theme === "dark";
+  const onToggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    toggleTheme();
+    document.documentElement.classList.toggle("dark", next === "dark");
+  };
+
   return (
     <header className="sticky top-0 z-50">
       {/* Scroll progress bar */}
@@ -117,7 +128,9 @@ export default function Header() {
       <div
         className={cn(
           "transition-all duration-300",
-          scrolled ? "glass border-b border-rose-100 shadow-soft" : "bg-cream/80"
+          scrolled
+            ? "glass border-b border-rose-100 shadow-soft dark:border-stone-800"
+            : "bg-background/80"
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
@@ -134,9 +147,9 @@ export default function Header() {
             >
               <Flower2 className="h-5 w-5" aria-hidden />
             </motion.span>
-            <span className="whitespace-nowrap text-base font-extrabold tracking-tight text-charcoal sm:text-lg">
+            <span className="whitespace-nowrap text-base font-extrabold tracking-tight text-foreground sm:text-lg">
               Bloom <span className="text-gold">&amp;</span>{" "}
-              <span className="text-brand">Bliss</span>
+              <span className="text-brand dark:text-rose-400">Bliss</span>
             </span>
           </button>
 
@@ -146,32 +159,58 @@ export default function Header() {
               <button
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
-                className="group relative rounded-full px-3.5 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand"
+                className="group relative rounded-full px-3.5 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400"
               >
                 {link.label}
-                <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100" />
+                <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100 dark:bg-rose-400" />
               </button>
             ))}
           </nav>
 
           <div className="ml-auto flex items-center gap-2 md:gap-3">
+            {/* Theme toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={onToggleTheme}
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-gold transition-all hover:border-gold/60 hover:shadow-glow dark:border-stone-700 dark:bg-stone-900 dark:text-amber-300"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isDark ? "sun" : "moon"}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.55 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.55 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="grid place-items-center"
+                >
+                  {isDark ? (
+                    <Sun className="h-[18px] w-[18px]" aria-hidden />
+                  ) : (
+                    <Moon className="h-[18px] w-[18px]" aria-hidden />
+                  )}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
+
             {/* Search trigger */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setSearchOpen(true)}
-              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand md:flex"
+              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-rose-500/50 md:flex"
               aria-label="Search gifts"
             >
               <Search className="h-4 w-4" aria-hidden />
               <span className="text-sm font-semibold">Search…</span>
-              <kbd className="ml-2 rounded-md border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-400">
+              <kbd className="ml-2 rounded-md border border-stone-200 bg-stone-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-stone-400 dark:border-stone-700 dark:bg-stone-800">
                 ⌘K
               </kbd>
             </motion.button>
             <button
               onClick={() => setSearchOpen(true)}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:hidden"
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
               aria-label="Search gifts"
             >
               <Search className="h-4.5 w-4.5" aria-hidden />
@@ -180,25 +219,25 @@ export default function Header() {
             {/* Location selector */}
             <button
               onClick={() => setLocationOpen(true)}
-              className="hidden max-w-[180px] items-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-left transition-all hover:border-rose-300 hover:shadow-soft sm:flex"
+              className="hidden max-w-[180px] items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 py-2 text-left transition-all hover:border-rose-300 hover:shadow-soft dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 sm:flex"
               aria-label="Choose delivery location"
             >
-              <MapPin className="h-4 w-4 shrink-0 text-brand" aria-hidden />
+              <MapPin className="h-4 w-4 shrink-0 text-brand dark:text-rose-400" aria-hidden />
               <span className="min-w-0">
-                <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
                   Deliver to
                 </span>
-                <span className="block truncate text-sm font-bold text-charcoal">
+                <span className="block truncate text-sm font-bold text-foreground">
                   {mounted && location ? location.city : "Select city"}
                 </span>
               </span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-stone-400" aria-hidden />
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-stone-400 dark:text-stone-500" aria-hidden />
             </button>
 
             {/* Wishlist — compact icon on mobile */}
             <button
               onClick={() => setWishlistOpen(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:hidden"
+              className="relative grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:hidden"
               aria-label={`Open wishlist, ${wishCount} items`}
             >
               <Heart className="h-4.5 w-4.5" aria-hidden />
@@ -220,7 +259,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setWishlistOpen(true)}
-              className="relative hidden h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal transition-all hover:border-rose-300 hover:text-brand md:grid"
+              className="relative hidden h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 md:grid"
               aria-label={`Open wishlist, ${wishCount} items`}
             >
               <Heart className="h-4.5 w-4.5" aria-hidden />
@@ -274,7 +313,7 @@ export default function Header() {
             {/* Mobile menu */}
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-white text-charcoal lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground dark:border-stone-700 dark:bg-stone-900 lg:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
             >
@@ -291,7 +330,7 @@ export default function Header() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              className="overflow-hidden border-t border-rose-100 lg:hidden"
+              className="overflow-hidden border-t border-rose-100 dark:border-stone-800 lg:hidden"
               aria-label="Mobile"
             >
               <div className="space-y-1 px-4 py-3">
@@ -300,7 +339,7 @@ export default function Header() {
                     setMenuOpen(false);
                     setLocationOpen(true);
                   }}
-                  className="flex w-full items-center gap-2 rounded-xl bg-brand-soft px-3 py-2.5 text-sm font-bold text-brand"
+                  className="flex w-full items-center gap-2 rounded-xl bg-brand-soft px-3 py-2.5 text-sm font-bold text-brand dark:bg-rose-950/60 dark:text-rose-300"
                 >
                   <MapPin className="h-4 w-4" aria-hidden />
                   Deliver to {mounted && location ? location.city : "— select city"}
@@ -312,11 +351,34 @@ export default function Header() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * i }}
                     onClick={() => scrollTo(link.href)}
-                    className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold text-stone-700 hover:bg-rose-50 hover:text-brand"
+                    className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold text-stone-700 hover:bg-rose-50 hover:text-brand dark:text-stone-200 dark:hover:bg-stone-800 dark:hover:text-rose-300"
                   >
                     {link.label}
                   </motion.button>
                 ))}
+                <button
+                  onClick={onToggleTheme}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold text-stone-700 hover:bg-rose-50 dark:text-stone-200 dark:hover:bg-stone-800"
+                >
+                  <span className="flex items-center gap-2">
+                    {isDark ? (
+                      <Sun className="h-4 w-4 text-gold" aria-hidden />
+                    ) : (
+                      <Moon className="h-4 w-4 text-brand" aria-hidden />
+                    )}
+                    {isDark ? "Light mode" : "Dark mode"}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
+                      isDark
+                        ? "bg-gold-soft text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                        : "bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400"
+                    )}
+                  >
+                    {isDark ? "ON" : "OFF"}
+                  </span>
+                </button>
               </div>
             </motion.nav>
           )}

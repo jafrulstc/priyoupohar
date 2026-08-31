@@ -170,7 +170,7 @@ export default function Hero() {
   return (
     <section className="relative overflow-hidden" aria-label="Hero">
       {/* gradient wash + dotted texture */}
-      <div className="absolute inset-0 bg-gradient-to-b from-brand-soft via-cream to-cream" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-b from-brand-soft via-cream to-cream dark:from-rose-950/40 dark:via-background dark:to-background" aria-hidden />
       <div className="absolute inset-0 bg-dotted opacity-60" aria-hidden />
 
       {/* celebratory particles */}
@@ -198,7 +198,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 px-3.5 py-1.5 text-xs font-bold text-charcoal shadow-soft backdrop-blur"
+            className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white/80 dark:border-stone-700 dark:bg-card/80 px-3.5 py-1.5 text-xs font-bold text-foreground shadow-soft backdrop-blur"
           >
             <span className="flex items-center gap-0.5" aria-hidden>
               {Array.from({ length: 5 }).map((_, i) => (
@@ -213,7 +213,7 @@ export default function Hero() {
             initial="hidden"
             animate="show"
             variants={{ show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } }}
-            className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-charcoal sm:text-5xl xl:text-6xl"
+            className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl xl:text-6xl"
           >
             {["Make", "every", "moment"].map((w) => (
               <motion.span key={w} variants={wordVariants} className="mr-3 inline-block">
@@ -245,7 +245,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55, duration: 0.5 }}
-            className="mt-5 max-w-md text-base font-medium leading-relaxed text-stone-600 md:text-lg"
+            className="mt-5 max-w-md text-base font-medium leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg"
           >
             Fresh flowers, decadent cakes &amp; personalised surprises — hand-delivered
             same-day across 400+ cities. Gifts that arrive with a heartbeat.&nbsp;💝
@@ -274,7 +274,7 @@ export default function Hero() {
               onClick={() =>
                 document.querySelector("#combo-builder")?.scrollIntoView({ behavior: "smooth" })
               }
-              className="inline-flex items-center gap-2 rounded-full border-2 border-charcoal/10 bg-white px-6 py-3 text-sm font-extrabold text-charcoal transition hover:border-brand hover:text-brand"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-charcoal/10 bg-white dark:border-white/10 dark:bg-card px-6 py-3 text-sm font-extrabold text-foreground transition hover:border-brand hover:text-brand"
             >
               🎀 Build a Combo
             </motion.button>
@@ -300,7 +300,7 @@ export default function Hero() {
                   initial={{ scale: 0, x: -6 }}
                   animate={{ scale: 1, x: 0 }}
                   transition={{ delay: 0.85 + i * 0.07, type: "spring", stiffness: 400, damping: 18 }}
-                  className={`grid h-8 w-8 place-items-center rounded-full text-[10px] font-extrabold text-white ring-2 ring-white ${a.bg}`}
+                  className={`grid h-8 w-8 place-items-center rounded-full text-[10px] font-extrabold text-white ring-2 ring-white dark:ring-stone-800 ${a.bg}`}
                 >
                   {a.ch}
                 </motion.span>
@@ -309,13 +309,13 @@ export default function Hero() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 1.22, type: "spring", stiffness: 400, damping: 16 }}
-                className="grid h-8 w-8 place-items-center rounded-full bg-charcoal text-[9px] font-extrabold text-gold ring-2 ring-white"
+                className="grid h-8 w-8 place-items-center rounded-full bg-charcoal text-[9px] font-extrabold text-gold ring-2 ring-white dark:ring-stone-800"
               >
                 50k+
               </motion.span>
             </div>
-            <p className="text-[11px] font-bold leading-tight text-stone-500">
-              <span className="block text-xs font-extrabold text-charcoal">
+            <p className="text-[11px] font-bold leading-tight text-stone-500 dark:text-stone-400">
+              <span className="block text-xs font-extrabold text-foreground">
                 12,480 gifts delivered this week
               </span>
               Joined by 50,000+ happy gifters across India
@@ -327,7 +327,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
-            className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold text-stone-500"
+            className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold text-stone-500 dark:text-stone-400"
           >
             <span className="flex items-center gap-1.5">
               <Truck className="h-4 w-4 text-brand" aria-hidden /> Same-day in 2 hrs
@@ -347,12 +347,12 @@ export default function Hero() {
             transition={{ delay: 1, duration: 0.55 }}
             className="mt-8 max-w-lg"
           >
-            <div className="glass rounded-3xl border border-rose-100 p-3 shadow-soft sm:rounded-full sm:p-2">
+            <div className="glass rounded-3xl border border-rose-100 dark:border-stone-800 p-3 shadow-soft sm:rounded-full sm:p-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 {/* city */}
                 <button
                   onClick={() => setLocationOpen(true)}
-                  className="flex flex-1 items-center gap-2.5 rounded-2xl bg-white px-4 py-2.5 text-left ring-1 ring-stone-200 transition hover:ring-rose-300 sm:rounded-full"
+                  className="flex flex-1 items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 text-left ring-1 ring-stone-200 dark:ring-stone-700 transition hover:ring-rose-300 dark:hover:ring-rose-700 sm:rounded-full"
                   aria-label="Choose delivery city"
                 >
                   <MapPin className="h-4.5 w-4.5 shrink-0 text-brand" aria-hidden />
@@ -360,7 +360,7 @@ export default function Hero() {
                     <span className="block text-[10px] font-bold uppercase tracking-wide text-stone-400">
                       City
                     </span>
-                    <span className="block truncate text-sm font-bold text-charcoal">
+                    <span className="block truncate text-sm font-bold text-foreground">
                       {mounted && location ? location.city : "Select city"}
                     </span>
                   </span>
@@ -371,7 +371,7 @@ export default function Hero() {
                   <button
                     onClick={() => setDateOpen((v) => !v)}
                     aria-expanded={dateOpen}
-                    className="flex w-full items-center gap-2.5 rounded-2xl bg-white px-4 py-2.5 text-left ring-1 ring-stone-200 transition hover:ring-rose-300 sm:rounded-full"
+                    className="flex w-full items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 text-left ring-1 ring-stone-200 dark:ring-stone-700 transition hover:ring-rose-300 dark:hover:ring-rose-700 sm:rounded-full"
                     aria-label="Choose delivery date"
                   >
                     <CalendarDays className="h-4.5 w-4.5 shrink-0 text-brand" aria-hidden />
@@ -379,7 +379,7 @@ export default function Hero() {
                       <span className="block text-[10px] font-bold uppercase tracking-wide text-stone-400">
                         Delivery date
                       </span>
-                      <span className="block truncate text-sm font-bold text-charcoal">
+                      <span className="block truncate text-sm font-bold text-foreground">
                         {mounted
                           ? `${dates[dateIdx]?.label}, ${dates[dateIdx]?.sub}`
                           : "Pick a date"}
@@ -394,7 +394,7 @@ export default function Hero() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.96 }}
                         transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                        className="absolute bottom-full left-0 z-20 mb-2 w-full min-w-[320px] rounded-3xl border border-rose-100 bg-white p-3 shadow-lift"
+                        className="absolute bottom-full left-0 z-20 mb-2 w-full min-w-[320px] rounded-3xl border border-rose-100 dark:border-stone-800 bg-card p-3 shadow-lift"
                       >
                         <div className="grid grid-cols-4 gap-1.5">
                           {dates.map((d, i) => (
@@ -408,7 +408,7 @@ export default function Hero() {
                                 "rounded-2xl px-2 py-2 text-center transition-all",
                                 i === dateIdx
                                   ? "bg-brand text-white shadow-lift"
-                                  : "bg-cream text-charcoal hover:bg-brand-soft"
+                                  : "bg-cream dark:bg-muted text-foreground hover:bg-brand-soft dark:hover:bg-rose-950/50"
                               )}
                             >
                               <span className="block text-[11px] font-extrabold">{d.label}</span>
@@ -464,14 +464,14 @@ export default function Hero() {
                   "relative overflow-hidden rounded-full px-4 py-2 text-xs font-extrabold transition-all sm:text-sm",
                   i === tab
                     ? "text-brand"
-                    : "text-stone-500 hover:text-charcoal"
+                    : "text-stone-500 hover:text-charcoal dark:text-stone-400 dark:hover:text-foreground"
                 )}
                 aria-pressed={i === tab}
               >
                 {i === tab && (
                   <motion.span
                     layoutId="hero-tab-pill"
-                    className="absolute inset-0 rounded-full bg-white shadow-soft ring-1 ring-rose-100"
+                    className="absolute inset-0 rounded-full bg-card shadow-soft ring-1 ring-rose-100 dark:ring-stone-700"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -541,18 +541,18 @@ export default function Hero() {
                       ✨ Bestseller
                     </div>
                     {/* info bar */}
-                    <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 rounded-2xl bg-white/95 p-2.5 backdrop-blur">
+                    <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2.5 backdrop-blur">
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-extrabold text-charcoal">
+                        <p className="truncate text-xs font-extrabold text-foreground">
                           {product.name}
                         </p>
-                        <p className="flex items-center gap-1 text-[10px] font-bold text-stone-500">
+                        <p className="flex items-center gap-1 text-[10px] font-bold text-stone-500 dark:text-stone-400">
                           <Star className="h-3 w-3 fill-gold text-gold" aria-hidden />
                           {product.rating} · {product.reviews} reviews
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-brand">
+                        <span className="text-sm font-extrabold text-brand dark:text-rose-400">
                           {formatINR(product.price)}
                         </span>
                         <motion.button
@@ -575,14 +575,14 @@ export default function Hero() {
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute -top-1 right-2 z-20 hidden items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-extrabold text-charcoal shadow-soft backdrop-blur sm:flex"
+              className="absolute -top-1 right-2 z-20 hidden items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-[11px] font-extrabold text-foreground shadow-soft backdrop-blur sm:flex"
             >
               <Truck className="h-3.5 w-3.5 text-mint" aria-hidden /> Free delivery over ₹999
             </motion.div>
             <motion.div
               animate={{ y: [0, 10, 0] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 0.8 }}
-              className="absolute bottom-8 left-0 z-20 hidden items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-extrabold text-charcoal shadow-soft backdrop-blur sm:flex"
+              className="absolute bottom-8 left-0 z-20 hidden items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-[11px] font-extrabold text-foreground shadow-soft backdrop-blur sm:flex"
             >
               <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-mint text-white">
                 <Check className="h-3 w-3" aria-hidden />

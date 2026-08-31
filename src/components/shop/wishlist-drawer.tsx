@@ -65,7 +65,7 @@ function WishRow({ item }: { item: ProductSnapshot }) {
       animate={leaving ? { opacity: 0, x: 60 } : { opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 60, height: 0, marginBottom: 0, scale: 0.92 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className="flex gap-3 rounded-2xl border border-rose-100 bg-white p-3 shadow-soft"
+      className="flex gap-3 rounded-2xl border border-rose-100 bg-card p-3 shadow-soft dark:border-stone-800"
     >
       <button
         onClick={() => setQuickView(item)}
@@ -84,7 +84,7 @@ function WishRow({ item }: { item: ProductSnapshot }) {
         <div className="flex items-start justify-between gap-2">
           <button
             onClick={() => setQuickView(item)}
-            className="line-clamp-2 text-left text-sm font-bold text-charcoal transition-colors hover:text-brand"
+            className="line-clamp-2 text-left text-sm font-bold text-foreground transition-colors hover:text-brand"
           >
             {item.name}
           </button>
@@ -228,20 +228,20 @@ export default function WishlistDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-cream shadow-2xl"
+            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-background shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-rose-100 bg-white px-5 py-4">
+            <div className="flex items-center justify-between border-b border-rose-100 bg-card px-5 py-4 dark:border-stone-800">
               <div className="flex items-center gap-2.5">
                 <motion.span
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                  className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-brand"
+                  className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-brand dark:bg-rose-950/40 dark:text-rose-300"
                 >
                   <Heart className="h-4.5 w-4.5 fill-brand" aria-hidden />
                 </motion.span>
                 <div>
-                  <h2 className="text-base font-extrabold text-charcoal">Wishlist</h2>
+                  <h2 className="text-base font-extrabold text-foreground">Wishlist</h2>
                   <p className="text-xs text-stone-400">
                     {items.length} saved treasure{items.length === 1 ? "" : "s"}
                   </p>
@@ -249,7 +249,7 @@ export default function WishlistDrawer() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 text-stone-500 transition hover:border-rose-300 hover:text-brand"
+                className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 text-stone-500 transition hover:border-rose-300 hover:text-brand dark:border-stone-700"
                 aria-label="Close wishlist"
               >
                 <X className="h-4.5 w-4.5" />
@@ -288,11 +288,11 @@ export default function WishlistDrawer() {
                 <motion.div
                   animate={{ y: [0, -10, 0], scale: [1, 1.06, 1] }}
                   transition={{ repeat: Infinity, duration: 3 }}
-                  className="relative grid h-24 w-24 place-items-center rounded-full bg-rose-100 text-brand"
+                  className="relative grid h-24 w-24 place-items-center rounded-full bg-rose-100 text-brand dark:bg-rose-950/40 dark:text-rose-300"
                 >
                   <Heart className="h-10 w-10 fill-brand" aria-hidden />
                 </motion.div>
-                <h3 className="relative text-lg font-extrabold text-charcoal">
+                <h3 className="relative text-lg font-extrabold text-foreground">
                   No wishes yet
                 </h3>
                 <p className="relative max-w-64 text-sm text-stone-500">
@@ -317,19 +317,19 @@ export default function WishlistDrawer() {
                     ))}
                   </AnimatePresence>
 
-                  <div className="flex items-center gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-xs font-semibold text-rose-700">
+                  <div className="flex items-center gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-xs font-semibold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
                     <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
                     Wishlisted gifts sell out fast — same-day picks move quickest!
                   </div>
                 </div>
 
                 {/* ---------- FOOTER ---------- */}
-                <div className="border-t border-rose-100 bg-white px-5 py-4">
+                <div className="border-t border-rose-100 bg-card px-5 py-4 dark:border-stone-800">
                   <div className="mb-3 flex items-center justify-between text-sm">
                     <span className="text-stone-500">
                       {items.length} item{items.length === 1 ? "" : "s"} ready
                     </span>
-                    <span className="font-extrabold text-charcoal">
+                    <span className="font-extrabold text-foreground">
                       {formatINR(subtotal)}
                     </span>
                   </div>

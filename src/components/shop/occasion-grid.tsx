@@ -119,7 +119,7 @@ function OccasionTile({
                 e.stopPropagation();
                 onSelect(occasion);
               }}
-              className="shadow-lift mt-2 inline-flex cursor-pointer items-center whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-[10px] font-extrabold text-charcoal md:text-xs"
+              className="shadow-lift mt-2 inline-flex cursor-pointer items-center whitespace-nowrap rounded-full bg-white dark:bg-card px-3 py-1.5 text-[10px] font-extrabold text-charcoal dark:text-foreground md:text-xs"
             >
               Shop now →
             </motion.span>
@@ -150,13 +150,13 @@ export default function OccasionGrid() {
     <section id="occasions" className="py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="max-w-2xl">
-          <p className="text-brand text-xs font-bold uppercase tracking-[0.2em] md:text-sm">
+          <p className="text-brand dark:text-rose-400 text-xs font-bold uppercase tracking-[0.2em] md:text-sm">
             🎉 Every celebration covered
           </p>
-          <h2 className="mt-2 text-2xl font-extrabold text-charcoal md:text-4xl">
+          <h2 className="mt-2 text-2xl font-extrabold text-foreground md:text-4xl">
             Shop by <span className="text-gradient-brand">Occasion</span>
           </h2>
-          <p className="mt-3 text-sm text-stone-500 md:text-base">
+          <p className="mt-3 text-sm text-stone-500 dark:text-stone-400 md:text-base">
             From midnight cake drops to wedding-day blooms — handpicked hampers,
             cakes &amp; gifts for every moment that matters.
           </p>

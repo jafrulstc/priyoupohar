@@ -154,7 +154,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
   return (
     <div className="grid sm:grid-cols-2">
       {/* Image side */}
-      <div className="relative aspect-square bg-brand-soft">
+      <div className="relative aspect-square bg-brand-soft dark:bg-rose-950/50">
         <motion.img
           initial={{ scale: 1.08, opacity: 0.6 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -179,7 +179,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
         <button
           onClick={() => toggleWishlist(product)}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 shadow-soft transition hover:scale-110 active:scale-90"
+          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 shadow-soft transition dark:bg-stone-900/90 hover:scale-110 active:scale-90"
         >
           <motion.span
             key={String(wishlisted)}
@@ -200,7 +200,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
 
       {/* Details side */}
       <div className="flex flex-col p-5 sm:p-6">
-        <DialogTitle className="text-xl font-extrabold tracking-tight text-charcoal">
+        <DialogTitle className="text-xl font-extrabold tracking-tight text-foreground">
           {product.name}
         </DialogTitle>
         <DialogDescription className="sr-only">
@@ -226,7 +226,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
                 />
               ))}
             </span>
-            <span className="text-xs font-bold text-charcoal">
+            <span className="text-xs font-bold text-foreground">
               {product.rating.toFixed(1)}
             </span>
             <span className="truncate text-xs text-stone-400">
@@ -237,7 +237,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
             whileTap={{ scale: 0.9 }}
             onClick={share}
             aria-label={`Share ${product.name}`}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 py-1 text-[11px] font-bold text-stone-500 transition hover:border-rose-300 hover:text-brand"
+            className="flex shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 py-1 text-[11px] font-bold text-stone-500 transition hover:border-rose-300 hover:text-brand dark:border-stone-700"
           >
             {linkCopied ? (
               <Link2 className="h-3 w-3 text-mint" aria-hidden />
@@ -249,7 +249,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
         </div>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
-          <span className="text-3xl font-extrabold text-brand">
+          <span className="text-3xl font-extrabold text-brand dark:text-rose-400">
             {formatINR(product.price)}
           </span>
           {product.mrp > product.price && (
@@ -264,24 +264,24 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           )}
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-stone-600">
+        <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
           {product.description}
         </p>
 
         {/* Delivery info */}
-        <div className="mt-4 grid gap-1.5 rounded-2xl bg-cream p-3 text-xs font-semibold text-stone-600">
+        <div className="mt-4 grid gap-1.5 rounded-2xl bg-cream p-3 text-xs font-semibold text-stone-600 dark:bg-stone-900 dark:text-stone-300">
           <span className="flex items-center gap-2">
-            <Truck className="h-3.5 w-3.5 text-brand" aria-hidden />
+            <Truck className="h-3.5 w-3.5 text-brand dark:text-rose-400" aria-hidden />
             {product.sameDay
               ? "Same-day delivery — order in the next 2 hrs"
               : "Standard delivery in 2–3 days"}
           </span>
           <span className="flex items-center gap-2">
-            <MoonStar className="h-3.5 w-3.5 text-brand" aria-hidden />
+            <MoonStar className="h-3.5 w-3.5 text-brand dark:text-rose-400" aria-hidden />
             Midnight delivery available at checkout
           </span>
           <span className="flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
+            <ShieldCheck className="h-3.5 w-3.5 text-brand dark:text-rose-400" aria-hidden />
             Freshness guaranteed · Free gift wrap
           </span>
         </div>
@@ -293,11 +293,11 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
 
         {/* Qty + CTA */}
         <div className="mt-5 flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-full border border-stone-200 bg-cream p-1">
+          <div className="flex items-center gap-1 rounded-full border border-stone-200 bg-cream p-1 dark:border-stone-700 dark:bg-stone-800">
             <button
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               disabled={qty <= 1}
-              className="grid h-8 w-8 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand disabled:opacity-40"
+              className="grid h-8 w-8 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand dark:hover:bg-rose-950/40 disabled:opacity-40"
               aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" />
@@ -308,14 +308,14 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
                 initial={{ y: 8, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -8, opacity: 0 }}
-                className="w-7 text-center text-sm font-extrabold text-charcoal"
+                className="w-7 text-center text-sm font-extrabold text-foreground"
               >
                 {qty}
               </motion.span>
             </AnimatePresence>
             <button
               onClick={() => setQty((q) => Math.min(5, q + 1))}
-              className="grid h-8 w-8 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand"
+              className="grid h-8 w-8 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand dark:hover:bg-rose-950/40"
               aria-label="Increase quantity"
             >
               <Plus className="h-4 w-4" />

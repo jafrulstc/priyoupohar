@@ -44,6 +44,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/** Runs before paint: reads the persisted zustand store and applies the dark class (no FOUC). */
+const themeInitScript = `(function(){try{var raw=localStorage.getItem("bloom-bliss-shop");var t=raw?(JSON.parse(raw).state||{}).theme:null;if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,8 +54,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
-        className={`${jakarta.variable} ${geistMono.variable} font-sans antialiased bg-cream text-foreground`}
+        className={`${jakarta.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />

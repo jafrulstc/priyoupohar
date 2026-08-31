@@ -257,3 +257,57 @@ Stage Summary:
 - Bug fixed: no fee is ever charged without a visible line item + user choice.
 - Unresolved/risks: (a) loyalty is client-persisted — server should own stamps per user before production; (b) reward chip Apply doesn't clear `rewardCoupon` (stays until dismissed — intentional so users can re-apply, but a "used" flow could be added); (c) BLOOM100 has no min-order guard (flat 100 capped at subtotal by couponDiscount).
 - Next-round ideas (priority): 1) Dark mode toggle (tokens centralised; biggest styling lever left); 2) Cart bottom-sheet variant on mobile; 3) Per-gift OG share cards (?gift=slug + route with generateMetadata); 4) Loyalty tiers (3→6 stamps = free SHIPFREE coupon auto-grant); 5) Real order events feed for the social ticker.
+
+---
+Task ID: round-6-a
+Agent: frontend-styling-expert
+Task: Dark mode sweep — section components (hero, bestsellers, product-card, category-rail, testimonials, recently-viewed, occasion-grid, gift-finder, page wrapper)
+Work Log:
+- Applied the conversion table across 9 files: bg-white → bg-card (+/90 /95 variants kept as opacity), text-charcoal → text-foreground on light surfaces, text-stone-600/500 → dark:text-stone-300/400, borders/rings rose-100/200 + stone-200 → dark:stone-700/800 pairs.
+- Light gradients got dark stops: hero wash (dark:from-rose-950/40 dark:via-background dark:to-background), gift-finder backdrop (dark:via-rose-950/30); page.tsx root swapped bg-cream → bg-background (identical #fafaf9 in light, auto-flips in dark).
+- brand-soft chips/buttons → dark:bg-rose-950/50 + dark:text-rose-300/400; hero info bar / quick-view chip / occasion "Shop now" chip → bg-card-based so no white pills remain; hero avatar rings → dark:ring-stone-800; inactive bestseller tabs, testimonial arrows/dots, recently-viewed controls all got dark pairs incl. hover states.
+- Dark-by-design sections left untouched per rule 14: usp-marquee, stats-bar, combo-builder, newsletter, footer, spin-to-win (all bg-charcoal/bg-gradient-brand, text-cream/stone-300 fine in both modes).
+- VERIFIED: bun run lint → 0 problems; bunx tsc --noEmit → 0 errors in src/; GET / 200, dev compile clean; grep shows bg-white only when paired with dark:bg-*, text-charcoal only on gold badges (both-mode safe).
+Stage Summary:
+- Files touched (9): src/app/page.tsx, src/components/shop/{hero,bestsellers,product-card,category-rail,testimonials,recently-viewed,occasion-grid,gift-finder}.tsx — 123 dark: variants added; light mode pixel-identical (only appends + table swaps).
+- Deliberately skipped: image border-white frames (hero polaroids), gold "Bestseller"/"⚡ Midnight ready" ribbons (text-charcoal on gold, fine both modes), hero ⌘ trust-row icon colors, all lead-owned files (search-overlay/pincode-checker/order-track-modal styling noticed but out of scope — flag for lead round).
+- Dark surfaces now alternate cleanly: #171412 page → #211d1b cards → dark feature sections unchanged.
+
+---
+Task ID: round-6-b
+Agent: frontend-styling-expert
+Task: Dark mode sweep — overlays group (search, quick view, wishlist drawer, location, occasion, order track, social ticker, pincode, back-to-top, mobile nav)
+Work Log:
+- Applied the round-6 conversion table across 9 files; back-to-top.tsx needed nothing (charcoal circle + gold ring already dark-safe, table rule 14) — untouched.
+- 85 `dark:` variants appended + token swaps: `bg-white`→`bg-card` (wishlist rows/header/footer, occasion MiniCards+skeletons, order chips, track inputs/buttons, pincode input), drawer panel `bg-cream`→`bg-background` (matches cart-drawer), `text-charcoal`→`text-foreground` (×15), `text-brand`→`dark:text-rose-400` on prices/icons over dark surfaces.
+- Kept light `bg-cream` fills (delivery info, qty stepper, history/status panels) and appended `dark:bg-stone-900` / `dark:bg-stone-800` mirroring cart-drawer's house pattern; `bg-brand-soft`+`text-brand` chips got `dark:bg-rose-950/50 dark:text-rose-300` everywhere (incl. `dark:aria-selected:` rows in search).
+- Fixed genuinely invisible dark elements: pincode Midnight chip (`bg-charcoal/8 text-charcoal` → `dark:bg-stone-800/60 dark:text-stone-200`), social ticker glass card (`dark:bg-stone-900/80 dark:border-stone-700/60`), amber fallback card, gold-soft chips, skeletons.
+- Backdrops (`bg-charcoal/50`), gradient banners, `bg-dotted`, tag chips (`bg-gold text-charcoal` Bestseller), floating white/95 heart button over image (got `dark:bg-stone-900/90`), and white/15 accents on gradient banners deliberately left as-is.
+- Verified: `bun run lint` 0 problems; `bunx tsc --noEmit` 0 errors in src/ (only pre-existing examples/+skills noise); leftover grep clean (all hits paired with dark: or justified above).
+Stage Summary:
+- Files touched: search-overlay.tsx, product-quick-view.tsx, wishlist-drawer.tsx, location-modal.tsx, occasion-dialog.tsx, order-track-modal.tsx, social-proof-ticker.tsx, pincode-checker.tsx, mobile-nav.tsx (85 dark: variants; back-to-top.tsx intentionally unchanged). No functionality/JSX/copy changes — className-only.
+- Drawers now read as dark cards (#171412 panel / #211d1b rows) over the dim backdrop; dialogs/popovers flip via tokens; active mobile-nav pill stays readable (`dark:text-rose-400` active tab).
+- Left for lead: DialogContent primitive uses `bg-background` (not bg-popover) — dialogs flip to #171412; fine, just noting the quality-bar wording. Light mode untouched (only appended dark: or token swaps that are pixel-identical in light).
+
+---
+Task ID: round-6 (lead)
+Agent: Z.ai Code (main, webDevReview)
+Task: Status assessment + agent-browser QA + new features (dark mode, mobile cart bottom-sheet, tiered loyalty) + styling details
+
+Work Log:
+- STATUS ASSESSMENT: dev server healthy (GET / 200, /api/products 200, /api/pincode 200), lint 0 problems, tsc(src) 0 errors, dev.log clean, fresh-load console clean. agent-browser smoke tests: cart drawer (Bloom Rewards 0/3 + BLOOM100 chip + Apply → −₹100 → ₹398), mobile hero, persisted store (cart 1, 2 orders, reward BLOOM100). Verdict: STABLE → new features.
+- FEATURE 1 — DARK MODE (flagship): globals.css refined `.dark` tokens (bg #171412, card #211d1b, popover #262220, rose-tinted secondary/accent), theme-aware `.glass`/`.bg-dotted`/`.scrollbar-slim` via CSS vars, dark `.shadow-lift`/`.shadow-soft`, brighter `.shimmer-text` in dark, `color-scheme` per theme, prefers-reduced-motion kill-switch. layout.tsx: inline no-FOUC script reads persisted store and applies `dark` class pre-paint. Store v5: `theme` persisted + toggleTheme/setTheme. Header: animated Sun/Moon toggle (AnimatePresence rotate-swap, gold glow hover) desktop + Dark-mode row (ON/OFF pill) in mobile menu; header chrome dark-ified.
+- DELEGATED SWEEP (parallel subagents, Task IDs round-6-a/6-b in worklog): 208 dark: variants across 18 files with a shared conversion table (bg-white→bg-card, bg-cream→bg-background, text-charcoal→text-foreground, brand-soft/gold-soft → rose-950/amber-950 pairs, light gradients → dark stops). Agent A (sections): hero, bestsellers, product-card, category-rail, testimonials, recently-viewed, occasion-grid, gift-finder, page.tsx. Agent B (overlays): search-overlay, quick-view, wishlist-drawer, location-modal, occasion-dialog, order-track-modal, social ticker, pincode-checker (fixed invisible Midnight chip), mobile-nav. Light mode pixel-identical (append-only). Verified dark across hero/grid/finder/occasions/stats/cart/search surfaces via screenshots; toggles persist across reloads.
+- FEATURE 2 — Cart bottom-sheet on mobile: cart-drawer panel is responsive — mobile: slides from bottom (spring y), rounded-t-[1.75rem], max-h-[88dvh], grab handle, drag-to-dismiss (offset>110 or velocity>600); desktop: unchanged right slide-over. Verified 390×844: sheet + handle render, full totals/checkout visible.
+- FEATURE 3 — Tiered Bloom Rewards: store v5 adds lifetime `ordersCount` (migrated from history length); reward ladder LOYALTY_TIERS=[BLOOM100, SHIPFREE, SPIN15] cycles per completed 3-order block (loyaltyRewardFor()). Drawer rewards card copy is tier-aware ("1 more order → Free shipping"); reward chip + Apply toast + success "Reward earned" row now show dynamic labels (resolveCoupon). E2E VERIFIED: seeded ordersCount=5/stamps=2 → copy correct → 6th order unlocked SHIPFREE (double confetti + toast) → reward chip "SHIPFREE · Free shipping" applies → delivery FREE, checkout ₹549.
+- FIX: success-view gold reward row cramped at narrow widths → stacked 2-line layout with label on its own line.
+- STYLING DETAILS: reduced-motion support (a11y), dark shadows softened, dark selection color, color-scheme for native scrollbars/inputs; cart drawer fully dark-ified by lead (bands bg-card, item cards, slot pills, wrap toggle, coupon input, gold hints).
+- Dev-infra note: Turbopack served stale globals.css again after token edits → killed dev server, rm -rf .next, restarted (setsid nohup bun run dev) → fresh tokens confirmed (--background #171412).
+- FINAL GATES: lint 0 problems, tsc(src) 0 errors, fresh-load console + dev.log clean, light mode pixel-identical, dark mode verified desktop+mobile, all APIs 200.
+
+Stage Summary:
+- Store contract: version 5 — NEW persisted `theme: "light"|"dark"` (+toggleTheme/setTheme) and `ordersCount: number`; NEW exports LOYALTY_TIERS, loyaltyRewardFor(), Theme type. migrate: ordersCount falls back to orderHistory.length.
+- Layout: no-FOUC theme script in <head>; body bg token bg-background. Root wrapper in page.tsx also bg-background.
+- QA screenshots: download/qa/r6-*.png (dark hero/bestsellers/finder/occasions/stats/cart/sheet, tier2 unlock, shipfree apply, light-final).
+- Unresolved/risks: (a) dark-mode contrast on user-generated confetti/images unchanged (by design); (b) drawer drag-dismiss only on mobile sheet (desktop unchanged); (c) order-track modal charcoal banner + back-to-top circle intentionally same in both themes; (d) prefers-reduced-motion also nigs marquee/float (intended).
+- Next-round ideas (priority): 1) Per-gift OG share cards (?gift=slug + route with generateMetadata); 2) Loyalty dashboard strip (stamps + tier ladder + history in one place); 3) Cart bottom-sheet drag affordance polish + snap points; 4) Real order events feed for social ticker; 5) A11y audit pass (focus traps in drawers, aria-live for toasts).

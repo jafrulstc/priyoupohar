@@ -43,7 +43,7 @@ export default function RecentlyViewed() {
               <History className="h-3.5 w-3.5 text-brand" aria-hidden />
               Pick up where you left off
             </p>
-            <h2 className="mt-1.5 text-xl font-extrabold text-charcoal md:text-2xl">
+            <h2 className="mt-1.5 text-xl font-extrabold text-foreground md:text-2xl">
               Recently <span className="text-gradient-brand">viewed</span>
             </h2>
           </div>
@@ -54,7 +54,7 @@ export default function RecentlyViewed() {
                 clear();
                 toast({ title: "History cleared ✨", description: "A clean slate for new wishes." });
               }}
-              className="flex h-8 items-center gap-1 rounded-full border border-stone-200 bg-white px-3 text-[11px] font-bold text-stone-500 transition hover:border-rose-300 hover:text-brand"
+              className="flex h-8 items-center gap-1 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-card px-3 text-[11px] font-bold text-stone-500 dark:text-stone-400 transition hover:border-rose-300 dark:hover:border-stone-600 hover:text-brand dark:hover:text-rose-400"
               aria-label="Clear recently viewed"
             >
               <X className="h-3 w-3" aria-hidden /> Clear
@@ -62,7 +62,7 @@ export default function RecentlyViewed() {
             <button
               onClick={() => nudge(-1)}
               disabled={atStart}
-              className="grid h-8 w-8 place-items-center rounded-full border border-stone-200 bg-white text-charcoal transition hover:border-rose-300 hover:text-brand disabled:opacity-30"
+              className="grid h-8 w-8 place-items-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-card text-charcoal dark:text-foreground transition hover:border-rose-300 dark:hover:border-stone-600 hover:text-brand dark:hover:text-rose-400 disabled:opacity-30"
               aria-label="Scroll recently viewed left"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -70,7 +70,7 @@ export default function RecentlyViewed() {
             <button
               onClick={() => nudge(1)}
               disabled={atEnd}
-              className="grid h-8 w-8 place-items-center rounded-full border border-stone-200 bg-white text-charcoal transition hover:border-rose-300 hover:text-brand disabled:opacity-30"
+              className="grid h-8 w-8 place-items-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-card text-charcoal dark:text-foreground transition hover:border-rose-300 dark:hover:border-stone-600 hover:text-brand dark:hover:text-rose-400 disabled:opacity-30"
               aria-label="Scroll recently viewed right"
             >
               <ChevronRight className="h-4 w-4" aria-hidden />
@@ -96,7 +96,7 @@ export default function RecentlyViewed() {
               className="group w-36 shrink-0 snap-start text-center"
               aria-label={`Quick view ${item.name}`}
             >
-              <span className="shadow-soft group-hover:shadow-lift group-hover:ring-brand relative mx-auto block h-28 w-28 overflow-hidden rounded-full ring-2 ring-rose-100 transition-all group-hover:ring-4">
+              <span className="shadow-soft group-hover:shadow-lift group-hover:ring-brand relative mx-auto block h-28 w-28 overflow-hidden rounded-full ring-2 ring-rose-100 dark:ring-stone-700 transition-all group-hover:ring-4">
                 { }
                 <img
                   src={item.image}
@@ -104,13 +104,13 @@ export default function RecentlyViewed() {
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </span>
-              <span className="mt-2 line-clamp-1 block text-xs font-bold text-charcoal transition-colors group-hover:text-brand">
+              <span className="mt-2 line-clamp-1 block text-xs font-bold text-foreground transition-colors group-hover:text-brand">
                 {item.name}
               </span>
               <span
                 className={cn(
                   "mt-0.5 block text-xs font-extrabold",
-                  "text-brand"
+                  "text-brand dark:text-rose-400"
                 )}
               >
                 {formatINR(item.price)}

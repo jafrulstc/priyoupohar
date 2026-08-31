@@ -75,8 +75,8 @@ export default function PincodeChecker({ compact = false }: { compact?: boolean 
             placeholder={prefill || "Enter pincode"}
             aria-label="Delivery pincode"
             className={cn(
-              "w-full rounded-full border bg-white py-2.5 pl-9 pr-3 text-sm font-bold tracking-widest text-charcoal outline-none transition placeholder:tracking-normal placeholder:font-medium placeholder:text-stone-400",
-              error ? "border-amber-400" : "border-stone-200 focus:border-brand focus:ring-2 focus:ring-rose-100"
+              "w-full rounded-full border bg-card py-2.5 pl-9 pr-3 text-sm font-bold tracking-widest text-foreground outline-none transition placeholder:tracking-normal placeholder:font-medium placeholder:text-stone-400 dark:placeholder:text-stone-500",
+              error ? "border-amber-400" : "border-stone-200 focus:border-brand focus:ring-2 focus:ring-rose-100 dark:border-stone-700 dark:focus:ring-stone-700"
             )}
           />
         </div>
@@ -101,7 +101,7 @@ export default function PincodeChecker({ compact = false }: { compact?: boolean 
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mt-1.5 pl-2 text-[11px] font-bold text-amber-600"
+            className="mt-1.5 pl-2 text-[11px] font-bold text-amber-600 dark:text-amber-300"
           >
             {error}
           </motion.p>
@@ -116,24 +116,24 @@ export default function PincodeChecker({ compact = false }: { compact?: boolean 
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
             className="mt-2.5 overflow-hidden rounded-2xl border border-mint/30 bg-mint/5 p-3"
           >
-            <p className="flex items-center gap-1.5 text-xs font-extrabold text-charcoal">
+            <p className="flex items-center gap-1.5 text-xs font-extrabold text-foreground">
               <CheckCircle2 className="h-4 w-4 text-mint" aria-hidden />
               Yes! Delivers to {result.city}
               <span className="font-semibold text-stone-400">· {result.etaLabel}</span>
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {result.sameDay && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold text-brand">
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold text-brand dark:bg-rose-950/50 dark:text-rose-300">
                   <Zap className="h-3 w-3" aria-hidden /> Same-day
                 </span>
               )}
               {result.midnightAvailable && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-charcoal/8 px-2 py-0.5 text-[10px] font-extrabold text-charcoal">
+                <span className="inline-flex items-center gap-1 rounded-full bg-charcoal/8 px-2 py-0.5 text-[10px] font-extrabold text-charcoal dark:bg-stone-800/60 dark:text-stone-200">
                   <MoonStar className="h-3 w-3 text-gold" aria-hidden /> Midnight
                 </span>
               )}
               {result.codAvailable && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-300">
                   <Banknote className="h-3 w-3" aria-hidden /> COD
                 </span>
               )}
@@ -151,9 +151,9 @@ export default function PincodeChecker({ compact = false }: { compact?: boolean 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="mt-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-3"
+            className="mt-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
           >
-            <p className="text-xs font-extrabold text-charcoal">
+            <p className="text-xs font-extrabold text-foreground">
               🚚 Not in our direct network yet
             </p>
             <p className="mt-0.5 text-[11px] font-medium text-stone-500">

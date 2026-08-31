@@ -100,9 +100,9 @@ function MiniCard({
       transition={{ type: "spring", stiffness: 300, damping: 26, delay: index * 0.05 }}
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.97 }}
-      className="group relative overflow-hidden rounded-2xl border border-rose-100 bg-white text-left shadow-soft transition-shadow hover:shadow-lift"
+      className="group relative overflow-hidden rounded-2xl border border-rose-100 bg-card text-left shadow-soft transition-shadow hover:shadow-lift dark:border-stone-800"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-cream">
+      <div className="relative aspect-[4/3] overflow-hidden bg-background">
         <Image
           src={product.image}
           alt={product.name}
@@ -118,7 +118,7 @@ function MiniCard({
       </div>
 
       <div className="p-2.5">
-        <h4 className="line-clamp-1 text-xs font-bold text-charcoal">
+        <h4 className="line-clamp-1 text-xs font-bold text-foreground">
           {product.name}
         </h4>
         <div className="mt-1 flex items-center justify-between gap-1">
@@ -157,7 +157,7 @@ function MiniCard({
         </div>
         <div className="mt-1 flex items-center gap-1">
           <Star className="h-3 w-3 fill-gold text-gold" aria-hidden />
-          <span className="text-[10px] font-bold text-charcoal">
+          <span className="text-[10px] font-bold text-foreground">
             {product.rating.toFixed(1)}
           </span>
           <span className="text-[10px] text-stone-400">
@@ -273,12 +273,12 @@ export default function OccasionDialog({
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
-                      className="overflow-hidden rounded-2xl border border-rose-100 bg-white"
+                      className="overflow-hidden rounded-2xl border border-rose-100 bg-card dark:border-stone-800"
                     >
-                      <div className="aspect-[4/3] animate-pulse bg-rose-100" />
+                      <div className="aspect-[4/3] animate-pulse bg-rose-100 dark:bg-rose-950/40" />
                       <div className="space-y-1.5 p-2.5">
-                        <div className="h-3 w-3/4 animate-pulse rounded-full bg-stone-200" />
-                        <div className="h-3 w-1/3 animate-pulse rounded-full bg-stone-200" />
+                        <div className="h-3 w-3/4 animate-pulse rounded-full bg-stone-200 dark:bg-stone-700" />
+                        <div className="h-3 w-1/3 animate-pulse rounded-full bg-stone-200 dark:bg-stone-700" />
                       </div>
                     </div>
                   ))}
@@ -286,7 +286,7 @@ export default function OccasionDialog({
               ) : products.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <Sparkles className="h-8 w-8 text-gold" aria-hidden />
-                  <p className="text-sm font-bold text-charcoal">
+                  <p className="text-sm font-bold text-foreground">
                     Curators are still picking…
                   </p>
                   <p className="text-xs text-stone-500">

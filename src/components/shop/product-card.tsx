@@ -91,7 +91,7 @@ export default function ProductCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={SPRING}
       whileHover={{ y: -8, transition: SPRING }}
-      className="group relative flex h-full flex-col rounded-3xl border border-rose-100 bg-white shadow-soft transition-shadow hover:shadow-lift"
+      className="group relative flex h-full flex-col rounded-3xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card shadow-soft transition-shadow hover:shadow-lift"
     >
       {/* ---------- Image ---------- */}
       <div className="relative aspect-square overflow-hidden rounded-t-3xl">
@@ -111,7 +111,7 @@ export default function ProductCard({
           aria-label={`Quick view ${product.name}`}
           className="absolute inset-0 z-[5] grid cursor-pointer place-items-center bg-charcoal/0 opacity-0 transition-all duration-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand group-hover:bg-charcoal/15 group-hover:opacity-100"
         >
-          <span className="flex translate-y-2 items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-xs font-extrabold text-charcoal shadow-lift backdrop-blur transition-transform duration-300 group-hover:translate-y-0">
+          <span className="flex translate-y-2 items-center gap-1.5 rounded-full bg-card/95 px-3.5 py-2 text-xs font-extrabold text-foreground shadow-lift backdrop-blur transition-transform duration-300 group-hover:translate-y-0">
             <Eye size={14} aria-hidden /> Quick view
           </span>
         </button>
@@ -141,7 +141,7 @@ export default function ProductCard({
               ? `Remove ${product.name} from wishlist`
               : `Add ${product.name} to wishlist`
           }
-          className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-rose-100/80 bg-white/90 shadow-sm backdrop-blur transition-colors hover:bg-white"
+          className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-rose-100/80 dark:border-stone-700/80 bg-white/90 dark:bg-stone-900/90 shadow-sm backdrop-blur transition-colors hover:bg-white dark:hover:bg-stone-800"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -155,7 +155,7 @@ export default function ProductCard({
               <Heart
                 size={16}
                 aria-hidden
-                className={isWishlisted ? "fill-brand text-brand" : "text-stone-500"}
+                className={isWishlisted ? "fill-brand text-brand" : "text-stone-500 dark:text-stone-400"}
               />
             </motion.span>
           </AnimatePresence>
@@ -170,7 +170,7 @@ export default function ProductCard({
         ) : null}
 
         {/* Rating chip (bottom-right) */}
-        <span className="absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-xs font-bold text-charcoal">
+        <span className="absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded-full bg-card/95 px-2 py-0.5 text-xs font-bold text-foreground">
           <Star size={12} aria-hidden className="fill-gold text-gold" />
           {product.rating.toFixed(1)}
         </span>
@@ -179,7 +179,7 @@ export default function ProductCard({
       {/* ---------- Body ---------- */}
       <div className="flex flex-1 flex-col p-4">
         <div className="flex-1">
-          <h3 className="line-clamp-1 text-sm font-bold text-charcoal md:text-base">
+          <h3 className="line-clamp-1 text-sm font-bold text-foreground md:text-base">
             <button
               type="button"
               onClick={openQuickView}
@@ -189,12 +189,12 @@ export default function ProductCard({
               {product.name}
             </button>
           </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-stone-500">
+          <p className="mt-1 line-clamp-2 text-xs text-stone-500 dark:text-stone-400">
             {product.description}
           </p>
 
           <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className="text-lg font-extrabold text-brand">
+            <span className="text-lg font-extrabold text-brand dark:text-rose-400">
               {formatINR(product.price)}
             </span>
             {off > 0 ? (

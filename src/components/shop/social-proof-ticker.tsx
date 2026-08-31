@@ -123,12 +123,12 @@ export default function SocialProofTicker() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -40, scale: 0.92 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="pointer-events-auto flex max-w-[19rem] items-center gap-3 rounded-2xl border border-white/60 bg-white/80 px-3.5 py-3 shadow-lift backdrop-blur-md"
+            className="pointer-events-auto flex max-w-[19rem] items-center gap-3 rounded-2xl border border-white/60 bg-white/80 px-3.5 py-3 shadow-lift backdrop-blur-md dark:border-stone-700/60 dark:bg-stone-900/80"
             role="status"
           >
             {/* Live avatar */}
             <div className="relative shrink-0">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-soft text-lg" aria-hidden="true">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-soft text-lg dark:bg-rose-950/50" aria-hidden="true">
                 {current.emoji}
               </span>
               <span className="absolute -bottom-0.5 -right-0.5 flex items-center gap-0.5 rounded-full bg-mint px-1 py-px">
@@ -140,10 +140,10 @@ export default function SocialProofTicker() {
             </div>
 
             <div className="min-w-0 flex-1 text-left">
-              <p className="truncate text-xs font-extrabold text-charcoal">
+              <p className="truncate text-xs font-extrabold text-foreground">
                 {current.name} from {current.city}
               </p>
-              <p className="truncate text-[11px] font-semibold text-stone-500">
+              <p className="truncate text-[11px] font-semibold text-stone-500 dark:text-stone-400">
                 just sent {current.gift} {current.emoji}
               </p>
               <p className="text-[10px] font-bold uppercase tracking-wide text-mint">
@@ -154,7 +154,7 @@ export default function SocialProofTicker() {
             <button
               onClick={dismiss}
               aria-label="Hide live activity notifications"
-              className="grid h-6 w-6 shrink-0 place-items-center self-start rounded-full text-stone-300 transition hover:bg-rose-50 hover:text-brand"
+              className="grid h-6 w-6 shrink-0 place-items-center self-start rounded-full text-stone-300 transition hover:bg-rose-50 hover:text-brand dark:hover:bg-rose-950/40"
             >
               <X className="h-3.5 w-3.5" />
             </button>

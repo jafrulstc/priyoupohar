@@ -33,7 +33,7 @@ export default function MobileNav() {
       className="fixed inset-x-0 bottom-0 z-40 md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="glass border-t border-rose-100 shadow-[0_-8px_30px_-12px_rgba(28,25,23,0.18)]">
+      <div className="glass border-t border-rose-100 shadow-[0_-8px_30px_-12px_rgba(28,25,23,0.18)] dark:border-stone-800">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
           {ITEMS.map((item) => {
             const Icon = item.icon;
@@ -52,21 +52,21 @@ export default function MobileNav() {
                 {isActive && (
                   <motion.span
                     layoutId="mobile-nav-pill"
-                    className="absolute inset-x-3 inset-y-1 rounded-2xl bg-brand-soft"
+                    className="absolute inset-x-3 inset-y-1 rounded-2xl bg-brand-soft dark:bg-rose-950/50"
                     transition={{ type: "spring", stiffness: 420, damping: 32 }}
                   />
                 )}
                 <Icon
                   className={cn(
                     "relative z-10 h-5 w-5 transition-colors",
-                    isActive ? "text-brand" : "text-stone-500"
+                    isActive ? "text-brand dark:text-rose-400" : "text-stone-500"
                   )}
                   aria-hidden
                 />
                 <span
                   className={cn(
                     "relative z-10 text-[10px] font-bold transition-colors",
-                    isActive ? "text-brand" : "text-stone-500"
+                    isActive ? "text-brand dark:text-rose-400" : "text-stone-500"
                   )}
                 >
                   {item.label}

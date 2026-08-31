@@ -152,7 +152,7 @@ export default function OrderTrackModal() {
                   onChange={(e) => setOrderId(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && startTracking(orderId)}
                   placeholder="e.g. BBMC0A37"
-                  className="h-11 min-w-0 flex-1 rounded-2xl border border-stone-200 bg-white px-4 font-mono text-sm font-bold uppercase text-charcoal placeholder:font-sans placeholder:font-normal placeholder:normal-case placeholder:text-stone-300 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                  className="h-11 min-w-0 flex-1 rounded-2xl border border-stone-200 bg-card px-4 font-mono text-sm font-bold uppercase text-foreground placeholder:font-sans placeholder:font-normal placeholder:normal-case placeholder:text-stone-300 dark:border-stone-700 dark:placeholder:text-stone-500 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200"
                 />
                 <motion.button
                   whileHover={{ scale: 1.04 }}
@@ -171,7 +171,7 @@ export default function OrderTrackModal() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.15 }}
                   onClick={() => startTracking(lastOrderId)}
-                  className="flex w-fit items-center gap-1.5 rounded-full bg-gold-soft px-3 py-1.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-200"
+                  className="flex w-fit items-center gap-1.5 rounded-full bg-gold-soft px-3 py-1.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60"
                 >
                   <History className="h-3 w-3" aria-hidden />
                   Use last order ·{" "}
@@ -184,7 +184,7 @@ export default function OrderTrackModal() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="rounded-2xl border border-stone-200 bg-cream p-3"
+                  className="rounded-2xl border border-stone-200 bg-cream p-3 dark:border-stone-700 dark:bg-stone-900"
                 >
                   <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
                     <History className="h-3 w-3" aria-hidden />
@@ -197,11 +197,11 @@ export default function OrderTrackModal() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.94 }}
                         onClick={() => startTracking(o.id)}
-                        className="flex items-center gap-1.5 rounded-full border border-rose-100 bg-white px-2.5 py-1 text-[10px] font-bold text-charcoal transition hover:border-brand hover:text-brand"
+                        className="flex items-center gap-1.5 rounded-full border border-rose-100 bg-card px-2.5 py-1 text-[10px] font-bold text-foreground transition hover:border-brand hover:text-brand dark:border-stone-800"
                         aria-label={`Track order ${o.id}`}
                       >
                         <span className="font-mono">{o.id}</span>
-                        <span className="text-brand">{formatINR(o.total)}</span>
+                        <span className="text-brand dark:text-rose-400">{formatINR(o.total)}</span>
                         <span className="text-stone-300">
                           {new Date(o.at).toLocaleDateString("en-IN", {
                             day: "numeric",
@@ -224,19 +224,19 @@ export default function OrderTrackModal() {
               animate={{ opacity: 1, y: 0 }}
             >
               {/* status header */}
-              <div className="flex items-center justify-between rounded-2xl bg-cream px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl bg-cream px-4 py-3 dark:bg-stone-900">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">
                     Order
                   </p>
-                  <p className="font-mono text-sm font-extrabold text-charcoal">
+                  <p className="font-mono text-sm font-extrabold text-foreground">
                     {orderId}
                   </p>
                 </div>
                 <span
                   className={cn(
                     "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-extrabold",
-                    done ? "bg-mint/15 text-mint" : "bg-brand-soft text-brand"
+                    done ? "bg-mint/15 text-mint" : "bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300"
                   )}
                 >
                   {done ? (
@@ -257,7 +257,7 @@ export default function OrderTrackModal() {
                 {/* track line */}
                 <span
                   aria-hidden
-                  className="absolute bottom-5 left-[19px] top-5 w-0.5 bg-stone-200"
+                  className="absolute bottom-5 left-[19px] top-5 w-0.5 bg-stone-200 dark:bg-stone-700"
                 />
                 <motion.span
                   aria-hidden
@@ -294,10 +294,10 @@ export default function OrderTrackModal() {
                             : { type: "spring", stiffness: 400, damping: 18 }
                         }
                         className={cn(
-                          "z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 bg-white",
+                          "z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 bg-card",
                           reached
                             ? "border-brand text-brand"
-                            : "border-stone-200 text-stone-300"
+                            : "border-stone-200 text-stone-300 dark:border-stone-700"
                         )}
                       >
                         {i < (phase ?? 0) || done ? (
@@ -316,7 +316,7 @@ export default function OrderTrackModal() {
                         <p
                           className={cn(
                             "text-sm font-extrabold",
-                            reached ? "text-charcoal" : "text-stone-400"
+                            reached ? "text-foreground" : "text-stone-400"
                           )}
                         >
                           {step.label}
@@ -343,7 +343,7 @@ export default function OrderTrackModal() {
                     if (timerRef.current) clearInterval(timerRef.current);
                     setPhase(null);
                   }}
-                  className="h-10 flex-1 rounded-2xl border border-stone-200 bg-white text-sm font-bold text-stone-600 transition hover:border-rose-300 hover:text-brand"
+                  className="h-10 flex-1 rounded-2xl border border-stone-200 bg-card text-sm font-bold text-stone-600 transition hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:text-stone-300"
                 >
                   Track another
                 </button>

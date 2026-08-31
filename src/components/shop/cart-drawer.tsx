@@ -33,10 +33,11 @@ import {
   cartCount,
   FREE_SHIPPING_THRESHOLD,
   LOYALTY_TARGET,
-  LOYALTY_COUPON,
+  loyaltyRewardFor,
 } from "@/lib/store";
 import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 import { useMounted } from "@/hooks/use-mounted";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatINR } from "@/lib/format";
 import { celebrationConfetti, petalConfetti, miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +83,7 @@ export default function CartDrawer() {
   const recordOrder = useShopStore((s) => s.recordOrder);
   const dismissReward = useShopStore((s) => s.dismissReward);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const mounted = useMounted();
   const [checkingOut, setCheckingOut] = useState(false);
@@ -117,6 +119,12 @@ export default function CartDrawer() {
   const deliveryFee = pct >= 100 || appliedCoupon?.kind === "shipping" ? 0 : 99;
   const wrapFee = premiumWrap ? 49 : 0;
   const grandTotal = subtotal - discount + deliveryFee + wrapFee;
+
+  /* tiered loyalty: the reward ladder climbs each completed 3-order cycle */
+  const ordersCount = useShopStore((s) => s.ordersCount);
+  const nextCycle = Math.floor(ordersCount / LOYALTY_TARGET) + 1;
+  const nextRewardLabel =
+    resolveCoupon(loyaltyRewardFor(nextCycle))?.label ?? "₹100 off";
 
   const applyCoupon = () => {
     const code = couponInput.trim().toUpperCase();
@@ -188,7 +196,7 @@ export default function CartDrawer() {
         setTimeout(() => celebrationConfetti(), 650);
         toast({
           title: "Bloom Reward unlocked! 🌸",
-          description: `${unlockedCode} — ₹100 off your next order, on us.`,
+          description: `${unlockedCode} — ${resolveCoupon(unlockedCode)?.label ?? "a treat"} on your next order, on us.`,
         });
       }
       celebrationConfetti();
@@ -224,32 +232,50 @@ export default function CartDrawer() {
             className="absolute inset-0 bg-charcoal/50 backdrop-blur-sm"
           />
 
-          {/* Panel */}
+          {/* Panel — bottom sheet on mobile (drag to dismiss) · slide-over on desktop */}
           <motion.aside
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-cream shadow-2xl"
+            drag={isMobile ? "y" : false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 110 || info.velocity.y > 600) setOpen(false);
+            }}
+            className={cn(
+              "absolute flex w-full flex-col bg-background shadow-2xl",
+              isMobile
+                ? "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-[1.75rem]"
+                : "inset-y-0 right-0 max-w-md"
+            )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-rose-100 bg-white px-5 py-4">
-              <div className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand">
-                  <ShoppingBag className="h-4.5 w-4.5" aria-hidden />
-                </span>
-                <div>
-                  <h2 className="text-base font-extrabold text-charcoal">Your Gift Bag</h2>
-                  <p className="text-xs text-stone-400">{count} item{count === 1 ? "" : "s"} of joy</p>
-                </div>
+            <div className="border-b border-rose-100 bg-card dark:border-stone-800">
+              <div className="flex justify-center pt-2 md:hidden" aria-hidden>
+                <span className="h-1.5 w-12 rounded-full bg-stone-300 dark:bg-stone-600" />
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 text-stone-500 transition hover:border-rose-300 hover:text-brand"
-                aria-label="Close gift bag"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
+              <div className="flex items-center justify-between px-5 py-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300">
+                    <ShoppingBag className="h-4.5 w-4.5" aria-hidden />
+                  </span>
+                  <div>
+                    <h2 className="text-base font-extrabold text-foreground">Your Gift Bag</h2>
+                    <p className="text-xs text-stone-400">
+                      {count} item{count === 1 ? "" : "s"} of joy
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-stone-200 text-stone-500 transition hover:border-rose-300 hover:text-brand dark:border-stone-700"
+                  aria-label="Close gift bag"
+                >
+                  <X className="h-4.5 w-4.5" />
+                </button>
+              </div>
             </div>
 
             {result ? (
@@ -267,29 +293,31 @@ export default function CartDrawer() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.15 }}
                 >
-                  <h3 className="text-xl font-extrabold text-charcoal">Order confirmed! 🎉</h3>
+                  <h3 className="text-xl font-extrabold text-foreground">Order confirmed! 🎉</h3>
                   <p className="mt-1 text-sm text-stone-500">
                     Order <span className="font-mono font-bold text-brand">{result.orderId}</span> is
                     being wrapped with love.
                   </p>
-                  <div className="mt-4 w-full space-y-2 rounded-2xl border border-rose-100 bg-white p-4 text-left text-sm shadow-soft">
+                  <div className="mt-4 w-full space-y-2 rounded-2xl border border-rose-100 bg-card p-4 text-left text-sm shadow-soft dark:border-stone-800">
                     {unlocked && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 18 }}
-                        className="flex items-center justify-between rounded-xl bg-gold-soft px-3 py-2"
+                        className="flex flex-col gap-0.5 rounded-xl bg-gold-soft px-3 py-2 dark:bg-amber-950/40"
                       >
-                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700">
+                        <span className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700 dark:text-amber-300">
                           <Flower2 className="h-4 w-4" aria-hidden />
                           Reward earned · {unlocked}
                         </span>
-                        <span className="text-xs font-extrabold text-amber-700">₹100 off next</span>
+                        <span className="text-[11px] font-bold text-amber-700/90 dark:text-amber-300/90">
+                          {resolveCoupon(unlocked)?.label ?? "₹100 off"} on your next order
+                        </span>
                       </motion.div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-stone-500">Paid</span>
-                      <span className="font-extrabold text-charcoal">{formatINR(result.total)}</span>
+                      <span className="font-extrabold text-foreground">{formatINR(result.total)}</span>
                     </div>
                     {result.coupon && result.discount > 0 && (
                       <div className="flex justify-between">
@@ -311,17 +339,17 @@ export default function CartDrawer() {
                     )}
                     <div className="flex justify-between">
                       <span className="text-stone-500">Delivering to</span>
-                      <span className="font-bold text-charcoal">{result.deliveryTo}</span>
+                      <span className="font-bold text-foreground">{result.deliveryTo}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">Slot</span>
-                      <span className="font-bold capitalize text-charcoal">
+                      <span className="font-bold capitalize text-foreground">
                         {result.slot?.replace("-", "·") ?? "Same·day"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-stone-500">Gift wrap</span>
-                      <span className="font-bold text-charcoal">
+                      <span className="font-bold text-foreground">
                         {result.premiumWrap ? "Premium velvet 🎀" : "Free classic 🎁"}
                       </span>
                     </div>
@@ -344,7 +372,7 @@ export default function CartDrawer() {
                         setOpen(false);
                         setTrackOpen(true);
                       }}
-                      className="flex items-center justify-center gap-1.5 rounded-full border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-charcoal transition hover:border-brand hover:text-brand"
+                      className="flex items-center justify-center gap-1.5 rounded-full border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-foreground transition hover:border-brand hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
                     >
                       <Radar className="h-4 w-4 text-brand" aria-hidden />
                       Track
@@ -358,11 +386,11 @@ export default function CartDrawer() {
                 <motion.div
                   animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
                   transition={{ repeat: Infinity, duration: 3.2 }}
-                  className="grid h-24 w-24 place-items-center rounded-full bg-brand-soft text-brand"
+                  className="grid h-24 w-24 place-items-center rounded-full bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300"
                 >
                   <Gift className="h-10 w-10" aria-hidden />
                 </motion.div>
-                <h3 className="text-lg font-extrabold text-charcoal">Your bag is feeling light</h3>
+                <h3 className="text-lg font-extrabold text-foreground">Your bag is feeling light</h3>
                 <p className="max-w-60 text-sm text-stone-500">
                   Fill it with flowers, cakes & surprises — happiness ships free over{" "}
                   {formatINR(FREE_SHIPPING_THRESHOLD)}.
@@ -377,8 +405,8 @@ export default function CartDrawer() {
             ) : (
               <>
                 {/* ---------- BLOOM REWARDS ---------- */}
-                <div className="border-b border-rose-100 bg-white px-5 py-3">
-                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 px-3.5 py-2.5 ring-1 ring-rose-100">
+                <div className="border-b border-rose-100 bg-card px-5 py-3 dark:border-stone-800">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 px-3.5 py-2.5 ring-1 ring-rose-100 dark:from-rose-950/40 dark:via-stone-900 dark:to-amber-950/30 dark:ring-stone-700/80">
                     <div className="flex items-center gap-2.5">
                       <motion.span
                         animate={{ rotate: [0, -8, 8, 0] }}
@@ -389,16 +417,16 @@ export default function CartDrawer() {
                         <Flower2 className="h-4 w-4" />
                       </motion.span>
                       <div>
-                        <p className="text-xs font-extrabold text-charcoal">
+                        <p className="text-xs font-extrabold text-foreground">
                           Bloom Rewards{" "}
-                          <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-brand">
+                          <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-brand dark:bg-rose-950/50 dark:text-rose-300">
                             {stamps}/{LOYALTY_TARGET} stamps
                           </span>
                         </p>
                         <p className="text-[10px] font-semibold text-stone-400">
                           {stamps > 0
-                            ? `${LOYALTY_TARGET - stamps} more order${LOYALTY_TARGET - stamps === 1 ? "" : "s"} → ₹100 off`
-                            : "Every 3rd order earns ₹100 off"}
+                            ? `${LOYALTY_TARGET - stamps} more order${LOYALTY_TARGET - stamps === 1 ? "" : "s"} → ${nextRewardLabel}`
+                            : `Every ${LOYALTY_TARGET}rd order earns ${nextRewardLabel}`}
                         </p>
                       </div>
                     </div>
@@ -417,7 +445,7 @@ export default function CartDrawer() {
                           <Flower2
                             className={cn(
                               "h-4.5 w-4.5",
-                              i < stamps ? "fill-brand text-brand" : "text-rose-200"
+                              i < stamps ? "fill-brand text-brand" : "text-rose-200 dark:text-rose-800"
                             )}
                           />
                         </motion.span>
@@ -428,11 +456,11 @@ export default function CartDrawer() {
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-2 flex items-center justify-between rounded-2xl border border-dashed border-gold bg-gold-soft/70 px-3.5 py-2"
+                      className="mt-2 flex items-center justify-between rounded-2xl border border-dashed border-gold bg-gold-soft/70 px-3.5 py-2 dark:bg-amber-950/30"
                     >
-                      <span className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-700">
+                      <span className="flex items-center gap-1.5 text-[11px] font-extrabold text-amber-700 dark:text-amber-300">
                         <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                        Your ₹100 reward · {rewardCoupon}
+                        Your reward · {rewardCoupon}
                       </span>
                       <span className="flex items-center gap-2">
                         <button
@@ -442,7 +470,7 @@ export default function CartDrawer() {
                             miniConfetti();
                             toast({
                               title: "Reward applied! 🌸",
-                              description: "BLOOM100 · ₹100 off this order.",
+                              description: `${rewardCoupon} · ${resolveCoupon(rewardCoupon)?.label ?? "applied"} this order.`,
                             });
                           }}
                           className="rounded-full bg-charcoal px-3 py-1 text-[10px] font-extrabold text-cream transition hover:bg-stone-700"
@@ -462,7 +490,7 @@ export default function CartDrawer() {
                 </div>
 
                 {/* ---------- FREE SHIPPING PROGRESS ---------- */}
-                <div className="border-b border-rose-100 bg-white px-5 py-3.5">
+                <div className="border-b border-rose-100 bg-card px-5 py-3.5 dark:border-stone-800">
                   <div className="mb-1.5 flex items-center gap-2 text-xs font-bold">
                     <Truck
                       className={cn("h-4 w-4", pct >= 100 ? "text-mint" : "text-brand")}
@@ -473,13 +501,13 @@ export default function CartDrawer() {
                         Yay! You&apos;ve unlocked FREE shipping 🎉
                       </span>
                     ) : (
-                      <span className="text-charcoal">
+                      <span className="text-foreground">
                         Add {formatINR(remaining)} more for{" "}
                         <span className="text-brand">FREE shipping</span>
                       </span>
                     )}
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-rose-100">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-rose-100 dark:bg-stone-800">
                     <motion.div
                       className={cn(
                         "relative h-full rounded-full",
@@ -505,7 +533,7 @@ export default function CartDrawer() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 60, height: 0, marginBottom: 0, scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                        className="flex gap-3 rounded-2xl border border-rose-100 bg-white p-3 shadow-soft"
+                        className="flex gap-3 rounded-2xl border border-rose-100 bg-card p-3 shadow-soft dark:border-stone-800"
                       >
                         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
                           <img
@@ -516,7 +544,7 @@ export default function CartDrawer() {
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col">
                           <div className="flex items-start justify-between gap-2">
-                            <h4 className="line-clamp-2 text-sm font-bold text-charcoal">
+                            <h4 className="line-clamp-2 text-sm font-bold text-foreground">
                               {item.name}
                             </h4>
                             <button
@@ -531,7 +559,7 @@ export default function CartDrawer() {
                             {formatINR(item.price)}
                           </p>
                           <div className="mt-auto flex items-center justify-between pt-2">
-                            <div className="flex items-center gap-1 rounded-full border border-stone-200 bg-cream p-0.5">
+                            <div className="flex items-center gap-1 rounded-full border border-stone-200 bg-cream p-0.5 dark:border-stone-700 dark:bg-stone-800">
                               <button
                                 onClick={() => updateQty(item.id, -1)}
                                 className="grid h-6.5 w-6.5 place-items-center rounded-full text-stone-500 transition hover:bg-rose-100 hover:text-brand"
@@ -539,7 +567,7 @@ export default function CartDrawer() {
                               >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
-                              <span className="w-6 text-center text-sm font-extrabold text-charcoal">
+                              <span className="w-6 text-center text-sm font-extrabold text-foreground">
                                 {item.qty}
                               </span>
                               <button
@@ -550,7 +578,7 @@ export default function CartDrawer() {
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
                             </div>
-                            <span className="text-sm font-extrabold text-charcoal">
+                            <span className="text-sm font-extrabold text-foreground">
                               {formatINR(item.price * item.qty)}
                             </span>
                           </div>
@@ -559,13 +587,13 @@ export default function CartDrawer() {
                     ))}
                   </AnimatePresence>
 
-                  <div className="flex items-center gap-2 rounded-2xl bg-gold-soft px-4 py-3 text-xs font-semibold text-amber-700">
+                  <div className="flex items-center gap-2 rounded-2xl bg-gold-soft px-4 py-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                     <Gift className="h-4 w-4 shrink-0" aria-hidden />
                     Every order ships with a free gift wrap & message card.
                   </div>
 
                   {/* ---------- DELIVERY SLOT ---------- */}
-                  <div className="rounded-2xl border border-rose-100 bg-white p-3.5 shadow-soft">
+                  <div className="rounded-2xl border border-rose-100 bg-card p-3.5 shadow-soft dark:border-stone-800">
                     <p className="text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
                       Delivery slot
                     </p>
@@ -582,7 +610,7 @@ export default function CartDrawer() {
                               "relative flex flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-center transition",
                               active
                                 ? "bg-brand text-white shadow-soft"
-                                : "bg-cream text-stone-500 hover:bg-rose-50 hover:text-charcoal"
+                                : "bg-cream text-stone-500 hover:bg-rose-50 hover:text-foreground dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
                             )}
                           >
                             <Icon className="h-4 w-4" aria-hidden />
@@ -607,8 +635,8 @@ export default function CartDrawer() {
                     className={cn(
                       "flex items-center gap-3 rounded-2xl border-2 border-dashed p-3.5 transition-colors",
                       premiumWrap
-                        ? "border-gold bg-gold-soft/50"
-                        : "border-rose-200 bg-white"
+                        ? "border-gold bg-gold-soft/50 dark:bg-amber-950/30"
+                        : "border-rose-200 bg-card dark:border-stone-700"
                     )}
                   >
                     <motion.span
@@ -616,16 +644,16 @@ export default function CartDrawer() {
                       transition={{ duration: 0.6 }}
                       className={cn(
                         "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
-                        premiumWrap ? "bg-gold text-white" : "bg-brand-soft text-brand"
+                        premiumWrap ? "bg-gold text-white" : "bg-brand-soft text-brand dark:bg-rose-950/50 dark:text-rose-300"
                       )}
                       aria-hidden
                     >
                       <Ribbon className="h-4.5 w-4.5" />
                     </motion.span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-extrabold text-charcoal">
+                      <p className="text-xs font-extrabold text-foreground">
                         Premium velvet wrap
-                        <span className="ml-1.5 rounded-full bg-gold-soft px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700">
+                        <span className="ml-1.5 rounded-full bg-gold-soft px-1.5 py-0.5 text-[9px] font-extrabold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
                           +{formatINR(49)}
                         </span>
                       </p>
@@ -640,7 +668,7 @@ export default function CartDrawer() {
                       onClick={() => setPremiumWrap(!premiumWrap)}
                       className={cn(
                         "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-                        premiumWrap ? "bg-gold" : "bg-stone-200"
+                        premiumWrap ? "bg-gold" : "bg-stone-200 dark:bg-stone-700"
                       )}
                     >
                       <motion.span
@@ -658,7 +686,7 @@ export default function CartDrawer() {
                 </div>
 
                 {/* ---------- FOOTER ---------- */}
-                <div className="border-t border-rose-100 bg-white px-5 py-4">
+                <div className="border-t border-rose-100 bg-card px-5 py-4 dark:border-stone-800">
                   {/* Coupon */}
                   <AnimatePresence mode="wait" initial={false}>
                     {coupon ? (
@@ -710,10 +738,10 @@ export default function CartDrawer() {
                               aria-label="Coupon code"
                               aria-invalid={!!couponError}
                               className={cn(
-                                "h-10 w-full rounded-2xl border bg-cream pl-9 pr-3 text-xs font-bold uppercase tracking-wide text-charcoal placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-stone-300 focus:outline-none focus:ring-2",
+                                "h-10 w-full rounded-2xl border bg-cream pl-9 pr-3 text-xs font-bold uppercase tracking-wide text-foreground placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-stone-300 focus:outline-none focus:ring-2 dark:bg-stone-900 dark:placeholder:text-stone-600",
                                 couponError
                                   ? "border-rose-400 focus:ring-rose-200"
-                                  : "border-stone-200 focus:border-rose-300 focus:ring-rose-200"
+                                  : "border-stone-200 focus:border-rose-300 focus:ring-rose-200 dark:border-stone-700"
                               )}
                             />
                           </div>
@@ -753,7 +781,7 @@ export default function CartDrawer() {
 
                   <div className="mb-1 flex justify-between text-sm">
                     <span className="text-stone-500">Subtotal</span>
-                    <span className="font-extrabold text-charcoal">{formatINR(subtotal)}</span>
+                    <span className="font-extrabold text-foreground">{formatINR(subtotal)}</span>
                   </div>
                   {discount > 0 && (
                     <motion.div
@@ -767,7 +795,7 @@ export default function CartDrawer() {
                   )}
                   <div className="mb-1 flex justify-between text-sm">
                     <span className="text-stone-500">Delivery</span>
-                    <span className={cn("font-bold", freeShipUnlocked ? "text-mint" : "text-charcoal")}>
+                    <span className={cn("font-bold", freeShipUnlocked ? "text-mint" : "text-foreground")}>
                       {freeShipUnlocked ? "FREE" : formatINR(99)}
                     </span>
                   </div>
@@ -782,7 +810,7 @@ export default function CartDrawer() {
                         <span className="flex items-center gap-1 text-amber-700">
                           <Ribbon className="h-3.5 w-3.5" aria-hidden /> Premium wrap
                         </span>
-                        <span className="font-bold text-charcoal">{formatINR(49)}</span>
+                        <span className="font-bold text-foreground">{formatINR(49)}</span>
                       </motion.div>
                     )}
                   </AnimatePresence>

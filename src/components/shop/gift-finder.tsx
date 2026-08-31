@@ -95,14 +95,14 @@ function MatchCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 24, delay: index * 0.07 }}
       whileHover={{ y: -6 }}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-rose-100 bg-white text-left shadow-soft transition-shadow hover:shadow-lift"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card text-left shadow-soft transition-shadow hover:shadow-lift"
       onClick={() => setQuickView(product)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && setQuickView(product)}
       aria-label={`View ${product.name}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-cream">
+      <div className="relative aspect-[4/3] overflow-hidden bg-cream dark:bg-muted">
         <Image
           src={product.image}
           alt={product.name}
@@ -121,7 +121,7 @@ function MatchCard({
         </span>
       </div>
       <div className="p-2.5">
-        <h4 className="line-clamp-1 text-xs font-bold text-charcoal">{product.name}</h4>
+        <h4 className="line-clamp-1 text-xs font-bold text-foreground">{product.name}</h4>
         <div className="mt-1 flex items-center justify-between gap-1">
           <div className="flex items-baseline gap-1">
             <span className="text-xs font-extrabold text-brand">
@@ -158,7 +158,7 @@ function MatchCard({
         </div>
         <div className="mt-1 flex items-center gap-1">
           <Star className="h-3 w-3 fill-gold text-gold" aria-hidden />
-          <span className="text-[10px] font-bold text-charcoal">
+          <span className="text-[10px] font-bold text-foreground">
             {product.rating.toFixed(1)}
           </span>
           <span className="text-[10px] text-stone-400">
@@ -331,7 +331,7 @@ export default function GiftFinder() {
       aria-label="Gift Finder quiz"
     >
       {/* backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-b from-cream via-brand-soft/60 to-cream" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-b from-cream via-brand-soft/60 to-cream dark:from-background dark:via-rose-950/30 dark:to-background" aria-hidden />
       <div className="absolute inset-0 bg-dotted opacity-50" aria-hidden />
 
       <div className="relative mx-auto max-w-3xl px-4 md:px-8">
@@ -343,14 +343,14 @@ export default function GiftFinder() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-white/80 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand shadow-soft backdrop-blur">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 dark:border-stone-700 bg-white/80 dark:bg-card/80 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand dark:text-rose-400 shadow-soft backdrop-blur">
             <Wand2 className="h-3.5 w-3.5" aria-hidden /> Gift Finder
           </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-charcoal sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             Never gift the{" "}
             <span className="text-gradient-brand">wrong thing</span> again
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm font-medium text-stone-500 sm:text-base">
+          <p className="mx-auto mt-2 max-w-md text-sm font-medium text-stone-500 dark:text-stone-400 sm:text-base">
             Three taps and our gift concierge hand-picks the shortlist for you.
           </p>
         </motion.div>
@@ -361,15 +361,15 @@ export default function GiftFinder() {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ type: "spring", stiffness: 200, damping: 24, delay: 0.1 }}
-          className="glass mt-8 overflow-hidden rounded-[2rem] border border-rose-100 shadow-lift"
+          className="glass mt-8 overflow-hidden rounded-[2rem] border border-rose-100 dark:border-stone-800 shadow-lift"
         >
           {/* progress header */}
-          <div className="flex items-center gap-3 border-b border-rose-100/70 bg-white/70 px-5 py-3.5 backdrop-blur">
+          <div className="flex items-center gap-3 border-b border-rose-100/70 dark:border-stone-800/70 bg-white/70 dark:bg-card/70 px-5 py-3.5 backdrop-blur">
             {step > 0 && step < 3 && (
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={back}
-                className="grid h-8 w-8 place-items-center rounded-full bg-cream text-charcoal transition hover:bg-rose-100 hover:text-brand"
+                className="grid h-8 w-8 place-items-center rounded-full bg-cream dark:bg-muted text-charcoal dark:text-foreground transition hover:bg-rose-100 dark:hover:bg-rose-950/40 hover:text-brand dark:hover:text-rose-400"
                 aria-label="Go back a step"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -379,7 +379,7 @@ export default function GiftFinder() {
               <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-stone-400">
                 {step < 3 ? `Step ${step + 1} of 3` : "Your matches"}
               </p>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-rose-100">
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-rose-100 dark:bg-stone-800">
                 <motion.div
                   className="h-full rounded-full bg-gradient-brand"
                   animate={{ width: `${progress}%` }}
@@ -409,10 +409,10 @@ export default function GiftFinder() {
                   exit={{ opacity: 0, x: dir * -64 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
-                  <h3 className="text-center text-xl font-extrabold tracking-tight text-charcoal sm:text-2xl">
+                  <h3 className="text-center text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
                     {STEPS[step].title}
                   </h3>
-                  <p className="mt-1 text-center text-sm font-medium text-stone-500">
+                  <p className="mt-1 text-center text-sm font-medium text-stone-500 dark:text-stone-400">
                     {STEPS[step].sub}
                   </p>
 
@@ -438,13 +438,13 @@ export default function GiftFinder() {
                             "relative flex flex-col items-center gap-1.5 rounded-2xl border-2 px-3 py-4 transition-colors",
                             selected
                               ? "border-brand bg-brand text-white shadow-lift"
-                              : "border-rose-100 bg-white text-charcoal shadow-soft hover:border-rose-300"
+                              : "border-rose-100 dark:border-stone-800 bg-white dark:bg-card text-charcoal dark:text-foreground shadow-soft hover:border-rose-300 dark:hover:border-stone-600"
                           )}
                         >
                           {selected && (
                             <motion.span
                               layoutId="finder-selected-glow"
-                              className="absolute inset-0 rounded-2xl ring-4 ring-rose-200"
+                              className="absolute inset-0 rounded-2xl ring-4 ring-rose-200 dark:ring-stone-700"
                               transition={{ type: "spring", stiffness: 380, damping: 30 }}
                             />
                           )}
@@ -477,10 +477,10 @@ export default function GiftFinder() {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1.6, ease: "linear" }}
-                    className="grid h-16 w-16 place-items-center rounded-full border-4 border-rose-100 border-t-brand"
+                    className="grid h-16 w-16 place-items-center rounded-full border-4 border-rose-100 dark:border-stone-800 border-t-brand"
                     aria-hidden
                   />
-                  <p className="text-sm font-extrabold text-charcoal">
+                  <p className="text-sm font-extrabold text-foreground">
                     Consulting our gift concierge…
                   </p>
                   <div className="flex gap-1.5">
@@ -509,12 +509,12 @@ export default function GiftFinder() {
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                      className="text-xl font-extrabold tracking-tight text-charcoal sm:text-2xl"
+                      className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl"
                     >
                       ✨ Hand-picked for {answers.recipient?.label}
                     </motion.h3>
-                    <p className="mt-1 inline-flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold text-stone-500">
-                      <span className="rounded-full bg-brand-soft px-2.5 py-1 text-brand">
+                    <p className="mt-1 inline-flex flex-wrap items-center justify-center gap-1.5 text-xs font-bold text-stone-500 dark:text-stone-400">
+                      <span className="rounded-full bg-brand-soft dark:bg-rose-950/50 px-2.5 py-1 text-brand dark:text-rose-300">
                         {chip}
                       </span>
                     </p>
@@ -523,7 +523,7 @@ export default function GiftFinder() {
                   {picks.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-10 text-center">
                       <Sparkles className="h-8 w-8 text-gold" aria-hidden />
-                      <p className="text-sm font-bold text-charcoal">
+                      <p className="text-sm font-bold text-foreground">
                         Our concierge is stumped — try another combo!
                       </p>
                     </div>
@@ -560,7 +560,7 @@ export default function GiftFinder() {
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={retake}
-                          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-stone-400 transition-colors hover:text-brand"
+                          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-stone-400 transition-colors hover:text-brand dark:hover:text-rose-400"
                         >
                           <RotateCcw className="h-3.5 w-3.5" aria-hidden />
                           Retake the quiz

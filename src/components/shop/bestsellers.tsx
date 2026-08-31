@@ -65,13 +65,13 @@ export default function Bestsellers() {
           viewport={{ once: true, margin: "-40px" }}
           transition={SPRING}
         >
-          <span className="inline-flex items-center rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
+          <span className="inline-flex items-center rounded-full bg-brand-soft dark:bg-rose-950/50 px-3 py-1 text-xs font-bold text-brand dark:text-rose-300">
             🔥 Most loved
           </span>
-          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-charcoal md:text-4xl">
+          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-foreground md:text-4xl">
             Bestsellers, <span className="text-gradient-brand">loved by millions</span>
           </h2>
-          <p className="mt-2 max-w-xl text-sm text-stone-500 md:text-base">
+          <p className="mt-2 max-w-xl text-sm text-stone-500 dark:text-stone-400 md:text-base">
             Handpicked gifts our customers can&apos;t stop re-ordering.
           </p>
         </motion.div>
@@ -94,7 +94,7 @@ export default function Bestsellers() {
                 className={`relative overflow-hidden whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-colors ${
                   active
                     ? "text-white"
-                    : "border border-stone-200 bg-white text-stone-600 hover:border-rose-300"
+                    : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-card text-stone-600 dark:text-stone-300 hover:border-rose-300 dark:hover:border-rose-700"
                 }`}
               >
                 {active ? (
@@ -122,10 +122,10 @@ export default function Bestsellers() {
           </div>
         ) : results.products.length === 0 ? (
           /* Empty state */
-          <div className="mt-8 flex flex-col items-center gap-2 rounded-3xl border border-rose-100 bg-white py-16 text-center">
+          <div className="mt-8 flex flex-col items-center gap-2 rounded-3xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card py-16 text-center">
             <Flower2 aria-hidden className="h-10 w-10 animate-wiggle text-rose-300" />
-            <p className="font-bold text-charcoal">No gifts here yet</p>
-            <p className="text-sm text-stone-500">
+            <p className="font-bold text-foreground">No gifts here yet</p>
+            <p className="text-sm text-stone-500 dark:text-stone-400">
               Try another category — something lovely is always blooming.
             </p>
           </div>
@@ -164,7 +164,7 @@ export default function Bestsellers() {
             onClick={() =>
               toast({ title: "Full catalog coming to this window soon ✨" })
             }
-            className="rounded-full border border-rose-200 px-6 py-2.5 font-bold text-brand transition-colors hover:bg-brand-soft"
+            className="rounded-full border border-rose-200 dark:border-stone-700 px-6 py-2.5 font-bold text-brand dark:text-rose-400 transition-colors hover:bg-brand-soft dark:hover:bg-rose-950/50"
           >
             View all gifts →
           </motion.button>
