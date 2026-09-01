@@ -399,3 +399,19 @@ Stage Summary:
 - QA shots: download/qa/r10-*.png (pairs-rail, card-designer, designer-live, success-view, dark-drawer).
 - Unresolved/risks: (a) pairsWith is hand-curated — could become per-product admin data later; (b) old persisted carts may still hold showcase-* ids until the next order (slug fallback covers cross-sell, but those lines never merge with grid adds — acceptable, they expire with cart clear); (c) browser profile reset (agent-browser close) wipes localStorage — QA state is not durable across sessions; (d) cardDesign is echoed/stored with the order but not yet rendered on the order-track modal.
 - Next-round ideas (priority): 1) Gift-page (/gift/slug) shows its "Pairs with" companions (reuse PairsRail server-side); 2) OG share card for the designed message card (Caveat + chosen washi/seal via next/og); 3) Bloom Club "gift me a stamp" share image; 4) Cart bottom-sheet snap points + drag affordance; 5) Admin-ish seed UI: pick pairs in combo-builder and persist user pairings; 6) Real inventory feel: decrement slot `left` on checkout.
+
+---
+Task ID: README-1
+Agent: Z.ai Code (main)
+Task: Write a comprehensive Local Setup Guide (README.md) for running the project on local Windows/Mac machines
+
+Work Log:
+- Verified project ground truth before writing: package.json (scripts, deps), prisma/schema.prisma (SQLite, DATABASE_URL via env), .env (sandbox absolute path — git-ignored by `.env*` rule), .gitignore, next.config.ts (output: standalone), prisma/seed.ts (runnable via tsx/bun), and grepped src/ for `process.env.*` and `z-ai-web-dev-sdk` usage → confirmed only DATABASE_URL is required, NO API keys needed.
+- Identified platform gotchas to document: (1) `.env` not shipped in git → users must create `.env.local`; (2) Prisma relative SQLite paths resolve from prisma/ dir → correct value is `file:../db/custom.db`; (3) npm scripts use Unix-only tools (`tee`, `cp -r`, inline NODE_ENV) → Windows needs `npx next dev/build/start` fallbacks; (4) Node ≥ 20.9 required by Next 16.
+- Created `/home/z/my-project/README.md` with all 5 requested sections: ① Prerequisites (Node version, npm/pnpm/yarn/bun table, zero-DB-install note) ② Installation Steps (get code → install deps → create .env.local → prisma generate/db:push/seed via `npx tsx prisma/seed.ts` → checkpoint) ③ Environment Variables (priority order, required DATABASE_URL with relative-path + Windows backslash warnings, clearly-marked optional dummy vars) ④ Running Dev Server (per-manager commands, Windows `npx next dev -p 3000` note, http://localhost:3000, smoke-test checklist, optional production/standalone instructions) ⑤ Troubleshooting (port 3000 in-use kill commands per OS, clean-reinstall matrix, .next cache clearing per shell, Prisma error table incl. empty-grid → seed fix, Unix-script Windows table, hydration note).
+- Added Appendix: npm scripts table, project structure tree, API endpoints table, stack versions.
+
+Stage Summary:
+- Deliverable: `README.md` at project root — copy-paste friendly guide covering Windows + macOS for all 4 package managers.
+- Key insight documented: fresh clones get NO `.env` (git-ignored) and NO DB without seed; both are now step-by-step instructions with verification checkpoints.
+- No application code was modified — zero regression risk; dev server continues to serve products normally (verified healthy dev.log before/after).
