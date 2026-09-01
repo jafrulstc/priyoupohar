@@ -9,9 +9,10 @@ A high-conversion, animation-rich e-commerce storefront for gifts & flowers, bui
 | Animation     | **Framer Motion**, **canvas-confetti**, **lottie-react**           |
 | Icons         | **lucide-react**                                                   |
 | State         | **Zustand** (persisted cart / wishlist) + **TanStack Query**       |
-| Database      | **Prisma ORM** + **SQLite** (zero-config, file-based)              |
+| Database      | **Prisma ORM** + **PostgreSQL** (Supabase-ready)                   |
+| Storage       | **S3-compatible object storage** (Filebase) for photo uploads      |
 
-> 🎁 Features: gift finder wizard, combo builder, cart drawer with free-shipping progress, wishlist, delivery-slot picker, pincode serviceability check, greeting-card designer, coupons, spin-to-win, dark mode, and more.
+> 🎁 Features: gift finder wizard, combo builder, cart drawer with free-shipping progress, wishlist, delivery-slot picker, pincode serviceability check, greeting-card designer with **photo personalization** (S3 uploads), coupons, spin-to-win, dark mode, and more.
 
 ---
 
@@ -57,8 +58,9 @@ The project ships with a `bun.lock` file (it was developed with Bun), but **any 
 
 ### 1.3 Everything else
 
-- **Database**: Nothing to install. The app uses **SQLite** through Prisma — the database is just a single file (`db/custom.db`) created automatically in step 2.
-- **API keys**: None required. All features (products, cart, checkout simulation) run fully offline.
+- **Database**: You need a **PostgreSQL** database. A free [Supabase](https://supabase.com/) instance works great (the connection string looks like `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`), or run Postgres locally via Docker.
+- **Object storage** (optional): The “attach a photo” feature needs S3-compatible storage (Filebase / AWS S3 / MinIO). Without it, the feature hides itself gracefully.
+- **API keys**: No third-party API keys required. All features (products, cart, checkout simulation) run fully offline.
 - **Git** (optional): only needed if you clone instead of extracting a ZIP.
 
 ---
@@ -110,10 +112,10 @@ cp .env.example .env.local 2>/dev/null || touch .env.local
 New-Item -ItemType File -Force .env.local
 ```
 
-Then paste this single required line into `.env.local`:
+Then paste this required line into `.env.local`:
 
 ```env
-DATABASE_URL=file:../db/custom.db
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 ```
 
 ### Step 4 — Create the database & seed it with products
@@ -122,7 +124,7 @@ DATABASE_URL=file:../db/custom.db
 # 4a. Generate the Prisma Client (TypeScript types + query engine)
 npx prisma generate
 
-# 4b. Create the SQLite database file with the schema
+# 4b. Create the tables in your PostgreSQL database
 npm run db:push        # → runs: prisma db push
 
 # 4c. Seed the store with the 16 demo products (flowers, cakes, plants…)
@@ -132,7 +134,11 @@ npx tsx prisma/seed.ts
 > 💡 `npx tsx` auto-downloads the TypeScript runner on first use — that's expected.
 > **Bun users** can skip `tsx`: `bun prisma/seed.ts`
 
-✅ **Checkpoint:** you should now have a file at `db/custom.db` (~50 KB) containing 16 products. If `db/` doesn't exist, create it first: `mkdir db` (the `db:push` command in 4b will place the file there).
+✅ **Checkpoint:** run this and you should see **16 products**:
+
+```bash
+npx tsx -e "import{PrismaClient}from'@prisma/client';new PrismaClient().product.count().then(c=>{console.log('products:',c);process.exit(0)})"
+```
 
 ### Step 5 — You're done installing 🎉
 
@@ -158,42 +164,43 @@ Why `.env.local`? Next.js loads env files in this priority order:
 
 ```env
 # ─── REQUIRED ─────────────────────────────────────────────────────────────
-# SQLite database connection used by Prisma.
+# PostgreSQL connection string used by Prisma.
 #
-# ⚠️ IMPORTANT — relative paths are resolved from prisma/schema.prisma,
-# NOT from the project root. That's why it's "file:../db/custom.db"
-# (one level UP from /prisma, then into /db).
+# Supabase example (project ref + password from your Supabase dashboard):
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 #
-# ⚠️ Always use forward slashes "/" — even on Windows.
+# Local Postgres (Docker) example:
+# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bloom_bliss
+#
+# ⚠️ URL-encode special characters in the password (e.g. @ → %40).
 
-DATABASE_URL=file:../db/custom.db
+# ─── REQUIRED for photo uploads (S3-compatible storage) ──────────────────
+S3_ENDPOINT=https://s3.filebase.io
+S3_REGION=auto
+S3_ACCESS_KEY_ID=your-access-key
+S3_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET=your-bucket
 ```
 
 **Windows users — do NOT write this:**
 
 ```env
-# ❌ WRONG (backslashes / drive letters break Prisma's file URL)
-DATABASE_URL=file:C:\dev\bloom-bliss\db\custom.db
+# ❌ WRONG (unencoded special characters break the URL)
+DATABASE_URL=postgresql://postgres:p@ss@localhost:5432/db
 
-# ✅ RIGHT (relative + forward slashes)
-DATABASE_URL=file:../db/custom.db
+# ✅ RIGHT (special chars percent-encoded)
+DATABASE_URL=postgresql://postgres:p%40ss@localhost:5432/db
 ```
 
 <details>
-<summary>Prefer an absolute path instead? (works too)</summary>
+<summary>Locking down uploads (recommended for production)</summary>
 
-```env
-# Windows
-DATABASE_URL=file:./db/custom.db   # relative is still the safest option
-
-# macOS / Linux
-DATABASE_URL=file:/Users/yourname/dev/bloom-bliss/db/custom.db
-```
+Uploaded photos live under the `gift-photos/` prefix. The API returns a presigned URL (7-day validity) so it works even on **private** buckets. To make photo links permanent, allow public reads on the bucket (e.g. in the Filebase dashboard) — the API also returns the permanent `canonical` URL for that case.
 </details>
 
 ### 3.3 Optional variables (dummy examples — safe to skip)
 
-The app currently reads **only `DATABASE_URL`**. Everything else works out of the box with zero third-party keys. If you later integrate services, here are conventional dummy placeholders:
+The app reads `DATABASE_URL` + the `S3_*` variables above. Everything else works out of the box with zero third-party keys. If you later integrate services, here are conventional dummy placeholders:
 
 ```env
 # ─── OPTIONAL (not used by the current codebase) ─────────────────────────
@@ -364,7 +371,9 @@ npm run dev
 | Error message | Cause | Fix |
 | --- | --- | --- |
 | `Environment variable not found: DATABASE_URL` | `.env.local` missing or in the wrong folder | Create it in the **project root** (next to `package.json`) — see §3 |
-| `Error code 14: Unable to open the database file` | The `db/` folder doesn't exist, or the path in `DATABASE_URL` is wrong | `mkdir db`, then re-run `npm run db:push`. Keep forward slashes |
+| `Can't reach database server` / P1001 | Wrong host/port, or DB paused (Supabase free tier pauses) | Check the connection string; wake the project in the Supabase dashboard |
+| `Authentication failed` / P1010 | Wrong user/password, or IP not allow-listed | Re-copy credentials; check Supabase IP restrictions |
+| password authentication failed | Special characters not URL-encoded | `@` → `%40`, `#` → `%23`, etc. |
 | `The column X does not exist` / schema drift | Schema changed without re-pushing | `npm run db:push` |
 | `@prisma/client did not initialize yet` | Client not generated | `npx prisma generate` |
 | Product grid is **empty** | DB exists but never seeded | `npx tsx prisma/seed.ts` |
@@ -372,8 +381,7 @@ npm run dev
 **Nuclear option** (wipes DB and re-creates everything):
 
 ```bash
-rm db/custom.db
-npm run db:push
+npm run db:push        # re-create tables (--accept-data-loss)
 npx tsx prisma/seed.ts
 ```
 
@@ -412,7 +420,7 @@ You may see a one-time `Hydration mismatch` or zustand-persist notice on first l
 | `npm run build`     | Production build (standalone output)                |
 | `npm run start`     | Run the standalone production server (via Bun)      |
 | `npm run lint`      | ESLint check                                        |
-| `npm run db:push`   | Push `prisma/schema.prisma` to the SQLite database  |
+| `npm run db:push`   | Push `prisma/schema.prisma` to PostgreSQL           |
 | `npm run db:generate` | Generate Prisma Client                            |
 | `npm run db:migrate` | Create/apply a dev migration                       |
 | `npm run db:reset`  | Drop & re-create the database                       |
@@ -422,21 +430,20 @@ You may see a one-time `Hydration mismatch` or zustand-persist notice on first l
 ```
 bloom-bliss/
 ├── prisma/
-│   ├── schema.prisma        # Product model (SQLite)
+│   ├── schema.prisma        # Product model (PostgreSQL)
 │   └── seed.ts              # 16 demo products seeder
-├── db/
-│   └── custom.db            # SQLite database (created by db:push)
 ├── public/
 │   └── images/              # Product & occasion imagery
 ├── src/
 │   ├── app/                 # App Router pages + /api routes
 │   │   ├── api/products/    # GET /api/products?category=&q=&limit=
+│   │   ├── api/upload/      # POST /api/upload → S3 gift-photo storage
 │   │   └── api/checkout/    # POST /api/checkout (validated with zod)
 │   ├── components/
 │   │   ├── shop/            # All storefront sections (hero, cart, gift finder…)
 │   │   └── ui/              # shadcn/ui primitives
 │   ├── hooks/               # use-mounted, use-mobile, use-toast…
-│   └── lib/                 # store.ts (Zustand), db.ts (Prisma), utils…
+│   └── lib/                 # store.ts (Zustand), db.ts (Prisma), s3.ts, utils…
 ├── .env.local               # ← YOU create this (Section 3)
 └── package.json
 ```
@@ -447,9 +454,10 @@ bloom-bliss/
 | --------------------- | ------ | -------------------------------- |
 | `/api/products`       | GET    | List/filter products             |
 | `/api/checkout`       | POST   | Validate cart & return order ETA |
+| `/api/upload`         | POST   | Upload gift photo to S3 storage  |
 | `/api/pincode`        | GET    | Delivery serviceability check    |
 | `/api/slots`          | GET    | Available delivery slots         |
 
 ---
 
-🛠️ **Stack versions:** Next.js ^16.1.1 · React ^19 · TypeScript ^5 · Tailwind CSS ^4 · Prisma ^6.11 · Framer Motion ^12 · Zustand ^5
+🛠️ **Stack versions:** Next.js ^16.1.1 · React ^19 · TypeScript ^5 · Tailwind CSS ^4 · Prisma ^6.11 + **PostgreSQL** · S3 (Filebase) · Framer Motion ^12 · Zustand ^5

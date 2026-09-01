@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -14,9 +15,13 @@ import {
   Sun,
   Heart,
   Palette,
+  ImagePlus,
+  Loader2,
+  Camera,
+  X,
   type LucideIcon,
 } from "lucide-react";
-import { useShopStore, type WashiId, type SealId } from "@/lib/store";
+import { useShopStore, type WashiId, type SealId, type GiftPhoto } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 type Template = { id: string; label: string; icon: LucideIcon; text: string };
@@ -55,6 +60,8 @@ const TEMPLATES: Template[] = [
 ];
 
 const MAX_LEN = 280;
+const PHOTO_MAX_MB = 5;
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /* ---------- card designer palettes (exported for the checkout success view) ---------- */
 export const WASHI_STYLES: Record<WashiId, { label: string; strip: string; dot: string }> = {
@@ -81,6 +88,46 @@ export default function GiftMessageEditor() {
   const setCardDesign = useShopStore((s) => s.setCardDesign);
   const [open, setOpen] = useState(false);
   const [activeTpl, setActiveTpl] = useState<string | null>(null);
+
+  /* ---------- photo personalization ---------- */
+  const giftPhoto = useShopStore((s) => s.giftPhoto);
+  const setGiftPhoto = useShopStore((s) => s.setGiftPhoto);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const pickPhoto = async (file: File) => {
+    setUploadError(null);
+    if (!PHOTO_TYPES.includes(file.type)) {
+      setUploadError("JPG, PNG or WebP only, please.");
+      return;
+    }
+    if (file.size > PHOTO_MAX_MB * 1024 * 1024) {
+      setUploadError(`That's over ${PHOTO_MAX_MB} MB — try a smaller photo.`);
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Upload failed");
+      const photo: GiftPhoto = {
+        url: data.url,
+        canonical: data.canonical,
+        key: data.key,
+        name: file.name,
+        uploadedAt: Date.now(),
+      };
+      setGiftPhoto(photo);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed — try again.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const washi = WASHI_STYLES[cardDesign.washi];
   const seal = SEAL_STYLES[cardDesign.seal];
@@ -238,6 +285,94 @@ export default function GiftMessageEditor() {
                 </div>
               </div>
 
+              {/* Photo personalization — uploaded to S3-compatible storage */}
+              <div>
+                <p className="mb-1.5 flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
+                  <Camera className="h-3 w-3 text-gold" aria-hidden />
+                  Add a photo
+                  <span className="ml-auto text-[9px] font-bold normal-case tracking-normal text-stone-400/80">
+                    jpg · png · webp · up to {PHOTO_MAX_MB} MB
+                  </span>
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  aria-label="Attach a photo to your gift"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void pickPhoto(f);
+                  }}
+                />
+                <AnimatePresence mode="wait" initial={false}>
+                  {giftPhoto ? (
+                    <motion.div
+                      key="photo-row"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="flex items-center gap-2.5 rounded-xl border border-mint/50 bg-mint/5 p-2 dark:bg-mint/10"
+                    >
+                      <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-stone-200 dark:ring-stone-700">
+                        <Image
+                          src={giftPhoto.url}
+                          alt="Photo attached to your gift"
+                          fill
+                          unoptimized
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[11px] font-bold text-foreground">
+                          {giftPhoto.name}
+                        </span>
+                        <span className="block text-[10px] font-semibold text-mint">
+                          Printed alongside your message 🌷
+                        </span>
+                      </span>
+                      <button
+                        onClick={() => setGiftPhoto(null)}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-stone-400 transition hover:bg-rose-50 hover:text-brand dark:hover:bg-stone-800"
+                        aria-label="Remove photo"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      key="photo-btn"
+                      type="button"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={uploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-stone-300 bg-cream/50 px-3 py-3 text-[11px] font-bold text-stone-500 transition hover:border-brand/50 hover:text-brand disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900/50 dark:text-stone-400 dark:hover:border-rose-500/50 dark:hover:text-rose-300"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-brand" aria-hidden />
+                          Uploading your photo…
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus className="h-4 w-4 text-brand" aria-hidden />
+                          Attach a photo to the card
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+                {uploadError && (
+                  <p className="mt-1 text-[10px] font-bold text-brand" role="alert">
+                    {uploadError}
+                  </p>
+                )}
+              </div>
+
               {/* Card designer — washi + wax seal */}
               <div className="rounded-xl border border-stone-200/70 bg-cream/60 p-2.5 dark:border-stone-700 dark:bg-stone-900/60">
                 <p className="mb-1.5 flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-stone-400">
@@ -335,6 +470,29 @@ export default function GiftMessageEditor() {
                       )}
                       aria-hidden
                     />
+                    {/* polaroid photo — springs in when a photo is attached */}
+                    <AnimatePresence>
+                      {giftPhoto && (
+                        <motion.span
+                          key={`photo-${giftPhoto.key}`}
+                          initial={{ opacity: 0, scale: 0.5, rotate: -14, y: -8 }}
+                          animate={{ opacity: 1, scale: 1, rotate: 6, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.6 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                          className="absolute -left-0.5 -top-1 block rounded-md bg-white p-[3px] pb-1 shadow-lift ring-1 ring-stone-200 dark:bg-stone-100 dark:ring-stone-300"
+                          aria-hidden
+                        >
+                          <Image
+                            src={giftPhoto.url}
+                            alt=""
+                            width={52}
+                            height={52}
+                            unoptimized
+                            className="h-[52px] w-[52px] rounded-sm object-cover"
+                          />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                     <p
                       className="relative px-2 text-center font-handwriting text-lg font-semibold leading-relaxed text-charcoal dark:text-stone-200"
                     >

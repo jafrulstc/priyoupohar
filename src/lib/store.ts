@@ -38,6 +38,18 @@ export type DeliveryLocation = {
   pincode?: string;
 };
 
+/** Photo attached to the gift-message card (uploaded to S3-compatible storage). */
+export type GiftPhoto = {
+  /** Presigned GET URL — works on private buckets, expires after ~7 days. */
+  url: string;
+  /** Permanent path-style URL — works once the bucket allows public reads. */
+  canonical: string;
+  /** Object key inside the bucket, e.g. "gift-photos/2025-11/<uuid>.jpg". */
+  key: string;
+  name: string;
+  uploadedAt: number;
+};
+
 /** A concrete delivery window chosen from /api/slots for the current pincode. */
 export type DeliverySlot = {
   id: string;
@@ -160,6 +172,9 @@ type ShopState = {
   /** Card designer — washi tape + wax seal colours for the message card. */
   cardDesign: CardDesign;
   setCardDesign: (d: Partial<CardDesign>) => void;
+  /** Photo personalization — uploaded image shown on the message card. */
+  giftPhoto: GiftPhoto | null;
+  setGiftPhoto: (p: GiftPhoto | null) => void;
 };
 
 export const useShopStore = create<ShopState>()(
@@ -289,16 +304,19 @@ export const useShopStore = create<ShopState>()(
       cardDesign: DEFAULT_CARD_DESIGN,
       setCardDesign: (d) =>
         set((state) => ({ cardDesign: { ...state.cardDesign, ...d } })),
+      giftPhoto: null,
+      setGiftPhoto: (p) => set({ giftPhoto: p }),
     }),
     {
       name: "bloom-bliss-shop",
-      version: 8,
+      version: 9,
       // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
       // v4 adds order history + loyalty stamps + cart upsell prefs;
       // v5 adds theme + lifetime ordersCount for tiered loyalty rewards;
       // v6 adds the free gift-message card (persisted draft);
       // v7 adds the chosen delivery slot (availability engine);
       // v8 adds the card designer (washi tape + wax seal colours).
+      // v9 adds the gift photo (S3-uploaded image on the message card).
       migrate: (persisted) => {
         const s = (persisted ?? {}) as {
           cart?: CartItem[];
@@ -318,6 +336,7 @@ export const useShopStore = create<ShopState>()(
           giftMessage?: string;
           chosenSlot?: DeliverySlot | null;
           cardDesign?: Partial<CardDesign>;
+          giftPhoto?: GiftPhoto | null;
         };
         return {
           cart: Array.isArray(s.cart) ? s.cart : [],
@@ -368,6 +387,13 @@ export const useShopStore = create<ShopState>()(
               ? (s.cardDesign!.seal as SealId)
               : DEFAULT_CARD_DESIGN.seal,
           },
+          giftPhoto:
+            s.giftPhoto &&
+            typeof s.giftPhoto === "object" &&
+            typeof s.giftPhoto.url === "string" &&
+            typeof s.giftPhoto.key === "string"
+              ? s.giftPhoto
+              : null,
         };
       },
       partialize: (state) => ({
@@ -388,6 +414,7 @@ export const useShopStore = create<ShopState>()(
         giftMessage: state.giftMessage,
         chosenSlot: state.chosenSlot,
         cardDesign: state.cardDesign,
+        giftPhoto: state.giftPhoto,
       }),
     }
   )

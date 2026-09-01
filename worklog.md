@@ -415,3 +415,31 @@ Stage Summary:
 - Deliverable: `README.md` at project root — copy-paste friendly guide covering Windows + macOS for all 4 package managers.
 - Key insight documented: fresh clones get NO `.env` (git-ignored) and NO DB without seed; both are now step-by-step instructions with verification checkpoints.
 - No application code was modified — zero regression risk; dev server continues to serve products normally (verified healthy dev.log before/after).
+
+---
+Task ID: PG-MIGRATE-1
+Agent: Z.ai Code (main)
+Task: Migrate SQLite → PostgreSQL (Supabase), integrate S3-compatible storage (Filebase) as a feature, prep repo for GitHub push
+
+Work Log:
+- prisma/schema.prisma: datasource provider sqlite → postgresql. Prisma Client regenerated (v6.19.2) with postgres engine.
+- .env: DATABASE_URL → Supabase pooler URL (session mode, port 5432). Created .env.example (placeholders only, committed).
+- Gotcha: sandbox shell exports a STALE DATABASE_URL globally, which overrides .env (real env wins in Prisma) → re-exported per session; documented.
+- bun run db:push OK against Supabase (schema sync 2.45s); bun prisma/seed.ts → 16 products; row count verified via PrismaClient = 16.
+- Dev server restarted (kill old tree; setsid+disown relaunch). Verified: /api/products serves from Postgres, GET / 200. Learned: sandbox reaps naive nohup children; setsid + disown persists; earlier death likely OOM during Turbopack recompiles.
+- S3 integration (Filebase): verified credentials via ListBuckets → bucket (name withheld from repo docs). Empirical test: PutObject OK; bucket is PRIVATE (public GET = 403) → strategy = presigned GET (7d) as primary URL + permanent canonical URL returned for when bucket goes public.
+- New: src/lib/s3.ts (client helpers, PHOTO_MIME/PHOTO_MAX_BYTES), src/app/api/upload/route.ts (multipart POST, jpeg/png/webp ≤5MB, key gift-photos/<yyyy-mm>/<uuid>.<ext>, ACL public-read attempt, returns url+canonical+key).
+- Store v9: GiftPhoto type + giftPhoto/setGiftPhoto, persisted (migrate + partialize updated).
+- gift-message-editor.tsx: "Add a photo" row (hidden file input, type/size validation, upload spinner, thumbnail + remove, inline errors) + polaroid photo that springs onto the card preview.
+- cart-drawer.tsx sends photoUrl (canonical || presigned); /api/checkout zod schema + response extended with photoUrl.
+- next.config.ts: images.remotePatterns for s3.filebase.io (+ wildcard subdomain). bun add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner.
+- E2E verified via curl: POST /api/upload → 200 + presigned URL → GET photo = HTTP 200 (6669 bytes). bun run lint clean; dev.log clean.
+- README.md fully updated for PostgreSQL + S3 (env vars, troubleshooting table, structure, endpoints).
+- GitHub: no ssh binary + no sudo in sandbox → built GIT_SSH shim (~/git-ssh-shim/ssh-shim.ts, ssh2 pure-JS, parses git's ssh argv, streams stdio). Deploy key saved ~/.ssh/github_deploy_rsa (600). Auth VERIFIED (GitHub "Invalid command" = deploy key authenticated). Repo URL unknown — probed qsandbox/{my-project,bloom-bliss,bloom-and-bliss,nextjs_tailwind_shadcn_ts} → all "Repository not found". NEED repo URL from user.
+- Repo hygiene: .gitignore + /download/ /tool-results/ /upload/ /.zscripts/ /db/; git rm --cached 87 artifact files; CRITICAL: git rm --cached .env (was already tracked from an early auto-commit — would have leaked Supabase + Filebase secrets on push!). Identity set repo-local (qsandbox).
+
+Stage Summary:
+- App now runs 100% on PostgreSQL (Supabase) — 16 products live; SQLite legacy file untracked/ignored.
+- NEW FEATURE shipped: photo personalization on the free message card, backed by user's Filebase bucket, graceful degradation when S3_* unset.
+- Commit prepared; push BLOCKED only on the GitHub repo URL (owner/name). SSH path proven working via ssh2 shim; key has write access per user.
+- Risk: bucket private → presigned photo URLs expire in 7 days (canonical URL provided; ask user to enable public read for permanence). Presigned URLs embedded in persisted localStorage drafts will expire — acceptable for demo, flagged to user.

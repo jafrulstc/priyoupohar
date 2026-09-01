@@ -83,6 +83,7 @@ export default function CartDrawer() {
   const giftMessage = useShopStore((s) => s.giftMessage);
   const setGiftMessage = useShopStore((s) => s.setGiftMessage);
   const cardDesign = useShopStore((s) => s.cardDesign);
+  const giftPhoto = useShopStore((s) => s.giftPhoto);
   const chosenSlot = useShopStore((s) => s.chosenSlot);
   const setChosenSlot = useShopStore((s) => s.setChosenSlot);
   const { toast } = useToast();
@@ -189,6 +190,7 @@ export default function CartDrawer() {
           coupon: coupon ?? undefined,
           premiumWrap,
           message: giftMessage.trim() || undefined,
+          photoUrl: giftPhoto ? giftPhoto.canonical || giftPhoto.url : undefined,
           cardDesign:
             giftMessage.trim()
               ? { washi: cardDesign.washi, seal: cardDesign.seal }
