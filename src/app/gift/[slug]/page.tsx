@@ -9,6 +9,7 @@ import {
 import { formatINR } from "@/lib/format";
 import GiftPageActions from "@/components/shop/gift-page-actions";
 import ProductReviews from "@/components/shop/product-reviews";
+import ScrollProgress from "@/components/shop/scroll-progress";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,8 @@ export default async function GiftPage({
   if (!product) notFound();
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-x-clip bg-background">
+      <ScrollProgress />
       {/* Background decorations */}
       <div
         aria-hidden
@@ -71,7 +73,7 @@ export default async function GiftPage({
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
         <GiftPageActions product={product} />
-        <ProductReviews rating={product.rating} count={product.reviews} />
+        <ProductReviews rating={product.rating} count={product.reviews} productId={product.id} />
       </div>
     </div>
   );

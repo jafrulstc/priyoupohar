@@ -22,11 +22,13 @@ import RecentlyViewed from "@/components/shop/recently-viewed";
 import SocialProofTicker from "@/components/shop/social-proof-ticker";
 import DeepLinkOpener from "@/components/shop/deep-link-opener";
 import BloomClub from "@/components/shop/bloom-club";
+import ScrollProgress from "@/components/shop/scroll-progress";
 import AdminOverlay from "@/components/admin/admin-overlay";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background pb-[72px] md:pb-0">
+      <ScrollProgress />
       <Header />
       <main className="flex-1">
         <Hero />

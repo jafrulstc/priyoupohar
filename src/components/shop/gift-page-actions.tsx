@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import ImageLightbox from "@/components/shop/image-lightbox";
 import {
   Star,
   Truck,
@@ -18,6 +19,7 @@ import {
   ArrowRight,
   Share2,
   ChevronRight,
+  ZoomIn,
 } from "lucide-react";
 import { useShopStore, type ProductSnapshot } from "@/lib/store";
 import { formatINR } from "@/lib/format";
@@ -167,6 +169,9 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
 
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [lightboxGen, setLightboxGen] = useState(0);
   const isWishlisted = wishlist.some((w) => w.id === product.id);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -266,6 +271,14 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
             aria-hidden
             className="pointer-events-none absolute -inset-4 -rotate-2 rounded-[2.5rem] bg-gradient-brand opacity-15 blur-2xl"
           />
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => { setLightboxIdx(0); setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
+            aria-label="Open image gallery"
+            className="block w-full cursor-zoom-in"
+          >
           <div className="relative overflow-hidden rounded-[2rem] border-[6px] border-white bg-white shadow-lift transition-all duration-500 hover:shadow-[0_25px_50px_-12px_rgba(225,29,72,0.2)] dark:border-stone-800 dark:bg-stone-800">
             <div className="relative aspect-square">
               <Image
@@ -281,6 +294,12 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
                   {product.tag}
                 </span>
               )}
+              {/* Zoom hint overlay */}
+              <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+                <span className="flex items-center gap-1.5 rounded-full bg-charcoal/50 px-3 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                  <ZoomIn className="h-3 w-3" /> Tap to expand
+                </span>
+              </div>
               {/* Wishlist heart overlay */}
               <motion.button
                 whileTap={{ scale: 0.85 }}
@@ -299,13 +318,18 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
               </motion.button>
             </div>
           </div>
+          </motion.button>
           {/* Gallery thumbnails */}
           {product.gallery && product.gallery.length > 0 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-slim">
               {[product.image, ...product.gallery].map((img, i) => (
-                <div
+                <motion.button
                   key={i}
+                  type="button"
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => { setLightboxIdx(i); setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
                   className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${i === 0 ? "border-brand shadow-soft" : "border-transparent opacity-60 hover:opacity-100"}`}
+                  aria-label={`View ${product.name} image ${i + 1}`}
                 >
                   <Image
                     src={img}
@@ -314,7 +338,7 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
                     height={64}
                     className="h-full w-full object-cover"
                   />
-                </div>
+                </motion.button>
               ))}
             </div>
           )}
@@ -536,6 +560,18 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
           <PairsRail product={product} />
         </motion.div>
       </div>
+
+      {/* Image lightbox */}
+      <ImageLightbox
+        key={lightboxGen}
+        images={product.gallery && product.gallery.length > 0
+          ? [product.image, ...product.gallery]
+          : [product.image]}
+        alt={product.name}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        initialIndex={lightboxIdx}
+      />
 
       {/* Mobile sticky CTA bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-rose-100 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden dark:border-stone-800">
