@@ -91,7 +91,7 @@ export default function ProductCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={SPRING}
       whileHover={{ y: -8, transition: SPRING }}
-      className="group relative flex h-full flex-col rounded-3xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card shadow-soft transition-shadow hover:shadow-lift"
+      className="group relative flex h-full flex-col rounded-3xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card shadow-soft transition-all duration-300 hover:shadow-lift hover:border-rose-200 dark:hover:border-stone-700"
     >
       {/* ---------- Image ---------- */}
       <div className="relative aspect-square overflow-hidden rounded-t-3xl">
@@ -101,8 +101,10 @@ export default function ProductCard({
           fill
           priority={index < 4}
           sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
         />
+        {/* Bottom gradient for text readability + depth */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-charcoal/5 to-transparent dark:from-charcoal/20" aria-hidden />
 
         {/* Quick-view overlay (covers image, appears on hover) */}
         <button
