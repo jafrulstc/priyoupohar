@@ -9,10 +9,12 @@ A high-conversion, animation-rich e-commerce storefront for gifts & flowers, bui
 | Animation     | **Framer Motion**, **canvas-confetti**, **lottie-react**           |
 | Icons         | **lucide-react**                                                   |
 | State         | **Zustand** (persisted cart / wishlist) + **TanStack Query**       |
-| Database      | **Prisma ORM** + **PostgreSQL** (Supabase-ready)                   |
-| Storage       | **S3-compatible object storage** (Filebase) for photo uploads      |
+| Backend API   | **FastAPI** + **SQLAlchemy 2.0 (async)** + **Pydantic v2** (Python 3.10+) |
+| Auth          | **JWT** (python-jose) + **argon2** password hashing                |
+| Database      | **PostgreSQL** — per-module schemas (`bb_auth` / `core` / `orders`); legacy Prisma client still available |
+| Storage       | **S3-compatible object storage** (Filebase, boto3) for photo & product uploads |
 
-> 🎁 Features: gift finder wizard, combo builder, cart drawer with free-shipping progress, wishlist, delivery-slot picker, pincode serviceability check, greeting-card designer with **photo personalization** (S3 uploads), coupons, spin-to-win, dark mode, and more.
+> 🎁 Features: gift finder wizard, combo builder, cart drawer with free-shipping progress, wishlist, delivery-slot picker, pincode serviceability check, greeting-card designer with **photo personalization** (S3 uploads), coupons, spin-to-win, dark mode — plus a full **Admin Panel** (products / categories / orders / users CRUD, stats dashboard, media uploads) backed by a modular **FastAPI** service.
 
 ---
 
@@ -23,7 +25,8 @@ A high-conversion, animation-rich e-commerce storefront for gifts & flowers, bui
 3. [Environment Variables](#3-environment-variables)
 4. [Running the Development Server](#4-running-the-development-server)
 5. [Troubleshooting Common Issues](#5-troubleshooting-common-issues)
-6. [Appendix: Scripts & Project Structure](#appendix-scripts--project-structure)
+6. [FastAPI Backend & Admin Panel](#6-fastapi-backend--admin-panel)
+7. [Appendix: Scripts & Project Structure](#appendix-scripts--project-structure)
 
 ---
 
@@ -407,6 +410,73 @@ You may see a one-time `Hydration mismatch` or zustand-persist notice on first l
 - Check the terminal output where `npm run dev` is running — Next.js prints the real error there.
 - Server logs are also written to `dev.log` in the project root (macOS/Linux).
 - Delete `.next` + `node_modules` and redo [Section 2](#2-installation-steps) from Step 2 — that resolves ~95% of issues.
+
+---
+
+## 6. FastAPI Backend & Admin Panel
+
+The catalog, orders, users and admin operations are served by a **modular FastAPI service** (this is the single source of truth for the storefront and the admin panel).
+
+### 6.1 Architecture
+
+```
+mini-services/fastapi-backend/
+├── app/
+│   ├── main.py            # minimal app factory (+ /api/health)
+│   ├── core/              # config (pydantic-settings), async engine, init_db
+│   ├── models/            # SQLAlchemy 2.0 models (Mapped/mapped_column)
+│   ├── schemas/           # Pydantic v2 request/response models
+│   ├── services/          # business logic (repository/service layer)
+│   ├── routers/           # thin HTTP layer (auth, store, admin/*)
+│   └── utils/             # security (JWT/argon2), deps (Annotated DI), slugify
+├── scripts/seed.py        # idempotent demo data seeder
+├── scripts/e2e_test.py    # 62-check API test suite
+├── alembic/               # async migration scaffold (wired to settings)
+└── pyproject.toml         # exact allowed dependency list
+```
+
+**PostgreSQL schemas (per module, no DB enums — values enforced by Pydantic/Zod):**
+
+| PG schema | Tables |
+|-----------|--------|
+| `bb_auth` | `users` (Supabase reserves the `auth` schema) |
+| `core`    | `categories`, `products` |
+| `orders`  | `orders`, `order_items` |
+
+### 6.2 Running the backend
+
+```bash
+cd mini-services/fastapi-backend
+python3 -m venv .venv                      # first time only (Python ≥ 3.12)
+.venv/bin/pip install -r requirements.txt  # first time only
+.venv/bin/python scripts/seed.py           # idempotent demo data + admin user
+bun run dev                                # or: .venv/bin/python -m uvicorn app.main:app --port 8000
+```
+
+- API docs: <http://localhost:8000/docs>
+- Health: `GET /api/health`
+- Seed credentials: **admin@bloombliss.test / Admin@12345** (override via `ADMIN_*` env vars); demo customers `ravi@demo.test` / `priya@demo.test` (`Demo@1234`)
+- Run the test suite: `.venv/bin/python scripts/e2e_test.py` (62 checks)
+
+### 6.3 Admin Panel (Next.js)
+
+- Open the site and click the **shield icon** in the header (or any viewport ≥ `md`).
+- Sign in with the admin credentials → full-screen dashboard: **Overview** (stats), **Products** (CRUD + image upload to S3), **Categories**, **Orders** (status workflow), **Users** (roles/activation).
+- All forms are validated with **zod**; every API call goes through `src/lib/py-api.ts`.
+
+### 6.4 How the storefront talks to FastAPI
+
+| Caller | Mechanism |
+|--------|-----------|
+| Browser (admin panel, client) | relative fetch + `?XTransformPort=8000` (sandbox gateway) — see `src/lib/py-api.ts` |
+| Next.js server routes | direct `http://localhost:8000` (override with `FASTAPI_URL`) — see `src/lib/product-map.ts`, `/api/products` proxy, `/api/checkout` order persistence |
+| Product detail / OG images | server-side fetch via `src/lib/product-map.ts` |
+
+### 6.5 Backend file-size & style rules (enforced)
+
+- Every Python file is **< 350 lines** (largest: 155).
+- No `enum` columns — plain `String` + `Literal` types in Pydantic + zod enums on the frontend.
+- `Annotated` dependency injection everywhere; async sessions; repository/service layering.
 
 ---
 

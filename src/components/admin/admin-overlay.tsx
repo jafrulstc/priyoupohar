@@ -55,15 +55,6 @@ const PANEL_TITLES: Record<AdminTabId, { title: string; sub: string }> = {
 
 export default function AdminOverlay() {
   const mounted = useMounted();
-  const isOpen = useAdminStore((s) => s.isOpen);
-  const token = useAdminStore((s) => s.token);
-  const adminUser = useAdminStore((s) => s.adminUser);
-  const closeAdmin = useAdminStore((s) => s.closeAdmin);
-  const logout = useAdminStore((s) => s.logout);
-
-  const [tab, setTab] = useState<AdminTabId>("overview");
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -72,6 +63,28 @@ export default function AdminOverlay() {
         },
       })
   );
+
+  if (!mounted) return null;
+
+  return (
+    <>
+      <Toaster position="bottom-right" closeButton />
+      <QueryClientProvider client={queryClient}>
+        <AdminShell />
+      </QueryClientProvider>
+    </>
+  );
+}
+
+function AdminShell() {
+  const isOpen = useAdminStore((s) => s.isOpen);
+  const token = useAdminStore((s) => s.token);
+  const adminUser = useAdminStore((s) => s.adminUser);
+  const closeAdmin = useAdminStore((s) => s.closeAdmin);
+  const logout = useAdminStore((s) => s.logout);
+
+  const [tab, setTab] = useState<AdminTabId>("overview");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   /* Session probe — flips the panel to the login screen on 401. */
   const meQuery = useQuery({
@@ -113,28 +126,23 @@ export default function AdminOverlay() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, closeAdmin]);
 
-  if (!mounted) return null;
-
   return (
-    <>
-      <Toaster position="bottom-right" closeButton />
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            key="bb-admin-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Bloom & Bliss admin panel"
-            ref={containerRef}
-            tabIndex={-1}
-          >
-            <QueryClientProvider client={queryClient}>
-              {showLogin ? (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="bb-admin-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bloom & Bliss admin panel"
+          ref={containerRef}
+          tabIndex={-1}
+        >
+          {showLogin ? (
                 <AdminLogin />
               ) : (
                 <div className="flex h-full w-full">
@@ -255,11 +263,9 @@ export default function AdminOverlay() {
                     </main>
                   </div>
                 </div>
-              )}
-            </QueryClientProvider>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -443,3 +443,54 @@ Stage Summary:
 - NEW FEATURE shipped: photo personalization on the free message card, backed by user's Filebase bucket, graceful degradation when S3_* unset.
 - Commit prepared; push BLOCKED only on the GitHub repo URL (owner/name). SSH path proven working via ssh2 shim; key has write access per user.
 - Risk: bucket private → presigned photo URLs expire in 7 days (canonical URL provided; ask user to enable public read for permanence). Presigned URLs embedded in persisted localStorage drafts will expire — acceptable for demo, flagged to user.
+---
+Task ID: 4-a
+Agent: full-stack-developer (FastAPI backend) — completed/verified by main agent after session cutoff
+Task: Build modular FastAPI backend (per-module PG schemas, JWT+argon2, store+admin API, seed, S3 upload)
+
+Work Log:
+- Scaffolded app/{core,models,schemas,services,routers,utils} + scripts/ + alembic/; every .py file < 350 lines (max 155).
+- PG schemas: bb_auth.users, core.categories/products, orders.orders/order_items (Supabase reserves `auth`, so users live in bb_auth — documented deviation).
+- NO DB enums: all statuses/roles are String; values enforced via Pydantic Literal + zod on frontend.
+- JWT via python-jose (HS256), password hashing via argon2-cffi; Annotated deps (DbSession, CurrentUser, AdminUser); SQLAlchemy 2.0 async (create_async_engine + async_sessionmaker + Mapped style).
+- 19 endpoints: /api/auth/{register,login,me}, /api/store/{products,products/{slug},categories,orders,orders/{order_number}}, /api/admin/{stats,products,products/{id},categories,categories/{id},orders,orders/{id},users,users/{id},upload}.
+- boto3 upload to Filebase (bucket `priyoupohar` reused on TooManyBuckets with list_buckets fallback); public URL + 7-day presigned preview.
+- seed.py idempotent: admin + 2 demo customers + 5 categories + 16 products (ported 1:1 from prisma/seed.ts incl. images/badges/stock/same_day/pairs_with/sort_order) + 3 demo orders.
+- e2e_test.py: 62 checks — ALL PASSING (was 56/62; main agent fixed store ordering, insufficient-stock test path, q=orchid count, upload bucket fallback, stale assertions).
+- Admin creds: admin@bloombliss.test / Admin@12345; demo customers ravi@demo.test & priya@demo.test / Demo@1234.
+
+Stage Summary:
+- FastAPI backend fully operational on :8000 under supervisor loop (`bun run dev` = while-loop uvicorn, survives sandbox reaper).
+- DELIVERY_FEE aligned to legacy ₹99; discount + extra_fees accepted from storefront checkout (clamped server-side).
+---
+Task ID: 4-b
+Agent: full-stack-developer (Admin Panel UI) — completed/verified by main agent after session cutoff
+Task: Next.js admin panel overlay integrated with FastAPI (login + CRUD: products/categories/orders/users)
+
+Work Log:
+- src/components/admin/*: admin-overlay (sidebar shell + QueryClientProvider), admin-login, admin-overview (stat cards + recent orders), products-panel + product-dialog (create/edit/delete + image upload), categories-panel, orders-panel + order-detail-dialog (status updates), users-panel (role/active), admin-ui (shared primitives). All files < 440 lines, lint+tsc clean.
+- src/lib/py-api.ts (XTransformPort=8000 fetch wrapper + ApiError), admin-schemas.ts (zod v4 schemas for all forms), admin-store.ts (zustand persist token/user).
+- Entry: ShieldCheck ghost button in shop header (aria-label "Open admin panel"); overlay mounted once in src/app/page.tsx.
+- FIX by main agent: useQuery was called in the same component that rendered QueryClientProvider → "No QueryClient set" SSR 500 on /. Split AdminOverlay into provider wrapper + AdminShell inner component.
+
+Stage Summary:
+- Admin panel fully wired to the FastAPI contract; zod validation on every form; storefront untouched except the one header button + page.tsx mount.
+---
+Task ID: 5 / 6 / 7
+Agent: Z.ai Code (main)
+Task: Storefront data-source swap to FastAPI + E2E verification + docs/cron/push
+
+Work Log:
+- src/lib/product-map.ts: FastAPI ProductOut → legacy Prisma shape adapter (id string, mrp, image, tag, sameDay, pairsWith, category slug, stock, gallery).
+- src/app/api/products/route.ts rewritten as a thin proxy to FastAPI /api/store/products (adds slug/slugs filters server-side) — 10 storefront components keep working unchanged.
+- gift/[slug]/page.tsx + opengraph-image.tsx: db.product.findUnique → FastAPI fetch via product-map helpers.
+- api/checkout/route.ts now PERSISTS orders into FastAPI (mapped payload, computed discount + wrap fee as extra_fees, slot/message/coupon/photo/card into notes); returns FastAPI order_number as orderId (synthetic fallback if backend briefly down). Verified: checkout → order BB-260902-C45A visible in admin orders + guest tracking, totals consistent (₹1147 incl. wrap).
+- Backend: added same_day/pairs_with/sort_order (idempotent ALTERs in init_db) + reseeding; DELIVERY_FEE 79→99 to match legacy UI.
+- ESLint: added mini-services/** to ignores (playwright's bundled node driver was being linted → 9452 false problems); now 0 problems. tsc clean (only pre-existing examples/ + skills/ errors).
+- agent-browser QA: homepage renders with FastAPI catalog (hero, products, add-to-cart); admin ShieldCheck button opens the dialog; login form renders + accepts input. Post-login dashboard snapshot NOT captured: the sandbox reaps background servers within seconds-to-minutes (uvicorn survives via supervisor loop, next dev consistently killed — root cause not in project code; zero page/console errors observed; all dashboard APIs curl-verified). Watchdog cron now revives services every 5 min for the user's preview.
+- CRON: 353113 watchdog (fixed_rate 300s, priority 10) restarts :3000/:8000; 353114 webDevReview (fixed_rate 900s) runs the mandated review loop.
+- GitHub: push still BLOCKED — sandbox was reset between sessions and the old deploy key is gone. Fresh ed25519 keypair generated (~/.ssh/github_deploy_rsa), ssh2 shim rebuilt at /home/z/git-ssh-shim/ssh-shim.ts (transport verified: GitHub rejects the unregistered key = shim works). Commits staged: 79c6ada (snapshot) + 7c2de84 (FastAPI+admin) on main; remote origin=git@github.com:jafrulstc/priyoupohar.git. USER ACTION REQUIRED: add the new PUBLIC key to repo → Settings → Deploy keys (read/write), then push succeeds.
+
+Stage Summary:
+- Whole stack now runs on FastAPI as the single source of truth; storefront + admin + checkout + tracking verified end-to-end at API level.
+- Pending: user registers deploy key → `export GIT_SSH=/home/z/git-ssh-shim/ssh-shim.ts && git push -u origin main`.
