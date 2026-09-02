@@ -21,6 +21,8 @@ import {
   Sparkles,
   Share2,
   Link2,
+  ZoomIn,
+  ExternalLink,
 } from "lucide-react";
 import { useShopStore } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
@@ -28,6 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 import { formatINR, discountPct } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
 import PincodeChecker from "@/components/shop/pincode-checker";
+import ImageLightbox from "@/components/shop/image-lightbox";
+import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +99,8 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxGen, setLightboxGen] = useState(0);
 
   const wishlisted = mounted
     ? wishlist.some((w) => w.id === product.id)
@@ -160,6 +166,12 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
     <div className="grid sm:grid-cols-2">
       {/* Image side */}
       <div className="relative aspect-square bg-brand-soft dark:bg-rose-950/50">
+        <button
+          type="button"
+          onClick={() => { setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
+          className="absolute inset-0 z-[2] cursor-zoom-in"
+          aria-label="Zoom image"
+        />
         <motion.img
           initial={{ scale: 1.08, opacity: 0.6 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -167,7 +179,12 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           src={product.image}
           alt={product.name}
           className="absolute inset-0 h-full w-full object-cover"
+          draggable={false}
         />
+        {/* Zoom hint */}
+        <span className="pointer-events-none absolute bottom-3 right-3 z-[3] flex items-center gap-1.5 rounded-full bg-charcoal/50 px-2.5 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm">
+          <ZoomIn className="h-3 w-3" /> Tap to zoom
+        </span>
         {product.tag && (
           <motion.span
             initial={{ scale: 0, rotate: -8 }}
@@ -362,7 +379,25 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
           <Sparkles className="h-3 w-3 text-gold" aria-hidden />
           Personalise your gift message at the combo builder or checkout
         </p>
+
+        {/* View full details link */}
+        <Link
+          href={`/gift/${product.slug}`}
+          onClick={() => useShopStore.getState().setQuickViewProduct(null)}
+          className="mt-3 flex items-center justify-center gap-1 text-xs font-bold text-brand transition hover:text-rose-700"
+        >
+          View full details <ExternalLink className="h-3 w-3" />
+        </Link>
       </div>
+
+      {/* Lightbox */}
+      <ImageLightbox
+        key={lightboxGen}
+        images={[product.image]}
+        alt={product.name}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }

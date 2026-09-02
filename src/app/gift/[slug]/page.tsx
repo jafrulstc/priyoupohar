@@ -7,9 +7,17 @@ import {
   type LegacyProduct,
 } from "@/lib/product-map";
 import { formatINR } from "@/lib/format";
+import GiftPageHeader from "@/components/shop/gift-page-header";
 import GiftPageActions from "@/components/shop/gift-page-actions";
 import ProductReviews from "@/components/shop/product-reviews";
+import YouMayAlsoLike from "@/components/shop/you-may-also-like";
 import ScrollProgress from "@/components/shop/scroll-progress";
+import BackToTop from "@/components/shop/back-to-top";
+import MobileNav from "@/components/shop/mobile-nav";
+import SearchOverlay from "@/components/shop/search-overlay";
+import ProductQuickView from "@/components/shop/product-quick-view";
+import CartDrawer from "@/components/shop/cart-drawer";
+import WishlistDrawer from "@/components/shop/wishlist-drawer";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +67,7 @@ export default async function GiftPage({
   if (!product) notFound();
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-background">
+    <div className="relative min-h-screen overflow-x-clip bg-background pb-[72px] md:pb-0">
       <ScrollProgress />
       {/* Background decorations */}
       <div
@@ -71,10 +79,26 @@ export default async function GiftPage({
         className="pointer-events-none fixed inset-0 bg-dotted opacity-[0.5]"
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
+      <GiftPageHeader
+        productName={product.name}
+        productPrice={product.price}
+        productImage={product.image}
+        productId={product.id}
+      />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
         <GiftPageActions product={product} />
         <ProductReviews rating={product.rating} count={product.reviews} productId={product.id} />
+        <YouMayAlsoLike currentSlug={product.slug} currentCategory={product.category ?? undefined} />
       </div>
+
+      {/* Overlays */}
+      <BackToTop />
+      <MobileNav />
+      <SearchOverlay />
+      <ProductQuickView />
+      <CartDrawer />
+      <WishlistDrawer />
     </div>
   );
 }
