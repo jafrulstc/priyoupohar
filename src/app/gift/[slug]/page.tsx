@@ -12,17 +12,23 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { db } from "@/lib/db";
+import {
+  fetchFastApi,
+  mapProduct,
+  type FastApiProduct,
+  type LegacyProduct,
+} from "@/lib/product-map";
 import { formatINR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-async function getProduct(slug: string) {
-  try {
-    return await db.product.findUnique({ where: { slug } });
-  } catch {
-    return null;
-  }
+/** Catalog source of truth is the FastAPI backend (port 8000). */
+async function getProduct(slug: string): Promise<LegacyProduct | null> {
+  const body = await fetchFastApi<{ items: FastApiProduct[] }>(
+    `/api/store/products?slug=${encodeURIComponent(slug)}&limit=1`
+  );
+  const item = body?.items?.[0];
+  return item ? mapProduct(item) : null;
 }
 
 export async function generateMetadata({
@@ -124,7 +130,7 @@ export default async function GiftPage({
         {/* Details */}
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand dark:text-rose-400">
-            {CATEGORY_LABEL[product.category] ?? "Handpicked Gift"}
+            {CATEGORY_LABEL[product.category ?? ""] ?? "Handpicked Gift"}
           </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
             {product.name}

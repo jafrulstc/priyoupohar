@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 
+const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
+
+/** POST the mapped checkout payload to FastAPI; returns the order_number. */
+async function persistOrderToFastApi(payload: {
+  items: { product_id: number; quantity: number }[];
+  city: string;
+  pincode: string;
+  discount: number;
+  extra_fees: number;
+  notes: string;
+}): Promise<string | null> {
+  try {
+    const res = await fetch(`${FASTAPI_URL}/api/store/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      console.error("FastAPI order persist failed", res.status, await res.text());
+      return null;
+    }
+    const body = (await res.json()) as { order?: { order_number?: string } };
+    return body.order?.order_number ?? null;
+  } catch (error) {
+    console.error("FastAPI order persist unreachable", error);
+    return null;
+  }
+}
+
 const checkoutSchema = z.object({
   items: z
     .array(
@@ -61,12 +91,34 @@ export async function POST(req: NextRequest) {
     const deliveryFee = subtotal >= 999 || freeShipping ? 0 : 99;
     const giftWrap = premiumWrap ? 49 : 0;
     const total = subtotal + deliveryFee + giftWrap - discount;
-    const orderId = `BB${Date.now().toString(36).toUpperCase()}`;
+    const fallbackOrderId = `BB${Date.now().toString(36).toUpperCase()}`;
+
+    // Persist the order in the FastAPI backend (source of truth for admin).
+    // Prices/stock are re-validated server-side; falls back to a synthetic id
+    // if the backend is briefly unreachable so checkout never hard-fails.
+    const orderId = await persistOrderToFastApi({
+      items: items.map((i) => ({ product_id: Number(i.id), quantity: i.qty })),
+      city: location.city,
+      pincode: location.pincode ?? "000000",
+      discount,
+      extra_fees: giftWrap,
+      notes: [
+        slotDetail ? `slot: ${slotDetail.label} (${slotDetail.dateISO})` : `slot: ${slot}`,
+        message ? `message: ${message}` : null,
+        couponCode ? `coupon: ${couponCode}` : null,
+        premiumWrap ? "premium velvet wrap" : null,
+        photoUrl ? `photo: ${photoUrl}` : null,
+        cardDesign ? `card: washi=${cardDesign.washi} seal=${cardDesign.seal}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ")
+        .slice(0, 2000),
+    });
 
     // Simulated payment + ETA logic
     const etaHours = slot === "midnight" ? 12 : slot === "same-day" ? 4 : 48;
     return NextResponse.json({
-      orderId,
+      orderId: orderId ?? fallbackOrderId,
       status: "confirmed",
       subtotal,
       deliveryFee,

@@ -15,8 +15,10 @@ import {
   MoonStar,
   Moon,
   Sun,
+  ShieldCheck,
 } from "lucide-react";
 import { useShopStore, cartCount } from "@/lib/store";
+import { useAdminStore } from "@/lib/admin-store";
 import { useMounted } from "@/hooks/use-mounted";
 import { cn } from "@/lib/utils";
 
@@ -194,6 +196,16 @@ export default function Header() {
                 </motion.span>
               </AnimatePresence>
             </motion.button>
+
+            {/* Admin panel trigger */}
+            <button
+              onClick={() => useAdminStore.getState().openAdmin()}
+              className="hidden h-10 w-10 place-items-center rounded-2xl border border-transparent text-stone-400 transition-all hover:border-rose-200 hover:bg-brand-soft hover:text-brand md:inline-flex dark:text-stone-500 dark:hover:border-rose-500/40 dark:hover:bg-stone-800 dark:hover:text-rose-300"
+              aria-label="Open admin panel"
+              title="Admin"
+            >
+              <ShieldCheck className="h-[18px] w-[18px]" aria-hidden />
+            </button>
 
             {/* Search trigger */}
             <motion.button

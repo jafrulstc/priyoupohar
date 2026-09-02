@@ -22,6 +22,7 @@ import RecentlyViewed from "@/components/shop/recently-viewed";
 import SocialProofTicker from "@/components/shop/social-proof-ticker";
 import DeepLinkOpener from "@/components/shop/deep-link-opener";
 import BloomClub from "@/components/shop/bloom-club";
+import AdminOverlay from "@/components/admin/admin-overlay";
 
 export default function Home() {
   return (
@@ -54,6 +55,7 @@ export default function Home() {
       <MobileNav />
       <SocialProofTicker />
       <DeepLinkOpener />
+      <AdminOverlay />
     </div>
   );
 }

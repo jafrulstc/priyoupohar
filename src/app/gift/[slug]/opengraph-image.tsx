@@ -1,18 +1,23 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import path from "path";
-import { db } from "@/lib/db";
+import {
+  fetchFastApi,
+  mapProduct,
+  type FastApiProduct,
+  type LegacyProduct,
+} from "@/lib/product-map";
 
 export const alt = "Bloom & Bliss — fresh flowers, cakes & personalised gifts";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-async function getProduct(slug: string) {
-  try {
-    return await db.product.findUnique({ where: { slug } });
-  } catch {
-    return null;
-  }
+async function getProduct(slug: string): Promise<LegacyProduct | null> {
+  const body = await fetchFastApi<{ items: FastApiProduct[] }>(
+    `/api/store/products?slug=${encodeURIComponent(slug)}&limit=1`
+  );
+  const item = body?.items?.[0];
+  return item ? mapProduct(item) : null;
 }
 
 async function toDataUri(imagePath: string | null) {
