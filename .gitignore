@@ -63,3 +63,7 @@ server.log
 /db/
 # but keep the example template
 !.env.example
+
+# Local secrets — NEVER commit or push
+.secret
+.env.local.secrets
