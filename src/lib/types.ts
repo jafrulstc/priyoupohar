@@ -12,6 +12,7 @@ export type Product = {
   sameDay: boolean;
   description: string;
   pairsWith?: string | null;
+  stock?: number;
 };
 
 export const CATEGORIES = [

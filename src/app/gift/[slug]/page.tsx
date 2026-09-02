@@ -9,6 +9,7 @@ import {
 import { formatINR } from "@/lib/format";
 import GiftPageHeader from "@/components/shop/gift-page-header";
 import GiftPageActions from "@/components/shop/gift-page-actions";
+import ProductDetailsTabs from "@/components/shop/product-details-tabs";
 import ProductReviews from "@/components/shop/product-reviews";
 import YouMayAlsoLike from "@/components/shop/you-may-also-like";
 import ScrollProgress from "@/components/shop/scroll-progress";
@@ -88,6 +89,7 @@ export default async function GiftPage({
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
         <GiftPageActions product={product} />
+        <ProductDetailsTabs product={product} />
         <ProductReviews rating={product.rating} count={product.reviews} productId={product.id} />
         <YouMayAlsoLike currentSlug={product.slug} currentCategory={product.category ?? undefined} />
       </div>

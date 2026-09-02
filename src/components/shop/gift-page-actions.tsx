@@ -172,6 +172,12 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [lightboxGen, setLightboxGen] = useState(0);
+  const [selectedImgIdx, setSelectedImgIdx] = useState(0);
+
+  const allImages = product.gallery && product.gallery.length > 0
+    ? [product.image, ...product.gallery]
+    : [product.image];
+  const currentImage = allImages[selectedImgIdx] ?? product.image;
   const isWishlisted = wishlist.some((w) => w.id === product.id);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -275,31 +281,43 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
             type="button"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            onClick={() => { setLightboxIdx(0); setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
+            onClick={() => { setLightboxIdx(selectedImgIdx); setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
             aria-label="Open image gallery"
             className="block w-full cursor-zoom-in"
           >
           <div className="relative overflow-hidden rounded-[2rem] border-[6px] border-white bg-white shadow-lift transition-all duration-500 hover:shadow-[0_25px_50px_-12px_rgba(225,29,72,0.2)] dark:border-stone-800 dark:bg-stone-800">
             <div className="relative aspect-square">
-              <Image
-                src={product.image}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                className="object-cover"
-              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedImgIdx}
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={currentImage}
+                    alt={`${product.name} — image ${selectedImgIdx + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority={selectedImgIdx === 0}
+                    className="object-cover"
+                  />
+                </motion.div>
+              </AnimatePresence>
               {product.tag && (
                 <span className="absolute left-4 top-4 rounded-full bg-gold px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-charcoal shadow-soft">
                   {product.tag}
                 </span>
               )}
-              {/* Zoom hint overlay */}
-              <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
-                <span className="flex items-center gap-1.5 rounded-full bg-charcoal/50 px-3 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                  <ZoomIn className="h-3 w-3" /> Tap to expand
+              {/* Image counter badge */}
+              {allImages.length > 1 && (
+                <span className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-charcoal/50 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
+                  <ZoomIn className="h-3 w-3" aria-hidden />
+                  {selectedImgIdx + 1} / {allImages.length}
                 </span>
-              </div>
+              )}
               {/* Wishlist heart overlay */}
               <motion.button
                 whileTap={{ scale: 0.85 }}
@@ -320,16 +338,17 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
           </div>
           </motion.button>
           {/* Gallery thumbnails */}
-          {product.gallery && product.gallery.length > 0 && (
+          {allImages.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-slim">
-              {[product.image, ...product.gallery].map((img, i) => (
+              {allImages.map((img, i) => (
                 <motion.button
                   key={i}
                   type="button"
                   whileTap={{ scale: 0.92 }}
-                  onClick={() => { setLightboxIdx(i); setLightboxGen((g) => g + 1); setLightboxOpen(true); }}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${i === 0 ? "border-brand shadow-soft" : "border-transparent opacity-60 hover:opacity-100"}`}
+                  onClick={() => setSelectedImgIdx(i)}
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 ${i === selectedImgIdx ? "border-brand shadow-soft ring-2 ring-brand/20" : "border-transparent opacity-60 hover:opacity-100"}`}
                   aria-label={`View ${product.name} image ${i + 1}`}
+                  aria-pressed={i === selectedImgIdx}
                 >
                   <Image
                     src={img}
@@ -338,6 +357,13 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
                     height={64}
                     className="h-full w-full object-cover"
                   />
+                  {i === selectedImgIdx && (
+                    <motion.div
+                      layoutId="gallery-active-indicator"
+                      className="absolute inset-0 rounded-[10px] border-2 border-brand"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
                 </motion.button>
               ))}
             </div>
@@ -564,9 +590,7 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
       {/* Image lightbox */}
       <ImageLightbox
         key={lightboxGen}
-        images={product.gallery && product.gallery.length > 0
-          ? [product.image, ...product.gallery]
-          : [product.image]}
+        images={allImages}
         alt={product.name}
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

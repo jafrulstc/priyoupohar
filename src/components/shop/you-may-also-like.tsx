@@ -18,6 +18,7 @@ import { formatINR, discountPct } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /* ---------- Single recommendation card ---------- */
 function RecCard({ product, index }: { product: Product; index: number }) {
@@ -244,7 +245,37 @@ export default function YouMayAlsoLike({
     return () => ctrl.abort();
   }, [currentSlug, currentCategory]);
 
-  if (!mounted || loading || products.length === 0) return null;
+  if (!mounted) return null;
+
+  /* Loading skeletons */
+  if (loading) {
+    return (
+      <section className="mt-16 border-t border-rose-100 pt-10 dark:border-stone-800">
+        <div className="mb-6 text-center">
+          <Skeleton className="mx-auto h-6 w-40 rounded-full" />
+          <Skeleton className="mx-auto mt-3 h-8 w-64 rounded-xl" />
+          <Skeleton className="mx-auto mt-2 h-4 w-72 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col overflow-hidden rounded-2xl border border-rose-100 dark:border-stone-800">
+              <Skeleton className="aspect-square rounded-none" />
+              <div className="flex flex-1 flex-col gap-2 p-3">
+                <Skeleton className="h-4 w-3/4 rounded-lg" />
+                <Skeleton className="h-3 w-1/3 rounded-lg" />
+                <div className="mt-auto flex items-baseline gap-1.5 pt-2">
+                  <Skeleton className="h-5 w-14 rounded-lg" />
+                </div>
+                <Skeleton className="h-9 w-full rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) return null;
 
   return (
     <section className="mt-16 border-t border-rose-100 pt-10 dark:border-stone-800">

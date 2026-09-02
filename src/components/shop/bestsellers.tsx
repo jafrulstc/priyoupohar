@@ -114,10 +114,22 @@ export default function Bestsellers() {
 
         {/* ---------- Content ---------- */}
         {loading && results.products.length === 0 ? (
-          /* First-load skeletons */
+          /* First-load skeletons — realistic product card shape */
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-3xl" />
+              <div key={i} className="flex h-full flex-col rounded-3xl border border-rose-100 dark:border-stone-800 bg-white dark:bg-card">
+                <Skeleton className="aspect-square rounded-t-3xl rounded-b-none" />
+                <div className="flex flex-1 flex-col p-4 gap-2.5">
+                  <Skeleton className="h-4 w-3/4 rounded-lg" />
+                  <Skeleton className="h-3 w-full rounded-lg" />
+                  <Skeleton className="h-3 w-1/2 rounded-lg" />
+                  <div className="mt-auto flex items-baseline gap-2">
+                    <Skeleton className="h-5 w-16 rounded-lg" />
+                    <Skeleton className="h-3 w-10 rounded-lg" />
+                  </div>
+                  <Skeleton className="mt-1 h-10 w-full rounded-xl" />
+                </div>
+              </div>
             ))}
           </div>
         ) : results.products.length === 0 ? (

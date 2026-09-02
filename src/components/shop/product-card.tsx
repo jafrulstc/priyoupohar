@@ -23,6 +23,18 @@ const TAG_STYLES: Record<string, string> = {
   Premium: "bg-charcoal",
 };
 
+/* Auto-badges based on product data */
+function getAutoBadge(product: Product): { label: string; className: string } | null {
+  if (product.tag) return null; // explicit tag takes priority
+  if (product.rating >= 4.7 && product.reviews >= 50) {
+    return { label: "Trending", className: "bg-gradient-to-r from-brand to-rose-400" };
+  }
+  if (product.stock != null && product.stock > 0 && product.stock <= 3) {
+    return { label: `Only ${product.stock} left`, className: "bg-amber-500" };
+  }
+  return null;
+}
+
 /* Hydration-safe "mounted" flag: false during SSR + hydration render,
    true afterwards — no setState-in-effect (lint-clean). */
 const subscribeNoop = () => () => {};
@@ -105,6 +117,8 @@ export default function ProductCard({
         />
         {/* Bottom gradient for text readability + depth */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-charcoal/5 to-transparent dark:from-charcoal/20" aria-hidden />
+        {/* Hover shine sweep */}
+        <div className="pointer-events-none absolute inset-0 z-[4] -translate-x-full transition-transform duration-700 ease-out group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent" aria-hidden />
 
         {/* Quick-view overlay (covers image, appears on hover) */}
         <button
@@ -119,18 +133,16 @@ export default function ProductCard({
         </button>
 
         {/* Tag badge (top-left) */}
-        {product.tag ? (
+        {(product.tag ? { label: product.tag, className: TAG_STYLES[product.tag] ?? "bg-brand" } : getAutoBadge(product)) && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ ...SPRING, delay: 0.2 + index * 0.05 }}
-            className={`absolute left-2 top-2 z-10 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white ${
-              TAG_STYLES[product.tag] ?? "bg-brand"
-            }`}
+            className={"absolute left-2 top-2 z-10 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white " + (product.tag ? (TAG_STYLES[product.tag] ?? "bg-brand") : getAutoBadge(product)!.className)}
           >
-            {product.tag}
+            {product.tag ?? getAutoBadge(product)!.label}
           </motion.span>
-        ) : null}
+        )}
 
         {/* Wishlist heart (top-right) */}
         <motion.button

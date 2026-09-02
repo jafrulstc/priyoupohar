@@ -16,8 +16,9 @@ import {
   Moon,
   Sun,
   ShieldCheck,
+  Gift,
 } from "lucide-react";
-import { useShopStore, cartCount } from "@/lib/store";
+import { useShopStore, cartCount, LOYALTY_TARGET } from "@/lib/store";
 import { useAdminStore } from "@/lib/admin-store";
 import { useMounted } from "@/hooks/use-mounted";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,8 @@ export default function Header() {
   const setWishlistOpen = useShopStore((s) => s.setWishlistOpen);
   const theme = useShopStore((s) => s.theme);
   const toggleTheme = useShopStore((s) => s.toggleTheme);
+  const stamps = useShopStore((s) => s.stamps);
+  const ordersCount = useShopStore((s) => s.ordersCount);
 
   const { scrollYProgress } = useScroll();
   const progressBar = useSpring(scrollYProgress, { stiffness: 140, damping: 28 });
@@ -392,6 +395,39 @@ export default function Header() {
                     {isDark ? "ON" : "OFF"}
                   </span>
                 </button>
+
+                {/* Loyalty stamps in mobile menu */}
+                {mounted && (
+                  <div className="mt-2 rounded-xl border border-rose-100 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-xs font-extrabold text-foreground">
+                        <Gift className="h-4 w-4 text-gold" aria-hidden />
+                        Bloom Club
+                      </span>
+                      <span className="text-[10px] font-bold text-stone-400">
+                        {ordersCount} order{ordersCount !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      {Array.from({ length: LOYALTY_TARGET }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "grid h-8 w-8 place-items-center rounded-lg border-2 transition-colors",
+                            i < stamps
+                              ? "border-gold bg-gold-soft text-gold"
+                              : "border-stone-200 bg-stone-50 text-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-600"
+                          )}
+                        >
+                          <Gift className="h-3.5 w-3.5" aria-hidden />
+                        </div>
+                      ))}
+                      <span className="ml-1 text-[10px] font-semibold text-stone-400">
+                        {stamps}/{LOYALTY_TARGET}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.nav>
           )}
