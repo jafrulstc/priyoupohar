@@ -27,6 +27,7 @@ import { petalConfetti } from "@/lib/confetti";
 import { formatINR } from "@/lib/format";
 import { useShopStore } from "@/lib/store";
 import type { Product } from "@/lib/types";
+import { r2ProductUrl } from "@/lib/media";
 
 /* ------------------------------ constants ------------------------------ */
 
@@ -42,9 +43,9 @@ const MAIN_TYPES: { id: MainType; label: string }[] = [
 ];
 
 const ADD_ONS: AddOn[] = [
-  { id: "teddy", name: "Cuddle Teddy", price: 349, image: "/api/media/products/teddy.jpg" },
-  { id: "choco", name: "Chocolate Box", price: 499, image: "/api/media/products/choco.jpg" },
-  { id: "mug", name: "Photo Mug", price: 399, image: "/api/media/products/mug.jpg" },
+  { id: "teddy", name: "Cuddle Teddy", price: 349, image: r2ProductUrl("teddy.jpg") },
+  { id: "choco", name: "Chocolate Box", price: 499, image: r2ProductUrl("choco.jpg") },
+  { id: "mug", name: "Photo Mug", price: 399, image: r2ProductUrl("mug.jpg") },
   { id: "card", name: "Handmade Card", price: 149, image: null },
 ];
 

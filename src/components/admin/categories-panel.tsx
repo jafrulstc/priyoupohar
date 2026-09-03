@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { resolveMediaUrl } from "@/lib/media";
 import {
   ApiError,
   pyFetch,
@@ -159,7 +160,7 @@ export default function CategoriesPanel() {
                 <Td>
                   <div className="flex items-center gap-3">
                     {c.image_url ? (
-                      <img src={c.image_url} alt="" className="h-9 w-9 rounded-lg border object-cover" />
+                      <img src={resolveMediaUrl(c.image_url)} alt="" className="h-9 w-9 rounded-lg border object-cover" />
                     ) : (
                       <span className="grid h-9 w-9 place-items-center rounded-lg bg-rose-50 text-rose-400 dark:bg-rose-950/60">
                         <FolderTree className="h-4 w-4" aria-hidden />

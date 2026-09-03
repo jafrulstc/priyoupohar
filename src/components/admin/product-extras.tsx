@@ -9,6 +9,7 @@ import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { ImagePlus, PackagePlus, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { resolveMediaUrl } from "@/lib/media";
 import {
   ApiError,
   pyFetch,
@@ -97,7 +98,7 @@ export function GalleryEditor({
               key={`${url}-${i}`}
               className="group relative aspect-square overflow-hidden rounded-xl border bg-muted/30"
             >
-              <img src={url} alt={`Gallery image ${i + 1}`} className="h-full w-full object-cover" />
+              <img src={resolveMediaUrl(url)} alt={`Gallery image ${i + 1}`} className="h-full w-full object-cover" />
               <button
                 type="button"
                 onClick={() => onChange(images.filter((_, idx) => idx !== i))}

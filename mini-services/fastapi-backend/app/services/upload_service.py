@@ -7,11 +7,12 @@ Order per upload (first success wins):
 
 Every S3 target is optional: targets with empty credentials are skipped.
 R2/Filebase do NOT support ACLs, so ``put_object`` is sent without one.
-After a successful PUT we probe the canonical URL WITHOUT auth; when the
-bucket is publicly readable we return the direct URL, otherwise the object
-is served through the authenticated backend proxy ``GET /api/media/{key}``
-(which streams private objects using the same credentials) so stored URLs
-never expire.
+After a successful PUT we probe public URLs WITHOUT auth, best candidate
+first: the R2 public CDN base (``r2_public_base_url`` — Cloudflare edge,
+browser loads directly) and then the provider's canonical endpoint URL.
+When nothing answers 200 the object is served through the authenticated
+backend proxy ``GET /api/media/{key}`` (which streams private objects
+using the same credentials) so stored URLs never expire.
 
 The boto3 + urllib calls are blocking; the admin router runs them in the
 FastAPI threadpool.
@@ -35,6 +36,9 @@ logger = logging.getLogger("bb.upload")
 ALLOWED_EXTENSIONS: frozenset[str] = frozenset({".jpg", ".jpeg", ".png", ".webp"})
 MAX_SIZE_BYTES = 8 * 1024 * 1024  # 8 MB
 _PUBLIC_PROBE_TIMEOUT = 4  # seconds
+# Cloudflare's edge 403s the default "Python-urllib/3.x" User-Agent on
+# r2.dev URLs, which would make every public probe a false negative.
+_PUBLIC_PROBE_UA = "Mozilla/5.0 (compatible; BloomBlissMediaProbe/1.0)"
 
 _CONTENT_TYPES = {
     ".jpg": "image/jpeg",
@@ -86,6 +90,7 @@ def s3_targets() -> list[dict]:
                 ),
                 "bucket": settings.s3_bucket,
                 "endpoint": settings.s3_endpoint,
+                "public_base": settings.r2_public_base_url,
             }
         )
     if (
@@ -104,6 +109,7 @@ def s3_targets() -> list[dict]:
                 ),
                 "bucket": settings.s3_fallback_bucket,
                 "endpoint": settings.s3_fallback_endpoint,
+                "public_base": "",  # Filebase serves private reads only
             }
         )
     return targets
@@ -123,7 +129,9 @@ def _save_local(key: str, content: bytes) -> None:
 
 def _url_is_public(url: str) -> bool:
     try:
-        req = urllib.request.Request(url, method="GET")
+        req = urllib.request.Request(
+            url, method="GET", headers={"User-Agent": _PUBLIC_PROBE_UA}
+        )
         with urllib.request.urlopen(req, timeout=_PUBLIC_PROBE_TIMEOUT) as resp:
             return resp.status == 200
     except (urllib.error.URLError, OSError, ValueError):
@@ -147,9 +155,18 @@ def _put_s3(target: dict, key: str, content: bytes, content_type: str) -> str:
         else:
             raise
 
-    canonical = f"{target['endpoint'].rstrip('/')}/{bucket}/{key}"
-    if _url_is_public(canonical):
-        return canonical
+    # Candidate public URLs, best first: the R2 public CDN base (used when
+    # the bucket's r2.dev access is enabled — browser hits Cloudflare's edge
+    # directly), then the provider's canonical endpoint URL (for providers
+    # that serve public reads from their API endpoint).
+    candidates: list[str] = []
+    public_base = (target.get("public_base") or "").rstrip("/")
+    if public_base:
+        candidates.append(f"{public_base}/{key}")
+    candidates.append(f"{target['endpoint'].rstrip('/')}/{bucket}/{key}")
+    for url in candidates:
+        if _url_is_public(url):
+            return url
     # Private bucket — serve through the authenticated backend proxy instead
     # of a presigned URL that would expire from the DB after 7 days.
     return f"/api/media/{key}"

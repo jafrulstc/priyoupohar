@@ -20,6 +20,7 @@ import { miniConfetti, petalConfetti } from "@/lib/confetti";
 import { formatINR } from "@/lib/format";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { r2ProductUrl } from "@/lib/media";
 
 /* ---------------------------------- data ---------------------------------- */
 
@@ -32,8 +33,8 @@ const SHOWCASE = [
     mrp: 899,
     rating: 4.9,
     reviews: "2.3k",
-    image: "/api/media/products/roses.jpg",
-    back: ["/api/media/products/gerbera.jpg", "/api/media/products/lily.jpg"],
+    image: r2ProductUrl("roses.jpg"),
+    back: [r2ProductUrl("gerbera.jpg"), r2ProductUrl("lily.jpg")],
   },
   {
     tab: "Cakes 🍰",
@@ -43,8 +44,8 @@ const SHOWCASE = [
     mrp: 899,
     rating: 4.9,
     reviews: "3.5k",
-    image: "/api/media/products/choccake.jpg",
-    back: ["/api/media/products/velvetcake.jpg", "/api/media/products/forestcake.jpg"],
+    image: r2ProductUrl("choccake.jpg"),
+    back: [r2ProductUrl("velvetcake.jpg"), r2ProductUrl("forestcake.jpg")],
   },
   {
     tab: "Gifts 🎁",
@@ -54,8 +55,8 @@ const SHOWCASE = [
     mrp: 599,
     rating: 4.6,
     reviews: "986",
-    image: "/api/media/products/mug.jpg",
-    back: ["/api/media/products/teddy.jpg", "/api/media/products/choco.jpg"],
+    image: r2ProductUrl("mug.jpg"),
+    back: [r2ProductUrl("teddy.jpg"), r2ProductUrl("choco.jpg")],
   },
 ] as const;
 

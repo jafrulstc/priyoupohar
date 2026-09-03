@@ -880,3 +880,24 @@ Stage Summary:
 - DB state now: image_url = main R2 proxy URL (16/16), gallery = 1–3 R2 proxy URLs (16/16).
 - Architecture (final): R2 bucket `priyoupohar` = media authority; DB stores origin-relative `/api/media/<key>` paths; browser → Next /api/media proxy → FastAPI → R2 private-bucket stream; next/image optimizer wraps URLs (that's why raw paths aren't visible in page source).
 - No code changes this round (DB data only + docs).
+
+---
+Task ID: r2-direct-cdn
+Agent: main (Super Z)
+Task: User enabled PUBLIC access on the Cloudflare R2 bucket (pub-e04790e99b0d41109ffc73b5345f35cd.r2.dev) and asked to serve images directly from Cloudflare's CDN instead of proxying through Next /api/media → FastAPI → R2, to cut page-load latency and server load.
+
+Work Log:
+- Verified public r2.dev URL serves objects: 200 image/jpeg via Cloudflare edge (CF-RAY HKG).
+- Found partial in-flight implementation in the working tree (parallel agent had edited media.ts, hero/category-rail/combo-builder, next.config, FastAPI config+upload_service, backend .env, then went quiet ~6.5 min, no commit); reviewed every diff, confirmed correctness, and completed the remaining gaps.
+- src/lib/media.ts: added resolveMediaUrl() — rewrites origin-relative "/api/media/<key>" paths to the public CDN URL at render time; absolute URLs and app-local paths pass through; proxy chain stays as graceful fallback.
+- src/lib/product-map.ts: mapProduct now resolves image + gallery (covers ALL DB-driven storefront surfaces: grids, quick-view, gift pages, cart, wishlist, search, cross-sell).
+- Admin display-only resolution: products-panel thumbnails, categories-panel thumbnails, product-dialog main preview, product-extras gallery previews (stored form values stay relative).
+- next.config.ts (already from parallel agent): images.unoptimized=true (browser loads raw files straight from Cloudflare; no /_next/image optimizer round-trip on the Node server) + remotePatterns entry for the r2.dev host (safety if optimization is re-enabled).
+- FastAPI (already from parallel agent): Settings.r2_public_base_url + upload_service probes public CDN base first, canonical endpoint second, falls back to /api/media/<key> proxy path — so NEW uploads return direct CDN URLs while private-bucket behavior is preserved. Backend .env has R2_PUBLIC_BASE_URL set; restarted FastAPI (200) and confirmed the setting loads.
+- DB decision: image_url/gallery rows deliberately stay origin-relative /api/media/<key> — render-time resolution means a future custom-domain swap (r2.dev is rate-limited, not meant for production) is a 2-line change instead of a DB migration; localStorage-persisted old cart/wishlist paths keep working via proxy fallback.
+- Rebuilt standalone (bun run build), restarted Next.js; QA: SSR HTML = 8 unique r2.dev URLs, 0 /_next/image, 0 /api/media refs; browser home = 34 imgs, 26 from CDN, 0 broken (8 decorative occasion images are app-bundled by design); /gift/eternal-red-roses = 10/10 CDN, 0 broken; proxy fallback /api/media/products/roses.jpg still 200 image/jpeg. Screenshots qa/r2-cdn-home.png, qa/r2-cdn-gift-page.png.
+
+Stage Summary:
+- New architecture: browser → Cloudflare CDN (r2.dev) directly for all product media; Next/FastAPI only handle uploads and act as private-object fallback. Zero per-request media load on our servers.
+- Stored paths unchanged (proxy-relative); resolution happens at render in src/lib/media.ts (single swap point for a custom domain later).
+- Known caveat to relay to user: r2.dev is Cloudflare's rate-limited dev domain — for production traffic add a custom domain to the bucket and update R2_PUBLIC_BASE_URL + src/lib/media.ts R2_PUBLIC_BASE.

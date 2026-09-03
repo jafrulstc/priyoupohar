@@ -56,6 +56,14 @@ class Settings(BaseSettings):
     s3_fallback_secret_access_key: str = ""
     s3_fallback_bucket: str = ""
 
+    # Public CDN base for the R2 bucket (r2.dev "Public Development Cloud").
+    # When the bucket allows public reads, uploaded object URLs point straight
+    # at Cloudflare's CDN instead of the authenticated media proxy — the
+    # browser fetches images with zero backend involvement. The upload probe
+    # verifies public reachability per object and falls back to the proxy
+    # URL when the CDN answers non-200.
+    r2_public_base_url: str = ""
+
     # Local fallback store for uploads when S3 is unavailable; also served
     # publicly via GET /api/media/{key}.
     media_dir: str = "/home/z/my-project/db/fastapi/media"

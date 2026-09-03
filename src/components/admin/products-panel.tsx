@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Flower2, Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 import {
   ApiError,
   pyFetch,
@@ -246,7 +247,7 @@ export default function ProductsPanel() {
                     <div className="flex items-center gap-3">
                       {p.image_url ? (
                         <img
-                          src={p.image_url}
+                          src={resolveMediaUrl(p.image_url)}
                           alt=""
                           className="h-10 w-10 shrink-0 rounded-lg border object-cover"
                         />

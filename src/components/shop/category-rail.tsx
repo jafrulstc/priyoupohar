@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { r2ProductUrl } from "@/lib/media";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 24 } as const;
 const SCROLL_STEP = 320;
@@ -16,12 +17,12 @@ type RailCategory = {
 };
 
 const CATEGORIES: RailCategory[] = [
-  { label: "Flowers", image: "/api/media/products/roses.jpg", emoji: "🌸" },
-  { label: "Cakes", image: "/api/media/products/choccake.jpg", emoji: "🍰" },
-  { label: "Personalised", image: "/api/media/products/mug.jpg", emoji: "🎁" },
-  { label: "Plants", image: "/api/media/products/plants.jpg", emoji: "🪴" },
-  { label: "Combos", image: "/api/media/products/combo1.jpg", emoji: "🎀" },
-  { label: "Teddy & More", image: "/api/media/products/teddy.jpg", emoji: "🧸" },
+  { label: "Flowers", image: r2ProductUrl("roses.jpg"), emoji: "🌸" },
+  { label: "Cakes", image: r2ProductUrl("choccake.jpg"), emoji: "🍰" },
+  { label: "Personalised", image: r2ProductUrl("mug.jpg"), emoji: "🎁" },
+  { label: "Plants", image: r2ProductUrl("plants.jpg"), emoji: "🪴" },
+  { label: "Combos", image: r2ProductUrl("combo1.jpg"), emoji: "🎀" },
+  { label: "Teddy & More", image: r2ProductUrl("teddy.jpg"), emoji: "🧸" },
 ];
 
 export default function CategoryRail() {

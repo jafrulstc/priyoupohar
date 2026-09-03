@@ -4,7 +4,11 @@
  *
  * FastAPI (mini-services/fastapi-backend) is the source of truth for the
  * catalog; this mapper keeps every existing component working unchanged.
+ * Media paths are resolved to the public R2 CDN here so every storefront
+ * consumer loads images straight from Cloudflare's edge (see lib/media).
  */
+
+import { resolveMediaUrl } from "@/lib/media";
 
 export interface FastApiCategory {
   id: number;
@@ -66,7 +70,7 @@ export function mapProduct(p: FastApiProduct): LegacyProduct {
     category: p.category?.slug ?? null,
     price: p.price,
     mrp: p.original_price ?? p.price,
-    image: p.image_url,
+    image: resolveMediaUrl(p.image_url),
     rating: p.rating,
     reviews: p.review_count,
     tag: p.badge,
@@ -75,7 +79,7 @@ export function mapProduct(p: FastApiProduct): LegacyProduct {
     pairsWith: p.pairs_with,
     stock: p.stock,
     isFeatured: p.is_featured,
-    gallery: p.images,
+    gallery: (p.images ?? []).map(resolveMediaUrl),
   };
 }
 

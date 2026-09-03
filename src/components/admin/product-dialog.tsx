@@ -29,6 +29,7 @@ import {
   type UploadResponse,
 } from "@/lib/py-api";
 import { useAdminStore } from "@/lib/admin-store";
+import { resolveMediaUrl } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -362,7 +363,7 @@ export default function ProductDialog({
               <Input
                 id="p-image"
                 className="rounded-xl font-mono text-xs"
-                placeholder="https://… or /api/media/products/rose.jpg"
+                placeholder="https://… (R2 CDN link or any image URL)"
                 {...register("image_url")}
               />
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
@@ -386,7 +387,7 @@ export default function ProductDialog({
             {imageUrl && (
               <div className="mt-1 flex items-center gap-2 rounded-xl border bg-muted/30 p-2">
                 <img
-                  src={imageUrl}
+                  src={resolveMediaUrl(imageUrl)}
                   alt="Product preview"
                   className="h-12 w-12 rounded-lg border object-cover"
                 />
