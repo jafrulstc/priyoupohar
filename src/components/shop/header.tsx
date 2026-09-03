@@ -143,7 +143,7 @@ export default function Header() {
             : "bg-background/80"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:gap-2 md:px-6 lg:px-8 xl:gap-3 min-[1600px]:gap-4">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:gap-2 md:px-6 lg:px-8 xl:gap-3 min-[1600px]:max-w-[1560px] min-[1600px]:gap-4">
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
