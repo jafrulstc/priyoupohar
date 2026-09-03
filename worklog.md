@@ -901,3 +901,23 @@ Stage Summary:
 - New architecture: browser → Cloudflare CDN (r2.dev) directly for all product media; Next/FastAPI only handle uploads and act as private-object fallback. Zero per-request media load on our servers.
 - Stored paths unchanged (proxy-relative); resolution happens at render in src/lib/media.ts (single swap point for a custom domain later).
 - Known caveat to relay to user: r2.dev is Cloudflare's rate-limited dev domain — for production traffic add a custom domain to the bucket and update R2_PUBLIC_BASE_URL + src/lib/media.ts R2_PUBLIC_BASE.
+
+---
+Task ID: r2-public-cdn-direct
+Agent: Z.ai Code (main session)
+Task: User request — R2 bucket is PUBLIC, stop routing images through the Next/FastAPI proxy chain; make the frontend load directly from Cloudflare's CDN using the public r2.dev domain.
+
+Work Log:
+- Verified public access: `https://pub-e04790e99b0d41109ffc73b5345f35cd.r2.dev/products/<file>.jpg` serves 200 image/jpeg straight from Cloudflare edge (CF-RAY present).
+- FASTAPI: config.py gained `r2_public_base_url` (env `R2_PUBLIC_BASE_URL`, set in backend .env + .env.example). upload_service.py `_put_s3` now probes candidate public URLs best-first — R2 public CDN base, then the provider canonical endpoint URL — and only falls back to the `/api/media/{key}` proxy when nothing answers 200 (private-bucket mode keeps working). Filebase target has no public base.
+- CRITICAL FIX discovered by E2E upload test: Cloudflare 403s the default "Python-urllib/3.x" User-Agent on r2.dev, so the reachability probe was a false negative and uploads kept returning proxy URLs. `_url_is_public` now sends a browser-like UA (`_PUBLIC_PROBE_UA`); after the fix uploads return direct CDN URLs (verified: admin login → upload → url starts with pub-…r2.dev → GET 200 → test objects deleted, bucket back to exactly the 16 catalog images).
+- NEXT.JS: next.config.ts `images.unoptimized: true` + remotePatterns for the r2.dev host — every <Image> renders its raw src, browsers fetch from Cloudflare directly, zero /_next/image optimizer load on the Node server. Hardcoded `/api/media/products/...` in hero.tsx, category-rail.tsx, combo-builder.tsx replaced via new `src/lib/media.ts` helpers (`R2_PUBLIC_BASE`, `r2Url`, `r2ProductUrl`); admin product-dialog placeholder updated.
+- A parallel webDevReview cron agent independently extended `src/lib/media.ts` with `resolveMediaUrl()` and wired it into product-map.ts (storefront image/gallery mapping) + admin products/categories/gallery previews. Compatible with this migration: absolute CDN URLs pass through untouched; legacy relative `/api/media/` paths get rewritten at render time. Combined tree lint-clean (1 pre-existing warning) and built together.
+- DB MIGRATION (.zscripts/migrate_media_urls_public_cdn.py, idempotent, asyncpg $1 placeholders, DSN from settings): 16/16 `image_url` + 16/16 `gallery` rewritten from `/api/media/products/<file>.jpg` to `https://pub-…r2.dev/products/<file>.jpg`; 0 proxy-form URLs remain. Store API verified returning CDN URLs for image + images[].
+- Rebuild (bun run build) + restart of both services; browser QA (agent-browser): homepage 34 imgs → 26 CDN-direct, 0 via /_next/image, 0 broken, 0 pending after full scroll; /gift/eternal-red-roses 10/10 CDN-direct (main + 3 gallery thumbs); admin Products table renders all 16 thumbnails from CDN (screenshots qa/r2-cdn-home*.png, qa/r2-cdn-gift-page.png, qa/r2-cdn-admin-products.png, qa/r2-cdn-final-home.png). Note: browsing raw :3000 breaks admin XHR (XTransformPort only exists on the Caddy gateway :81) — QA done via gateway for admin flow.
+- The `/api/media` proxy chain (Next route + FastAPI media router) is intentionally KEPT: it still serves local-disk fallback uploads and any legacy relative URL.
+
+Stage Summary:
+- NEW ARCHITECTURE: R2 public bucket = direct CDN authority; DB stores absolute `https://pub-…r2.dev/products/<key>` URLs; storefront + admin render raw src (unoptimized) and browsers fetch straight from Cloudflare edge; Next/FastAPI media proxy kept only as fallback. Zero image-processing load on the app server.
+- Known trade-off: if R2 AND Filebase both fail, a local-fallback upload's `/api/media/` URL would be rewritten to the CDN by `resolveMediaUrl` and 404 (object isn't in the bucket) — narrow window, acceptable; suggested future fix: backend stamps storage origin so the resolver can skip non-bucket objects.
+- If the user later attaches a custom domain to the bucket: update R2_PUBLIC_BASE_URL (backend .env), DB rows (re-run adapted migration), and R2_PUBLIC_BASE in src/lib/media.ts.
