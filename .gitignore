@@ -66,4 +66,21 @@ server.log
 
 # Local secrets — NEVER commit or push
 .secret
+.secrect
 .env.local.secrets
+mini-services/fastapi-backend/.secrets
+mini-services/fastapi-backend/uvicorn.log
+
+# QA screenshots (sandbox artifacts)
+/qa/
+
+# credential-bearing diagnostic scripts (kept locally in /.zscripts/)
+scripts/probe_*.py
+scripts/r2_*.py
+
+dev.log
+server.log
+
+# python virtualenvs
+.venv
+venv

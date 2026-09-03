@@ -36,6 +36,7 @@ import {
   EmptyState,
   ErrorState,
   PanelHeader,
+  RowActions,
   RowsSkeleton,
   Td,
   Th,
@@ -124,7 +125,7 @@ export default function UsersPanel() {
           description="Registered shoppers will show up here."
         />
       ) : (
-        <AdminTable maxHeight="55vh">
+        <AdminTable maxHeight="55dvh">
           <thead>
             <tr>
               <Th>User</Th>
@@ -138,7 +139,7 @@ export default function UsersPanel() {
             {items.map((u) => {
               const isSelf = u.id === selfUser?.id;
               return (
-                <tr key={u.id} className="transition-colors hover:bg-rose-50/40 dark:hover:bg-stone-800/50">
+                <tr key={u.id}>
                   <Td>
                     <div className="flex items-center gap-3">
                       <span
@@ -202,23 +203,18 @@ export default function UsersPanel() {
                     {formatDate(u.created_at)}
                   </Td>
                   <Td>
-                    <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                        aria-label={
-                          isSelf
-                            ? "You can't delete your own account"
-                            : `Delete ${u.name}`
-                        }
-                        title={isSelf ? "You can't delete your own account" : undefined}
-                        disabled={isSelf}
-                        onClick={() => setDeleting(u)}
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
+                    <RowActions
+                      label={`Actions for ${u.name}`}
+                      items={[
+                        {
+                          label: isSelf ? "You can't remove yourself" : "Remove user",
+                          icon: Trash2,
+                          danger: true,
+                          disabled: isSelf,
+                          onSelect: () => setDeleting(u),
+                        },
+                      ]}
+                    />
                   </Td>
                 </tr>
               );

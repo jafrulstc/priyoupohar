@@ -39,6 +39,9 @@ class Product(Base):
     same_day: Mapped[bool] = mapped_column(Boolean, default=True)
     pairs_with: Mapped[str | None] = mapped_column(String(300), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    # Combo product support: JSON list of {product_id, name, qty}.
+    is_combo: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    combo_items: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -58,3 +61,12 @@ class Product(Base):
         except (json.JSONDecodeError, TypeError):
             return []
         return [str(url) for url in parsed] if isinstance(parsed, list) else []
+
+    @property
+    def combo(self) -> list[dict]:
+        """Parse the JSON-encoded combo_items column into a list of dicts."""
+        try:
+            parsed = json.loads(self.combo_items or "[]")
+        except (json.JSONDecodeError, TypeError):
+            return []
+        return parsed if isinstance(parsed, list) else []

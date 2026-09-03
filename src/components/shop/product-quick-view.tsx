@@ -27,7 +27,7 @@ import {
 import { useShopStore } from "@/lib/store";
 import { useMounted } from "@/hooks/use-mounted";
 import { useToast } from "@/hooks/use-toast";
-import { formatINR, discountPct } from "@/lib/format";
+import { formatINR, discountPct, reviewLabel } from "@/lib/format";
 import { miniConfetti } from "@/lib/confetti";
 import PincodeChecker from "@/components/shop/pincode-checker";
 import ImageLightbox from "@/components/shop/image-lightbox";
@@ -201,7 +201,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
         <button
           onClick={() => toggleWishlist(product)}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 shadow-soft transition dark:bg-stone-900/90 hover:scale-110 active:scale-90"
+          className="absolute right-4 top-16 grid h-10 w-10 place-items-center rounded-full bg-white/95 shadow-soft transition dark:bg-stone-900/90 hover:scale-110 active:scale-90 sm:top-4"
         >
           <motion.span
             key={String(wishlisted)}
@@ -252,7 +252,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
               {product.rating.toFixed(1)}
             </span>
             <span className="truncate text-xs text-stone-400">
-              · {product.reviews.toLocaleString("en-IN")} reviews
+              · {reviewLabel(product.reviews)}
             </span>
           </div>
           <motion.button

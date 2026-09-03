@@ -15,6 +15,12 @@ class CategoryBrief(BaseModel):
     slug: str
 
 
+class ComboItem(BaseModel):
+    product_id: int = Field(gt=0)
+    name: str = Field(default="", max_length=200)
+    qty: int = Field(default=1, ge=1, le=10)
+
+
 class ProductOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,6 +43,8 @@ class ProductOut(BaseModel):
     same_day: bool = True
     pairs_with: str | None = None
     sort_order: int = 0
+    is_combo: bool = False
+    combo: list[ComboItem] = []
     created_at: datetime
     updated_at: datetime
 
@@ -61,6 +69,8 @@ class ProductIn(BaseModel):
     same_day: bool = True
     pairs_with: str | None = Field(default=None, max_length=300)
     sort_order: int = Field(default=0, ge=0)
+    is_combo: bool = False
+    combo: list[ComboItem] = []
 
 
 class ProductUpdate(BaseModel):
@@ -83,3 +93,5 @@ class ProductUpdate(BaseModel):
     same_day: bool | None = None
     pairs_with: str | None = Field(default=None, max_length=300)
     sort_order: int | None = Field(default=None, ge=0)
+    is_combo: bool | None = None
+    combo: list[ComboItem] | None = None

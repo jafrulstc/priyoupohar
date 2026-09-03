@@ -21,6 +21,22 @@ def _gallery_to_json(images: list[str] | None) -> str:
     return json.dumps(images or [])
 
 
+def _combo_to_json(combo: list[dict] | None) -> str:
+    """Serialize combo rows ({product_id, name, qty}) into the Text column."""
+    if not combo:
+        return "[]"
+    cleaned = [
+        {
+            "product_id": int(item["product_id"]),
+            "name": str(item.get("name") or "")[:200],
+            "qty": max(1, min(10, int(item.get("qty") or 1))),
+        }
+        for item in combo
+        if item.get("product_id")
+    ]
+    return json.dumps(cleaned)
+
+
 async def get_product(db: AsyncSession, product_id: int) -> Product | None:
     return await db.get(Product, product_id)
 
@@ -108,12 +124,14 @@ async def create_product(db: AsyncSession, data: dict) -> Product:
     """``data`` is ProductIn.model_dump(); slug auto-generated & uniquified."""
     await _validate_category(db, data.get("category_id"))
     images = data.pop("images", None)
+    combo = data.pop("combo", None)
     base = slugify(data.get("slug") or data["name"])
     product = Product(
         **{
             **data,
             "slug": await ensure_unique_slug(db, Product, base),
             "gallery": _gallery_to_json(images),
+            "combo_items": _combo_to_json(combo),
             "price": _to_money(data["price"]),
             "original_price": _to_money(data.get("original_price")),
             "updated_at": utc_now(),
@@ -133,6 +151,8 @@ async def update_product(db: AsyncSession, product_id: int, data: dict) -> Produ
     await _validate_category(db, data.get("category_id"))
     if "images" in data:
         product.gallery = _gallery_to_json(data.pop("images"))
+    if "combo" in data:
+        product.combo_items = _combo_to_json(data.pop("combo"))
     if data.get("slug"):
         data["slug"] = await ensure_unique_slug(
             db, Product, slugify(data["slug"]), exclude_id=product.id

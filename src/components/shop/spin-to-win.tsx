@@ -8,6 +8,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { useToast } from "@/hooks/use-toast";
 import { celebrationConfetti } from "@/lib/confetti";
 import { resolveCoupon } from "@/lib/coupons";
+import { useSpinConfig } from "@/lib/site-data";
 import { cn } from "@/lib/utils";
 
 const SPIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -20,8 +21,8 @@ type Segment = {
   fg: string; // label colour
 };
 
-/* 8 segments, clockwise from 12 o'clock */
-const SEGMENTS: Segment[] = [
+/* 8 fallback segments, clockwise from 12 o'clock */
+const FALLBACK_SEGMENTS: Segment[] = [
   { label: "15% OFF", win: true, code: "SPIN15", bg: "#E11D48", fg: "#FFFFFF" },
   { label: "₹50 OFF", win: true, code: "JOY50", bg: "#F59E0B", fg: "#292524" },
   { label: "TRY AGAIN", win: false, code: "", bg: "#9F1239", fg: "#FECDD3" },
@@ -32,7 +33,22 @@ const SEGMENTS: Segment[] = [
   { label: "SO CLOSE", win: false, code: "", bg: "#9F1239", fg: "#FECDD3" },
 ];
 
-const SEG_ANGLE = 360 / SEGMENTS.length;
+function dbToSegment(p: { label: string; kind: string; code: string | null; bg?: string; fg?: string }): Segment {
+  return { label: p.label, win: p.kind !== "none", code: p.code ?? "", bg: p.bg ?? "#9F1239", fg: p.fg ?? "#FECDD3" };
+}
+
+function useSegments(): Segment[] {
+  const { data } = useSpinConfig();
+  const fromDb = data.segments.filter(s => s.is_active).sort((a, b) => a.position - b.position).map(dbToSegment);
+  return fromDb.length >= 4 ? fromDb : FALLBACK_SEGMENTS;
+}
+
+function useCooldownHours(): number {
+  const { data } = useSpinConfig();
+  return data.cooldown_hours || 24;
+}
+
+const SEG_ANGLE = 360 / FALLBACK_SEGMENTS.length;
 const CENTER = 130;
 const RADIUS = 118;
 const LABEL_R = 76;
@@ -45,9 +61,9 @@ function polar(angleDeg: number, r: number): [number, number] {
   return [CENTER + r * Math.cos(rad), CENTER + r * Math.sin(rad)];
 }
 
-function segmentPath(i: number): string {
-  const [x1, y1] = polar(i * SEG_ANGLE, RADIUS);
-  const [x2, y2] = polar((i + 1) * SEG_ANGLE, RADIUS);
+function segmentPathForAngle(i: number, segAngle: number): string {
+  const [x1, y1] = polar(i * segAngle, RADIUS);
+  const [x2, y2] = polar((i + 1) * segAngle, RADIUS);
   return `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 0 1 ${x2} ${y2} Z`;
 }
 
@@ -60,6 +76,9 @@ export default function SpinToWin() {
   const spinPrize = useShopStore((s) => s.spinPrize);
   const spinAt = useShopStore((s) => s.spinAt);
   const setSpinResult = useShopStore((s) => s.setSpinResult);
+  const SEGMENTS = useSegments();
+  const cooldownHours = useCooldownHours();
+  const SPIN_COOLDOWN = cooldownHours * 60 * 60 * 1000;
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [rotation, setRotation] = useState(0);
@@ -69,8 +88,11 @@ export default function SpinToWin() {
   const pointerControls = useAnimationControls();
   const timerRef = useRef<number | null>(null);
 
-  const paths = useMemo(() => SEGMENTS.map((_, i) => segmentPath(i)), []);
-  const cooling = mounted && spinAt > 0 && Date.now() - spinAt < SPIN_COOLDOWN_MS;
+  const paths = useMemo(() => {
+    const angle = 360 / SEGMENTS.length;
+    return SEGMENTS.map((_, i) => segmentPathForAngle(i, angle));
+  }, [SEGMENTS]);
+  const cooling = mounted && spinAt > 0 && Date.now() - spinAt < SPIN_COOLDOWN;
   const canSpin = mounted && !cooling && phase !== "spinning";
 
   /* Keep the cooldown countdown live (30s tick) */
@@ -94,9 +116,10 @@ export default function SpinToWin() {
     setResult(null);
     setPhase("spinning");
 
+    const segAngle = 360 / SEGMENTS.length;
     const idx = Math.floor(Math.random() * SEGMENTS.length);
-    const jitter = (Math.random() - 0.5) * (SEG_ANGLE * 0.7);
-    const targetMod = (360 - (idx * SEG_ANGLE + SEG_ANGLE / 2) + jitter + 360) % 360;
+    const jitter = (Math.random() - 0.5) * (segAngle * 0.7);
+    const targetMod = (360 - (idx * segAngle + segAngle / 2) + jitter + 360) % 360;
     const currentMod = ((rotation % 360) + 360) % 360;
     const delta = (targetMod - currentMod + 360) % 360 + 360 * (5 + Math.floor(Math.random() * 2));
     setRotation(rotation + delta);
@@ -132,7 +155,7 @@ export default function SpinToWin() {
     }
   };
 
-  const cooldownLeft = cooling ? SPIN_COOLDOWN_MS - (Date.now() - spinAt) : 0;
+  const cooldownLeft = cooling ? SPIN_COOLDOWN - (Date.now() - spinAt) : 0;
   const cooldownLabel = cooldownLeft
     ? `${Math.floor(cooldownLeft / 3600000)}h ${Math.floor((cooldownLeft % 3600000) / 60000)}m`
     : "";
@@ -203,9 +226,10 @@ export default function SpinToWin() {
           transition={spinEase}
           onAnimationComplete={() => {
             if (phase === "spinning") {
+              const segAngle = 360 / SEGMENTS.length;
               const idx =
                 Math.round(
-                  ((360 - (((rotation % 360) + 360) % 360)) % 360) / SEG_ANGLE
+                  ((360 - (((rotation % 360) + 360) % 360)) % 360) / segAngle
                 ) % SEGMENTS.length;
               settle(SEGMENTS[idx]);
             }

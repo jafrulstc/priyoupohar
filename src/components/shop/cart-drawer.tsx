@@ -23,6 +23,7 @@ import {
   Check,
 } from "lucide-react";
 import { Lottie } from "lottie-react";
+import { useCustomerAuthStore } from "@/lib/customer-auth-store";
 import celebrationAnim from "@/lib/lottie/celebration.json";
 import {
   useShopStore,
@@ -174,9 +175,16 @@ export default function CartDrawer() {
     }
     setCheckingOut(true);
     try {
+      /* Task 2.4 — attach the customer's token so the order links to the account. */
+      const session = useCustomerAuthStore.getState().auth;
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
         body: JSON.stringify({
           items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
           location: { city: location.city, pincode: location.pincode },

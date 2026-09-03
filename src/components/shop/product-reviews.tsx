@@ -2,71 +2,12 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ThumbsUp, Quote, Send, PenLine, Check } from "lucide-react";
+import { Star, ThumbsUp, Quote, Send, PenLine, Check, Loader2 } from "lucide-react";
 import { miniConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
-
-const SAMPLE_REVIEWS = [
-  {
-    name: "Ananya S.",
-    city: "Mumbai",
-    rating: 5,
-    text: "Absolutely stunning bouquet! The roses were fresh and the packaging was so elegant. My partner was overjoyed. Will definitely order again.",
-    date: "2 days ago",
-    helpful: 24,
-  },
-  {
-    name: "Rahul M.",
-    city: "Delhi",
-    rating: 5,
-    text: "Ordered for my mother's birthday — the same-day delivery was a lifesaver! Flowers arrived in perfect condition. Highly recommend.",
-    date: "1 week ago",
-    helpful: 18,
-  },
-  {
-    name: "Priya K.",
-    city: "Bengaluru",
-    rating: 4,
-    text: "Beautiful arrangement and great quality. The only tiny thing is I wished the ribbon was a bit more satin-y. But overall, a wonderful gift!",
-    date: "2 weeks ago",
-    helpful: 12,
-  },
-  {
-    name: "Vikram T.",
-    city: "Hyderabad",
-    rating: 5,
-    text: "Third time ordering from Bloom & Bliss and they never disappoint. The midnight delivery option is perfect for surprise celebrations.",
-    date: "3 weeks ago",
-    helpful: 31,
-  },
-];
-
-interface UserReview {
-  name: string;
-  city?: string;
-  rating: number;
-  text: string;
-  date: string;
-  helpful?: number;
-}
-
-function loadUserReviews(productId: string): UserReview[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`bb_reviews_${productId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUserReviews(productId: string, reviews: UserReview[]) {
-  try {
-    localStorage.setItem(`bb_reviews_${productId}`, JSON.stringify(reviews));
-  } catch {
-    /* storage full — ignore */
-  }
-}
+import { useProductReviews } from "@/lib/site-data";
+import { pyFetch } from "@/lib/py-api";
+import { formatDate, reviewLabel } from "@/lib/format";
 
 function StarRow({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
   const h = size === "md" ? "h-4.5 w-4.5" : "h-3 w-3";
@@ -139,16 +80,17 @@ function StarSelector({
 /* Review form                                                         */
 /* ------------------------------------------------------------------ */
 function ReviewForm({
-  productId,
-  onSubmit,
+  slug,
+  onSubmitted,
 }: {
-  productId: string;
-  onSubmit: (review: UserReview) => void;
+  slug: string;
+  onSubmitted: () => void;
 }) {
   const [name, setName] = useState("");
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const validate = useCallback(() => {
@@ -163,19 +105,25 @@ function ReviewForm({
   }, [name, rating, text]);
 
   const handleSubmit = useCallback(() => {
-    if (!validate()) return;
-    const review: UserReview = {
-      name: name.trim(),
-      rating,
-      text: text.trim(),
-      date: "Just now",
-    };
-    onSubmit(review);
-    setName("");
-    setRating(0);
-    setText("");
-    setErrors({});
-  }, [validate, name, rating, text, onSubmit]);
+    if (!validate() || submitting) return;
+    setSubmitting(true);
+    pyFetch(`/api/store/products/${encodeURIComponent(slug)}/reviews`, {
+      method: "POST",
+      body: { name: name.trim(), rating, text: text.trim() },
+    })
+      .then(() => {
+        setName("");
+        setRating(0);
+        setText("");
+        setErrors({});
+        miniConfetti();
+        onSubmitted();
+      })
+      .catch(() => {
+        /* keep form state */
+      })
+      .finally(() => setSubmitting(false));
+  }, [validate, name, rating, text, slug, submitting, onSubmitted]);
 
   return (
     <motion.div
@@ -268,9 +216,10 @@ function ReviewForm({
           whileTap={{ scale: 0.97 }}
           onClick={handleSubmit}
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-brand px-6 py-2.5 text-xs font-extrabold text-white shadow-lift transition-shadow hover:shadow-[0_12px_24px_-8px_rgba(225,29,72,0.4)]"
+          disabled={submitting}
         >
-          <Send className="h-3.5 w-3.5" aria-hidden />
-          Submit review
+          {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Send className="h-3.5 w-3.5" aria-hidden />}
+          {submitting ? "Submitting…" : "Submit review"}
         </motion.button>
       </div>
     </motion.div>
@@ -281,8 +230,8 @@ function ReviewForm({
 /* Main reviews component                                              */
 /* ------------------------------------------------------------------ */
 export default function ProductReviews({
-  rating,
-  count,
+  rating: propRating,
+  count: propCount,
   productId,
 }: {
   rating: number;
@@ -291,33 +240,26 @@ export default function ProductReviews({
 }) {
   const [showAll, setShowAll] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [userReviews, setUserReviews] = useState<UserReview[]>([]);
   const [helpfulSet, setHelpfulSet] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
-  /* Load user reviews from localStorage */
-  useEffect(() => {
-    setUserReviews(loadUserReviews(productId));
-  }, [productId]);
+  const { reviews, summary, loading, reload } = useProductReviews(productId);
 
-  const allReviews = [...userReviews, ...SAMPLE_REVIEWS];
-  const displayLimit = showAll ? allReviews.length : Math.min(2, allReviews.length);
-  const visible = allReviews.slice(0, displayLimit);
+  const displayRating = summary?.average ?? propRating;
+  const displayCount = summary?.count ?? propCount;
+  const distribution = summary?.distribution ?? null;
 
-  const handleSubmit = useCallback(
-    (review: UserReview) => {
-      const updated = [review, ...userReviews];
-      setUserReviews(updated);
-      saveUserReviews(productId, updated);
-      setShowForm(false);
-      miniConfetti();
-      toast({
-        title: "Thank you for your review!",
-        description: "Your feedback helps other gifters choose better.",
-      });
-    },
-    [userReviews, productId, toast]
-  );
+  const displayLimit = showAll ? reviews.length : Math.min(3, reviews.length);
+  const visible = reviews.slice(0, displayLimit);
+
+  const handleSubmitted = useCallback(() => {
+    setShowForm(false);
+    reload();
+    toast({
+      title: "Thank you for your review!",
+      description: "Your feedback helps other gifters choose better.",
+    });
+  }, [reload, toast]);
 
   const toggleHelpful = useCallback(
     (name: string) => {
@@ -350,10 +292,10 @@ export default function ProductReviews({
             <h2 className="text-2xl font-extrabold text-foreground">Reviews</h2>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-3 py-1 text-xs font-extrabold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
               <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
-              {rating.toFixed(1)}
+              {displayRating.toFixed(1)}
             </span>
             <span className="text-sm font-semibold text-stone-400">
-              ({count.toLocaleString("en-IN")} reviews)
+              ({reviewLabel(displayCount)})
             </span>
           </div>
         </div>
@@ -381,7 +323,7 @@ export default function ProductReviews({
       <AnimatePresence>
         {showForm && (
           <div className="mt-5">
-            <ReviewForm productId={productId} onSubmit={handleSubmit} />
+            <ReviewForm slug={productId} onSubmitted={handleSubmitted} />
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowForm(false)}
@@ -396,8 +338,9 @@ export default function ProductReviews({
       {/* Rating breakdown bar */}
       <div className="mt-6 grid grid-cols-5 gap-2 rounded-2xl bg-rose-50/60 p-4 dark:bg-stone-900/50">
         {[5, 4, 3, 2, 1].map((stars) => {
-          const pct =
-            stars === 5 ? 72 : stars === 4 ? 18 : stars === 3 ? 6 : stars === 2 ? 3 : 1;
+          const distTotal = distribution ? Object.values(distribution).reduce((s, v) => s + v, 0) : 1;
+          const distCount = distribution?.[String(stars)] ?? 0;
+          const pct = distribution ? Math.round((distCount / Math.max(distTotal, 1)) * 100) : (stars === 5 ? 72 : stars === 4 ? 18 : stars === 3 ? 6 : stars === 2 ? 3 : 1);
           return (
             <div key={stars} className="flex flex-col items-center gap-1">
               <span className="text-[11px] font-bold text-stone-500">{stars}★</span>
@@ -420,12 +363,11 @@ export default function ProductReviews({
       <div className="mt-6 space-y-4">
         <AnimatePresence mode="popLayout">
           {visible.map((review, i) => {
-            const isUserReview = userReviews.some((u) => u.name === review.name && u.date === review.date);
-            const helpfulKey = review.name + review.date;
+            const helpfulKey = String(review.id);
             const isHelpful = helpfulSet.has(helpfulKey);
             return (
               <motion.div
-                key={`${review.name}-${review.date}`}
+                key={String(review.id)}
                 layout
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -436,11 +378,7 @@ export default function ProductReviews({
                   stiffness: 260,
                   damping: 24,
                 }}
-                className={
-                  isUserReview
-                    ? "rounded-2xl border-2 border-brand/30 bg-brand-soft/30 p-5 shadow-soft dark:border-rose-800/40 dark:bg-rose-950/20"
-                    : "rounded-2xl border border-rose-100 bg-card p-5 shadow-soft dark:border-stone-800"
-                }
+                className="rounded-2xl border border-rose-100 bg-card p-5 shadow-soft dark:border-stone-800"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -448,23 +386,18 @@ export default function ProductReviews({
                       {review.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-foreground">{review.name}</p>
-                        {isUserReview && (
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand dark:bg-rose-900/40 dark:text-rose-300">
-                            <Check className="h-2.5 w-2.5" aria-hidden />
-                            You
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-sm font-bold text-foreground">{review.name}</p>
                       <p className="text-[11px] font-semibold text-stone-400">
-                        {review.city ?? "India"}{review.city ? " · " : ""}{review.date}
+                        {[review.city ?? "India", formatDate(review.created_at)]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </div>
                   </div>
                   <StarRow rating={review.rating} />
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+                {review.title && <p className="mt-2 text-sm font-bold text-foreground">{review.title}</p>}
+                <p className="mt-1 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
                   {review.text}
                 </p>
                 <button
@@ -490,7 +423,7 @@ export default function ProductReviews({
       </div>
 
       {/* Show more / less */}
-      {allReviews.length > 2 && (
+      {reviews.length > 3 && (
         <AnimatePresence>
           {!showAll ? (
             <motion.button
@@ -503,7 +436,7 @@ export default function ProductReviews({
               onClick={() => setShowAll(true)}
               className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-rose-200 px-5 py-2.5 text-xs font-bold text-brand transition-colors hover:bg-rose-50 dark:border-stone-700 dark:text-rose-300 dark:hover:bg-stone-800"
             >
-              Show all {allReviews.length} reviews
+              Show all {reviewLabel(reviews.length)}
             </motion.button>
           ) : (
             <motion.button

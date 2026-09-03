@@ -34,4 +34,5 @@ async def upload_image(
         "preview_url": result["preview_url"],
         "filename": file.filename,
         "size": len(content),
+        "storage": result.get("storage", "local"),
     }

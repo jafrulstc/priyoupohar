@@ -231,7 +231,7 @@ export default function OccasionDialog({
           <DialogContent
             key={selection.label}
             forceMount
-            className="max-h-[85vh] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-2xl"
+            className="max-h-[85dvh] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-2xl"
           >
             {/* Gradient banner header */}
             <div className="relative overflow-hidden bg-gradient-brand px-5 py-5 text-white sm:px-6">
@@ -267,7 +267,7 @@ export default function OccasionDialog({
             </div>
 
             {/* Body */}
-            <div className="max-h-[52vh] overflow-y-auto px-4 py-4 scrollbar-slim sm:px-6">
+            <div className="max-h-[52dvh] overflow-y-auto px-4 py-4 scrollbar-slim sm:px-6">
               {loading ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {[...Array(6)].map((_, i) => (

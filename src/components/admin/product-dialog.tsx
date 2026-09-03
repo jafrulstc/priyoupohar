@@ -7,15 +7,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader2, Wand2 } from "lucide-react";
+import { Gift, ImagePlus, Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 import {
   productFormSchema,
   slugify,
+  type ComboItemValues,
   type ProductFormValues,
 } from "@/lib/admin-schemas";
 import {
@@ -24,6 +25,7 @@ import {
   type AdminCategory,
   type AdminProduct,
   type AdminProductInput,
+  type Paged,
   type UploadResponse,
 } from "@/lib/py-api";
 import { useAdminStore } from "@/lib/admin-store";
@@ -46,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ComboEditor, GalleryEditor } from "./product-extras";
 import { Field, Spinner } from "./admin-ui";
 
 type FormInput = z.input<typeof productFormSchema>;
@@ -64,8 +67,15 @@ function defaultsFor(product: AdminProduct | null): FormInput {
         stock: product.stock,
         badge: product.badge ?? "",
         image_url: product.image_url ?? "",
+        images: product.images ?? [],
         is_featured: product.is_featured,
         is_active: product.is_active,
+        is_combo: product.is_combo ?? false,
+        combo: (product.combo ?? []).map((c) => ({
+          product_id: c.product_id,
+          name: c.name,
+          qty: c.qty,
+        })),
       }
     : {
         name: "",
@@ -77,8 +87,11 @@ function defaultsFor(product: AdminProduct | null): FormInput {
         stock: undefined,
         badge: "",
         image_url: "",
+        images: [],
         is_featured: false,
         is_active: true,
+        is_combo: false,
+        combo: [],
       };
 }
 
@@ -117,6 +130,19 @@ export default function ProductDialog({
 
   const name = watch("name");
   const imageUrl = (watch("image_url") as string) ?? "";
+  const galleryImages = (watch("images") as string[] | undefined) ?? [];
+  const isCombo = !!watch("is_combo");
+  const comboItems = (watch("combo") as ComboItemValues[] | undefined) ?? [];
+
+  /* Catalogue for the combo product picker (Task 2.5). */
+  const productsQuery = useQuery({
+    queryKey: ["admin", "products", "combo-picker"],
+    queryFn: () =>
+      pyFetch<Paged<AdminProduct>>("/api/admin/products?limit=100", { token }),
+    enabled: open && !!token,
+    staleTime: 30_000,
+  });
+  const catalogue = productsQuery.data?.items ?? [];
 
   const mutation = useMutation({
     mutationFn: (payload: { id?: number; data: AdminProductInput }) =>
@@ -144,15 +170,20 @@ export default function ProductDialog({
     const data: AdminProductInput = {
       name: values.name,
       slug: values.slug || slugify(values.name),
-      description: values.description || null,
+      description: values.description ?? "",
       price: values.price,
       original_price: values.original_price ?? null,
       category_id: values.category_id ?? null,
       stock: values.stock,
       badge: values.badge || null,
       image_url: values.image_url || null,
+      images: values.images ?? [],
       is_featured: values.is_featured,
       is_active: values.is_active,
+      is_combo: !!values.is_combo,
+      combo: (values.combo ?? [])
+        .filter((c) => c.product_id > 0)
+        .map((c) => ({ product_id: c.product_id, name: c.name ?? "", qty: c.qty })),
     };
     mutation.mutate({ id: product?.id, data });
   };
@@ -189,7 +220,7 @@ export default function ProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-2xl">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-extrabold">
             {product ? `Edit product` : "New product"}
@@ -365,6 +396,49 @@ export default function ProductDialog({
               </div>
             )}
           </Field>
+
+          <Field
+            label="Gallery (extra images)"
+            className="sm:col-span-2"
+            hint="Shown as thumbnails on the product page — up to 8."
+            error={errors.images?.message}
+          >
+            <GalleryEditor
+              images={galleryImages}
+              onChange={(next) => setValue("images", next, { shouldValidate: false })}
+              token={token}
+            />
+          </Field>
+
+          <div className="flex items-center justify-between rounded-xl border px-3 py-2.5 sm:col-span-2">
+            <span className="flex items-center gap-2 text-sm font-bold">
+              <Gift className="h-4 w-4 text-brand dark:text-rose-400" aria-hidden />
+              Combo product (bundle of multiple items)
+            </span>
+            <Controller
+              control={control}
+              name="is_combo"
+              render={({ field }) => (
+                <Switch checked={!!field.value} onCheckedChange={field.onChange} aria-label="Combo product" />
+              )}
+            />
+          </div>
+
+          {isCombo && (
+            <Field
+              label="Combo contents"
+              className="sm:col-span-2"
+              error={errors.combo?.message}
+              hint="Each bundled product and its quantity."
+            >
+              <ComboEditor
+                combo={comboItems}
+                onChange={(next) => setValue("combo", next, { shouldValidate: true })}
+                products={catalogue}
+                selfId={product?.id}
+              />
+            </Field>
+          )}
 
           <div className="flex items-center justify-between rounded-xl border px-3 py-2.5">
             <span className="text-sm font-bold">Featured</span>

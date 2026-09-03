@@ -578,7 +578,8 @@ export default function Hero() {
                         </p>
                         <p className="flex items-center gap-1 text-[10px] font-bold text-stone-500 dark:text-stone-400">
                           <Star className="h-3 w-3 fill-gold text-gold" aria-hidden />
-                          {product.rating} · {product.reviews} reviews
+                          {product.rating} · {product.reviews}{" "}
+                          {product.reviews === "1" ? "review" : "reviews"}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

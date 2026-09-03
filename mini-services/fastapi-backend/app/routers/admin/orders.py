@@ -36,3 +36,27 @@ async def update_order_status(
     if order is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
     return OrderOut.model_validate(order)
+
+
+@router.get("/orders/{order_id}/timeline")
+async def order_timeline(
+    db: DbSession,
+    _admin: AdminUser,
+    order_id: Annotated[int, Path(gt=0)],
+) -> dict:
+    """Status history for the admin order-detail dialog (Task 2.3)."""
+    order = await order_service.get_order(db, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
+    events = await order_service.get_timeline(db, order)
+    return {
+        "events": [
+            {
+                "id": e.id,
+                "status": e.status,
+                "note": e.note,
+                "created_at": e.created_at.isoformat(),
+            }
+            for e in events
+        ]
+    }

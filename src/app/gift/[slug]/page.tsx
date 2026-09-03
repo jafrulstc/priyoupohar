@@ -90,7 +90,7 @@ export default async function GiftPage({
       <div className="relative z-10 mx-auto max-w-6xl px-4 pb-6 sm:px-6 sm:pb-10 lg:px-8 lg:pb-14">
         <GiftPageActions product={product} />
         <ProductDetailsTabs product={product} />
-        <ProductReviews rating={product.rating} count={product.reviews} productId={product.id} />
+        <ProductReviews rating={product.rating} count={product.reviews} productId={product.slug} />
         <YouMayAlsoLike currentSlug={product.slug} currentCategory={product.category ?? undefined} />
       </div>
 

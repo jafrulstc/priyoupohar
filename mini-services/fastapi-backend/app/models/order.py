@@ -65,3 +65,20 @@ class OrderItem(Base):
     line_total: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     order: Mapped["Order"] = relationship(back_populates="items")
+
+
+class OrderEvent(Base):
+    """Immutable status-history entry — powers the customer tracking timeline."""
+
+    __tablename__ = "order_events"
+    __table_args__ = {"schema": "orders"}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders.orders.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[str] = mapped_column(String(20))
+    note: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )

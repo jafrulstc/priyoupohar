@@ -3,12 +3,12 @@
 import { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, History, X, ShoppingBag, Heart, Star, Check } from "lucide-react";
-import { useShopStore, type ProductSnapshot } from "lib/store";
-import { useMounted } from "hooks/use-mounted";
-import { useToast } from "hooks/use-toast";
-import { formatINR, discountPct } from "lib/format";
-import { miniConfetti } from "lib/confetti";
-import { cn } from "lib/utils";
+import { useShopStore, type ProductSnapshot } from "@/lib/store";
+import { useMounted } from "@/hooks/use-mounted";
+import { useToast } from "@/hooks/use-toast";
+import { formatINR, discountPct } from "@/lib/format";
+import { miniConfetti } from "@/lib/confetti";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 /* ---------- mini card for the rail ---------- */

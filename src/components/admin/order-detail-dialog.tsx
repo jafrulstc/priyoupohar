@@ -5,8 +5,8 @@
  * admin status control (optimistic PATCH with rollback).
  */
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Package, ReceiptText, StickyNote } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MapPin, Package, ReceiptText, StickyNote, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
 import {
@@ -14,6 +14,7 @@ import {
   pyFetch,
   type AdminOrder,
   type AdminOrderStatus,
+  type OrderEvent,
   type Paged,
 } from "@/lib/py-api";
 import { useAdminStore } from "@/lib/admin-store";
@@ -46,6 +47,13 @@ export default function OrderDetailDialog({
 }) {
   const token = useAdminStore((s) => s.token);
   const queryClient = useQueryClient();
+
+  const timelineQuery = useQuery({
+    queryKey: ["admin", "order-timeline", order?.id],
+    queryFn: () => pyFetch<{ events: OrderEvent[] }>(`/api/admin/orders/${order!.id}/timeline`, { token }),
+    enabled: !!order,
+    retry: 1,
+  });
 
   const statusMutation = useMutation({
     mutationFn: (status: AdminOrderStatus) =>
@@ -83,12 +91,13 @@ export default function OrderDetailDialog({
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "order-timeline"] });
     },
   });
 
   return (
     <Dialog open={!!order} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-lg">
         {order && (
           <>
             <DialogHeader>
@@ -169,6 +178,28 @@ export default function OrderDetailDialog({
                     <dd className="font-extrabold tabular-nums">{formatINR(order.total)}</dd>
                   </div>
                 </dl>
+              </section>
+
+              {/* Status Timeline */}
+              <section aria-label="Status timeline" className="rounded-2xl border p-3">
+                <h4 className="mb-2 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" aria-hidden /> Timeline
+                </h4>
+                {timelineQuery.isLoading ? <p className="text-xs text-muted-foreground">Loading timeline…</p> :
+                timelineQuery.data?.events && timelineQuery.data.events.length > 0 ? (
+                  <ol className="relative ml-2 border-l-2 border-muted pl-4">
+                    {timelineQuery.data.events.map((ev) => (
+                      <li key={ev.id} className="relative mb-3 last:mb-0">
+                        <span className="absolute -left-[21px] top-0.5 h-3 w-3 rounded-full border-2 border-background bg-brand" />
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-extrabold">{ORDER_STATUS_META[ev.status as keyof typeof ORDER_STATUS_META]?.label ?? ev.status}</span>
+                          <span className="text-[10px] text-muted-foreground">{formatDateTime(ev.created_at)}</span>
+                        </div>
+                        {ev.note && <p className="mt-0.5 text-xs text-muted-foreground">{ev.note}</p>}
+                      </li>
+                    ))}
+                  </ol>
+                ) : <p className="text-xs text-muted-foreground italic">No timeline events yet.</p>}
               </section>
 
               {/* Notes */}

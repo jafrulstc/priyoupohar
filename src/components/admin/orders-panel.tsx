@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, RefreshCw, ShoppingBag } from "lucide-react";
+import { Eye, RefreshCw, ShoppingBag } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import { ORDER_STATUSES } from "@/lib/admin-schemas";
 import { pyFetch, type AdminOrder, type Paged } from "@/lib/py-api";
@@ -26,7 +26,9 @@ import {
   ErrorState,
   PanelHeader,
   RowsSkeleton,
+  RowActions,
   StatusBadge,
+  TablePager,
   Td,
   Th,
   formatDateTime,
@@ -113,9 +115,10 @@ export default function OrdersPanel() {
               <Th>Total</Th>
               <Th>Status</Th>
               <Th>Placed</Th>
+              <Th className="text-right">Actions</Th>
             </tr>
           </thead>
-          <RowsSkeleton rows={6} cols={6} />
+          <RowsSkeleton rows={6} cols={7} />
         </AdminTable>
       ) : items.length === 0 ? (
         <EmptyState
@@ -134,6 +137,7 @@ export default function OrdersPanel() {
                 <Th>Total</Th>
                 <Th>Status</Th>
                 <Th>Placed</Th>
+                <Th className="text-right">Actions</Th>
               </tr>
             </thead>
             <tbody>
@@ -150,7 +154,7 @@ export default function OrdersPanel() {
                       setSelected(o);
                     }
                   }}
-                  className="cursor-pointer transition-colors hover:bg-rose-50/40 focus-visible:bg-rose-50/60 dark:hover:bg-stone-800/50 dark:focus-visible:bg-stone-800/60"
+                  className="cursor-pointer focus-visible:bg-muted/60"
                 >
                   <Td className="font-mono text-xs font-bold text-brand dark:text-rose-400">
                     {o.order_number}
@@ -169,38 +173,31 @@ export default function OrdersPanel() {
                   <Td className="whitespace-nowrap text-xs text-muted-foreground">
                     {formatDateTime(o.created_at)}
                   </Td>
+                  <Td onClick={(e) => e.stopPropagation()}>
+                    <RowActions
+                      label={`Actions for ${o.order_number}`}
+                      items={[
+                        {
+                          label: "View details",
+                          icon: Eye,
+                          onSelect: () => setSelected(o),
+                        },
+                      ]}
+                    />
+                  </Td>
                 </tr>
               ))}
             </tbody>
           </AdminTable>
 
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <p className="text-muted-foreground">
-              Showing <span className="font-bold text-foreground">{offset + 1}</span>–
-              <span className="font-bold text-foreground">{offset + items.length}</span> of{" "}
-              <span className="font-bold text-foreground">{total}</span>
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 rounded-xl"
-                disabled={offset === 0 || ordersQuery.isFetching}
-                onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden /> Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 rounded-xl"
-                disabled={offset + PAGE_SIZE >= total || ordersQuery.isFetching}
-                onClick={() => setOffset((o) => o + PAGE_SIZE)}
-              >
-                Next <ChevronRight className="h-4 w-4" aria-hidden />
-              </Button>
-            </div>
-          </div>
+          <TablePager
+            offset={offset}
+            pageSize={PAGE_SIZE}
+            total={total}
+            fetching={ordersQuery.isFetching}
+            onPrev={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
+            onNext={() => setOffset((o) => o + PAGE_SIZE)}
+          />
         </>
       )}
 

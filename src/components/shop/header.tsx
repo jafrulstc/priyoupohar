@@ -17,10 +17,12 @@ import {
   Sun,
   ShieldCheck,
   Gift,
+  User,
 } from "lucide-react";
 import { useShopStore, cartCount, LOYALTY_TARGET } from "@/lib/store";
 import { useAdminStore } from "@/lib/admin-store";
 import { useMounted } from "@/hooks/use-mounted";
+import AuthSheet, { useCustomerAuth } from "@/components/shop/auth-sheet";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -36,7 +38,9 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [now, setNow] = useState<number | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
   const mounted = useMounted();
+  const { auth } = useCustomerAuth();
 
   const cart = useShopStore((s) => s.cart);
   const lastAddedAt = useShopStore((s) => s.lastAddedAt);
@@ -139,7 +143,7 @@ export default function Header() {
             : "bg-background/80"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:gap-2 md:px-6 lg:px-8 xl:gap-3 min-[1440px]:gap-4">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:gap-2 md:px-6 lg:px-8 xl:gap-3 min-[1600px]:gap-4">
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -165,10 +169,10 @@ export default function Header() {
               <button
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
-                className="group relative whitespace-nowrap rounded-full px-2 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400 min-[1440px]:px-3.5"
+                className="group relative whitespace-nowrap rounded-full px-2 py-2 text-sm font-bold text-stone-600 transition-colors hover:text-brand dark:text-stone-300 dark:hover:text-rose-400 min-[1600px]:px-3.5"
               >
                 {link.label}
-                <span className="absolute inset-x-3.5 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100 dark:bg-rose-400" />
+                <span className="absolute inset-x-2 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100 dark:bg-rose-400 min-[1600px]:inset-x-3.5" />
               </button>
             ))}
           </nav>
@@ -215,7 +219,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setSearchOpen(true)}
-              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-rose-500/50 min-[1440px]:flex"
+              className="hidden h-10 items-center gap-2 rounded-2xl border border-stone-200 bg-card px-3 text-stone-400 transition-all hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-rose-500/50 min-[1600px]:flex"
               aria-label="Search gifts"
             >
               <Search className="h-4 w-4" aria-hidden />
@@ -226,7 +230,7 @@ export default function Header() {
             </motion.button>
             <button
               onClick={() => setSearchOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 min-[1440px]:hidden"
+              className="grid h-9 w-9 place-items-center rounded-2xl border border-stone-200 bg-card text-foreground transition-all hover:border-rose-300 hover:text-brand sm:h-10 sm:w-10 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50 min-[1600px]:hidden"
               aria-label="Search gifts"
             >
               <Search className="h-4.5 w-4.5" aria-hidden />
@@ -240,7 +244,7 @@ export default function Header() {
             >
               <MapPin className="h-4 w-4 shrink-0 text-brand dark:text-rose-400" aria-hidden />
               <span className="min-w-0">
-                <span className="hidden text-[10px] font-semibold uppercase tracking-wide text-stone-400 min-[1440px]:block dark:text-stone-500">
+                <span className="hidden text-[10px] font-semibold uppercase tracking-wide text-stone-400 min-[1600px]:block dark:text-stone-500">
                   Deliver to
                 </span>
                 <span className="block truncate text-sm font-bold text-foreground">
@@ -248,6 +252,27 @@ export default function Header() {
                 </span>
               </span>
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-stone-400 dark:text-stone-500" aria-hidden />
+            </button>
+
+            {/* Account (Task 2.4) */}
+            <button
+              onClick={() => setAuthOpen(true)}
+              className={cn(
+                "grid h-9 w-9 place-items-center rounded-2xl border transition-all sm:h-10 sm:w-10",
+                auth
+                  ? "border-transparent bg-gradient-brand text-white shadow-soft hover:bg-rose-700"
+                  : "border-stone-200 bg-card text-foreground hover:border-rose-300 hover:text-brand dark:border-stone-700 dark:bg-stone-900 dark:hover:border-rose-500/50"
+              )}
+              aria-label={auth ? `Account — ${auth.user.name}` : "Sign in to your account"}
+              title={auth ? auth.user.name : "Sign in"}
+            >
+              {auth ? (
+                <span className="text-xs font-extrabold uppercase">
+                  {auth.user.name.trim().charAt(0)}
+                </span>
+              ) : (
+                <User className="h-4.5 w-4.5" aria-hidden />
+              )}
             </button>
 
             {/* Wishlist — compact icon on mobile */}
@@ -297,7 +322,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setCartOpen(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-2xl bg-brand text-white shadow-lift transition-colors hover:bg-rose-700 sm:h-11 sm:w-11"
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand text-white shadow-lift transition-colors hover:bg-rose-700 sm:h-11 sm:w-11"
               aria-label={`Open gift bag, ${count} items`}
             >
               <ShoppingBag className="h-5 w-5" aria-hidden />
@@ -396,6 +421,35 @@ export default function Header() {
                   </span>
                 </button>
 
+                {/* Account entry (mobile menu) */}
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setAuthOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-stone-700 hover:bg-rose-50 dark:text-stone-200 dark:hover:bg-stone-800"
+                >
+                  <User className="h-4 w-4 text-brand dark:text-rose-300" aria-hidden />
+                  {auth ? `Hi, ${auth.user.name.split(" ")[0]}` : "Sign in / Register"}
+                </button>
+
+                {/* Admin panel entry (mobile) */}
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    useAdminStore.getState().openAdmin();
+                  }}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold text-stone-700 hover:bg-rose-50 dark:text-stone-200 dark:hover:bg-stone-800"
+                >
+                  <span className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-brand dark:text-rose-300" aria-hidden />
+                    Admin panel
+                  </span>
+                  <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-extrabold text-stone-500 dark:bg-stone-800 dark:text-stone-400">
+                    STAFF
+                  </span>
+                </button>
+
                 {/* Loyalty stamps in mobile menu */}
                 {mounted && (
                   <div className="mt-2 rounded-xl border border-rose-100 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
@@ -432,6 +486,9 @@ export default function Header() {
             </motion.nav>
           )}
         </AnimatePresence>
+
+        {/* Storefront auth + account sheet (Task 2.4) */}
+        <AuthSheet open={authOpen} onOpenChange={setAuthOpen} />
       </div>
     </header>
   );

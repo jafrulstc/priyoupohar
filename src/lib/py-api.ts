@@ -124,6 +124,8 @@ export type AdminProduct = {
   is_featured: boolean;
   is_active: boolean;
   badge: string | null;
+  is_combo: boolean;
+  combo: ComboItem[];
   created_at: string;
   updated_at: string;
 };
@@ -141,6 +143,8 @@ export type AdminProductInput = {
   images?: string[];
   is_featured?: boolean;
   is_active?: boolean;
+  is_combo?: boolean;
+  combo?: ComboItem[];
 };
 
 export type AdminOrderStatus =
@@ -200,3 +204,156 @@ export type LoginResponse = {
 };
 
 export type UploadResponse = { url: string; preview_url: string };
+
+/* ------------------------------------------------------------------ */
+/* Phase 2 domain types (settings / locations / offers / spin / reviews) */
+/* ------------------------------------------------------------------ */
+
+export type SiteSettings = {
+  free_delivery_threshold: number;
+  delivery_fee: number;
+  cod_enabled: boolean;
+  support_phone: string;
+  support_email: string;
+  store_name: string;
+  announcement_enabled: boolean;
+};
+
+export type DeliveryLocation = {
+  id: number;
+  pincode_prefix: string;
+  city: string;
+  state: string;
+  delivery_fee: number;
+  free_above: number | null;
+  same_day: boolean;
+  midnight_available: boolean;
+  cod_available: boolean;
+  eta_hours: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DeliveryLocationInput = {
+  pincode_prefix: string;
+  city: string;
+  state: string;
+  delivery_fee: number;
+  free_above?: number | null;
+  same_day: boolean;
+  midnight_available: boolean;
+  cod_available: boolean;
+  eta_hours: number;
+  is_active: boolean;
+};
+
+export type Serviceability = {
+  serviceable: boolean;
+  city: string;
+  state: string;
+  same_day: boolean;
+  midnight_available: boolean;
+  cod_available: boolean;
+  eta_hours: number;
+  delivery_fee: number;
+  free_above: number | null;
+  free_delivery_threshold: number;
+};
+
+export type Offer = {
+  id: number;
+  title: string;
+  message: string;
+  icon: string;
+  accent: boolean;
+  code: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OfferInput = {
+  title: string;
+  message?: string;
+  icon?: string;
+  accent?: boolean;
+  code?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  priority?: number;
+  is_active?: boolean;
+};
+
+export type SpinKind = "percent" | "flat" | "freeship" | "none";
+
+export type SpinPrize = {
+  id: number;
+  label: string;
+  kind: SpinKind;
+  code: string | null;
+  value: number | null;
+  weight: number;
+  bg: string;
+  fg: string;
+  position: number;
+  is_active: boolean;
+  updated_at: string;
+};
+
+export type SpinPrizeInput = {
+  label?: string;
+  kind?: SpinKind;
+  code?: string | null;
+  value?: number | null;
+  weight?: number;
+  bg?: string;
+  fg?: string;
+  position?: number;
+  is_active?: boolean;
+};
+
+export type SpinConfig = { segments: SpinPrize[]; cooldown_hours: number };
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
+export type ProductReview = {
+  id: number;
+  product_id: number;
+  name: string;
+  city: string | null;
+  rating: number;
+  title: string | null;
+  text: string;
+  status: ReviewStatus;
+  helpful: number;
+  created_at: string;
+};
+
+export type ReviewInput = {
+  name: string;
+  city?: string | null;
+  rating: number;
+  title?: string | null;
+  text: string;
+};
+
+export type ReviewSummary = {
+  average: number;
+  count: number;
+  distribution: Record<string, number>;
+};
+
+export type OrderEvent = {
+  id: number;
+  status: string;
+  note: string | null;
+  created_at: string;
+};
+
+export type OrderTimeline = { order: AdminOrder; events: OrderEvent[] };
+
+export type ComboItem = { product_id: number; name: string; qty: number };

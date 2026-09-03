@@ -52,6 +52,7 @@ import {
   ErrorState,
   Field,
   PanelHeader,
+  RowActions,
   RowsSkeleton,
   Spinner,
   Td,
@@ -142,7 +143,7 @@ export default function CategoriesPanel() {
           }
         />
       ) : (
-        <AdminTable maxHeight="55vh">
+        <AdminTable maxHeight="55dvh">
           <thead>
             <tr>
               <Th>Name</Th>
@@ -154,7 +155,7 @@ export default function CategoriesPanel() {
           </thead>
           <tbody>
             {items.map((c) => (
-              <tr key={c.id} className="transition-colors hover:bg-rose-50/40 dark:hover:bg-stone-800/50">
+              <tr key={c.id}>
                 <Td>
                   <div className="flex items-center gap-3">
                     {c.image_url ? (
@@ -190,29 +191,25 @@ export default function CategoriesPanel() {
                   )}
                 </Td>
                 <Td>
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg"
-                      aria-label={`Edit ${c.name}`}
-                      onClick={() => {
-                        setEditing(c);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                      aria-label={`Delete ${c.name}`}
-                      onClick={() => setDeleting(c)}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </Button>
-                  </div>
+                  <RowActions
+                    label={`Actions for ${c.name}`}
+                    items={[
+                      {
+                        label: "Edit category",
+                        icon: Pencil,
+                        onSelect: () => {
+                          setEditing(c);
+                          setDialogOpen(true);
+                        },
+                      },
+                      {
+                        label: "Delete",
+                        icon: Trash2,
+                        danger: true,
+                        onSelect: () => setDeleting(c),
+                      },
+                    ]}
+                  />
                 </Td>
               </tr>
             ))}
@@ -342,7 +339,7 @@ function CategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto rounded-3xl scrollbar-slim sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-extrabold">
             {category ? "Edit category" : "New category"}

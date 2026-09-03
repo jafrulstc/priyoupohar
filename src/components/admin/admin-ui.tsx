@@ -6,19 +6,36 @@
  */
 
 import type { ComponentType, ReactNode } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, MoreVertical, RefreshCw } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { AdminOrderStatus } from "@/lib/py-api";
 
 /* ------------------------------------------------------------------ */
 /* Shared ids                                                          */
 /* ------------------------------------------------------------------ */
 
-export type AdminTabId = "overview" | "products" | "categories" | "orders" | "users";
+export type AdminTabId =
+  | "overview"
+  | "products"
+  | "categories"
+  | "orders"
+  | "users"
+  | "settings"
+  | "locations"
+  | "offers"
+  | "spin"
+  | "reviews";
 
 /* ------------------------------------------------------------------ */
 /* Spinner                                                             */
@@ -59,12 +76,12 @@ export function StatCard({
   loading?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-soft transition-shadow hover:shadow-lift">
-      <div className="flex items-center gap-2.5">
-        <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl", TONE_CHIP[tone])}>
-          <Icon className="h-4.5 w-4.5" aria-hidden />
+    <div className="rounded-2xl border bg-card p-3.5 shadow-soft transition-shadow hover:shadow-lift md:p-4">
+      <div className="flex items-center gap-2 md:gap-2.5">
+        <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl md:h-9 md:w-9", TONE_CHIP[tone])}>
+          <Icon className="h-4 w-4 md:h-4.5 md:w-4.5" aria-hidden />
         </span>
-        <span className="truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <span className="truncate text-[10px] font-bold uppercase tracking-wide text-muted-foreground md:text-xs">
           {label}
         </span>
       </div>
@@ -112,15 +129,15 @@ export function PanelHeader({
 
 export function AdminTable({
   children,
-  maxHeight = "60vh",
+  maxHeight = "60dvh",
 }: {
   children: ReactNode;
   maxHeight?: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card shadow-soft">
+    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft">
       <div className="scrollbar-slim overflow-x-auto overflow-y-auto" style={{ maxHeight }}>
-        <table className="w-full min-w-[640px] border-collapse text-sm">{children}</table>
+        <table className="w-full min-w-[640px] border-collapse text-sm [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/40">{children}</table>
       </div>
     </div>
   );
@@ -131,7 +148,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
     <th
       scope="col"
       className={cn(
-        "sticky top-0 z-10 border-b bg-muted/70 px-3 py-2.5 text-left text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground backdrop-blur first:pl-4 last:pr-4",
+        "sticky top-0 z-10 border-b border-border/70 bg-muted/80 px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground backdrop-blur first:pl-5 last:pr-5",
         className
       )}
     >
@@ -140,11 +157,126 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
   );
 }
 
-export function Td({ children, className }: { children?: ReactNode; className?: string }) {
+export function Td({
+  children,
+  className,
+  onClick,
+}: {
+  children?: ReactNode;
+  className?: string;
+  onClick?: (e: React.MouseEvent<HTMLTableCellElement>) => void;
+}) {
   return (
-    <td className={cn("border-b px-3 py-2.5 align-middle first:pl-4 last:pr-4", className)}>
+    <td
+      onClick={onClick}
+      className={cn("border-b border-border/60 px-4 py-3.5 align-middle first:pl-5 last:pr-5", className)}
+    >
       {children}
     </td>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Premium row actions (⋮ dropdown, Dashtrans style)                    */
+/* ------------------------------------------------------------------ */
+
+export type RowActionItem = {
+  label: string;
+  icon: LucideIcon;
+  onSelect: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+};
+
+export function RowActions({
+  items,
+  label = "Row actions",
+}: {
+  items: RowActionItem[];
+  label?: string;
+}) {
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={label}
+            className="h-8 w-8 rounded-full border-border/70 shadow-none hover:bg-muted"
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44 rounded-xl">
+          {items.map((item) => (
+            <DropdownMenuItem
+              key={item.label}
+              disabled={item.disabled}
+              onClick={item.onSelect}
+              className={cn(
+                "gap-2.5 rounded-lg py-2 text-[13px] font-semibold",
+                item.danger &&
+                  "text-rose-600 focus:bg-rose-50 focus:text-rose-700 dark:text-rose-400 dark:focus:bg-rose-950/40 dark:focus:text-rose-300"
+              )}
+            >
+              <item.icon className="h-4 w-4" aria-hidden />
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Table pager ("Result 1–5 of 15" + Prev/Next, Dashtrans style)        */
+/* ------------------------------------------------------------------ */
+
+export function TablePager({
+  offset,
+  pageSize,
+  total,
+  fetching = false,
+  onPrev,
+  onNext,
+}: {
+  offset: number;
+  pageSize: number;
+  total: number;
+  fetching?: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const from = total === 0 ? 0 : offset + 1;
+  const to = Math.min(offset + pageSize, total);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-sm">
+      <p className="text-muted-foreground">
+        Result <span className="font-bold text-foreground">{from}–{to}</span> of{" "}
+        <span className="font-bold text-foreground">{total}</span>
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1 rounded-xl"
+          disabled={offset === 0 || fetching}
+          onClick={onPrev}
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden /> Prev
+        </Button>
+        <Button
+          size="sm"
+          className="gap-1 rounded-xl bg-foreground font-bold text-background hover:bg-foreground/90"
+          disabled={offset + pageSize >= total || fetching}
+          onClick={onNext}
+        >
+          Next <ChevronRight className="h-4 w-4" aria-hidden />
+        </Button>
+      </div>
+    </div>
   );
 }
 

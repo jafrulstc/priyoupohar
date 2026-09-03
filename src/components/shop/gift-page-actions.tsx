@@ -22,7 +22,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { useShopStore, type ProductSnapshot } from "@/lib/store";
-import { formatINR } from "@/lib/format";
+import { formatINR, reviewLabel } from "@/lib/format";
 import { miniConfetti, petalConfetti } from "@/lib/confetti";
 import { useToast } from "@/hooks/use-toast";
 import type { LegacyProduct } from "@/lib/product-map";
@@ -417,7 +417,7 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
               {product.rating.toFixed(1)}
             </span>
             <span className="text-xs font-semibold text-stone-400">
-              {product.reviews.toLocaleString("en-IN")} happy reviews
+              {reviewLabel(product.reviews, { noun: "happy review" })}
             </span>
           </motion.div>
 

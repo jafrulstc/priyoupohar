@@ -44,6 +44,8 @@ import {
   ErrorState,
   PanelHeader,
   RowsSkeleton,
+  RowActions,
+  TablePager,
   Td,
   Th,
 } from "./admin-ui";
@@ -239,7 +241,7 @@ export default function ProductsPanel() {
             </thead>
             <tbody>
               {items.map((p) => (
-                <tr key={p.id} className="transition-colors hover:bg-rose-50/40 dark:hover:bg-stone-800/50">
+                <tr key={p.id}>
                   <Td>
                     <div className="flex items-center gap-3">
                       {p.image_url ? (
@@ -261,6 +263,14 @@ export default function ProductsPanel() {
                               className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400"
                               aria-label="Featured"
                             />
+                          )}
+                          {p.is_combo && (
+                            <span
+                              className="shrink-0 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-violet-700 dark:bg-violet-950/60 dark:text-violet-300"
+                              title="Combo product"
+                            >
+                              Combo
+                            </span>
                           )}
                         </div>
                         <div className="max-w-[220px] truncate font-mono text-[11px] text-muted-foreground">
@@ -302,26 +312,18 @@ export default function ProductsPanel() {
                     )}
                   </Td>
                   <Td>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(p)}
-                        aria-label={`Edit ${p.name}`}
-                        className="h-8 w-8 rounded-lg"
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleting(p)}
-                        aria-label={`Delete ${p.name}`}
-                        className="h-8 w-8 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
+                    <RowActions
+                      label={`Actions for ${p.name}`}
+                      items={[
+                        { label: "Edit product", icon: Pencil, onSelect: () => openEdit(p) },
+                        {
+                          label: "Delete",
+                          icon: Trash2,
+                          danger: true,
+                          onSelect: () => setDeleting(p),
+                        },
+                      ]}
+                    />
                   </Td>
                 </tr>
               ))}
@@ -329,33 +331,14 @@ export default function ProductsPanel() {
           </AdminTable>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <p className="text-muted-foreground">
-              Showing <span className="font-bold text-foreground">{offset + 1}</span>–
-              <span className="font-bold text-foreground">{offset + items.length}</span> of{" "}
-              <span className="font-bold text-foreground">{total}</span>
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                disabled={offset === 0 || productsQuery.isFetching}
-                onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                disabled={offset + PAGE_SIZE >= total || productsQuery.isFetching}
-                onClick={() => setOffset((o) => o + PAGE_SIZE)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <TablePager
+            offset={offset}
+            pageSize={PAGE_SIZE}
+            total={total}
+            fetching={productsQuery.isFetching}
+            onPrev={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
+            onNext={() => setOffset((o) => o + PAGE_SIZE)}
+          />
         </>
       )}
 

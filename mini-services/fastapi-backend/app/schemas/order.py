@@ -70,3 +70,21 @@ class OrderWrappedOut(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: ORDER_STATUSES
+
+
+class OrderEventOut(BaseModel):
+    """Single status-history entry (Task 2.3 tracking timeline)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    status: str
+    note: str | None = None
+    created_at: datetime
+
+
+class OrderTimelineOut(BaseModel):
+    """Public tracking payload: order summary + full status history."""
+
+    order: OrderOut
+    events: list[OrderEventOut] = []

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import StoreQueryProvider from "@/components/shop/store-query-provider";
 import LiveAnnouncer from "@/components/shop/live-announcer";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -68,9 +69,11 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${geistMono.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster />
-        <LiveAnnouncer />
+        <StoreQueryProvider>
+          {children}
+          <Toaster />
+          <LiveAnnouncer />
+        </StoreQueryProvider>
       </body>
     </html>
   );

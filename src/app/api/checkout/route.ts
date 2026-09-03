@@ -4,19 +4,40 @@ import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 
 const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
 
+let _settingsCache: { threshold: number; fee: number; at: number } | null = null;
+
+async function fetchSettings() {
+  if (_settingsCache && Date.now() - _settingsCache.at < 60_000) return _settingsCache;
+  try {
+    const res = await fetch(`${FASTAPI_URL}/api/store/settings`, { cache: "no-store" });
+    if (res.ok) {
+      const s = await res.json();
+      _settingsCache = { threshold: s.free_delivery_threshold ?? 999, fee: s.delivery_fee ?? 99, at: Date.now() };
+      return _settingsCache;
+    }
+  } catch { /* fallback */ }
+  return { threshold: 999, fee: 99, at: 0 };
+}
+
 /** POST the mapped checkout payload to FastAPI; returns the order_number. */
-async function persistOrderToFastApi(payload: {
-  items: { product_id: number; quantity: number }[];
-  city: string;
-  pincode: string;
-  discount: number;
-  extra_fees: number;
-  notes: string;
-}): Promise<string | null> {
+async function persistOrderToFastApi(
+  payload: {
+    items: { product_id: number; quantity: number }[];
+    city: string;
+    pincode: string;
+    discount: number;
+    extra_fees: number;
+    notes: string;
+  },
+  authHeader?: string | null
+): Promise<string | null> {
   try {
     const res = await fetch(`${FASTAPI_URL}/api/store/orders`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
@@ -84,11 +105,12 @@ export async function POST(req: NextRequest) {
     const { items, location, slot, slotDetail, message, photoUrl, coupon, premiumWrap, cardDesign } =
       parsed.data;
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const settings = await fetchSettings();
     const matched = resolveCoupon(coupon);
     const couponCode = matched?.code ?? null;
     const discount = matched ? couponDiscount(matched, subtotal) : 0;
-    const freeShipping = matched?.kind === "shipping";
-    const deliveryFee = subtotal >= 999 || freeShipping ? 0 : 99;
+    const freeShipping = matched?.kind === "shipping" || subtotal >= settings.threshold;
+    const deliveryFee = freeShipping ? 0 : settings.fee;
     const giftWrap = premiumWrap ? 49 : 0;
     const total = subtotal + deliveryFee + giftWrap - discount;
     const fallbackOrderId = `BB${Date.now().toString(36).toUpperCase()}`;
@@ -96,12 +118,13 @@ export async function POST(req: NextRequest) {
     // Persist the order in the FastAPI backend (source of truth for admin).
     // Prices/stock are re-validated server-side; falls back to a synthetic id
     // if the backend is briefly unreachable so checkout never hard-fails.
-    const orderId = await persistOrderToFastApi({
-      items: items.map((i) => ({ product_id: Number(i.id), quantity: i.qty })),
-      city: location.city,
-      pincode: location.pincode ?? "000000",
-      discount,
-      extra_fees: giftWrap,
+    const orderId = await persistOrderToFastApi(
+      {
+        items: items.map((i) => ({ product_id: Number(i.id), quantity: i.qty })),
+        city: location.city,
+        pincode: location.pincode ?? "000000",
+        discount,
+        extra_fees: giftWrap,
       notes: [
         slotDetail ? `slot: ${slotDetail.label} (${slotDetail.dateISO})` : `slot: ${slot}`,
         message ? `message: ${message}` : null,
@@ -113,7 +136,9 @@ export async function POST(req: NextRequest) {
         .filter(Boolean)
         .join(" | ")
         .slice(0, 2000),
-    });
+      },
+      req.headers.get("authorization")
+    );
 
     // Simulated payment + ETA logic
     const etaHours = slot === "midnight" ? 12 : slot === "same-day" ? 4 : 48;

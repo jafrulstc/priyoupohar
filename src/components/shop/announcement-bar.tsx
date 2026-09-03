@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Truck, Gift, Percent, Clock } from "lucide-react";
+import {
+  Sparkles,
+  Truck,
+  Gift,
+  Percent,
+  Clock,
+  Tag,
+  Heart,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
+import { useActiveOffers } from "@/lib/site-data";
+import type { Offer } from "@/lib/py-api";
 
 const ANNOUNCEMENTS = [
   {
@@ -32,13 +44,74 @@ const ANNOUNCEMENTS = [
   },
 ] as const;
 
+/** offer.icon string → lucide icon (DB values, default Sparkles). */
+const ICON_MAP: Record<string, LucideIcon> = {
+  truck: Truck,
+  gift: Gift,
+  percent: Percent,
+  clock: Clock,
+  sparkles: Sparkles,
+  tag: Tag,
+  heart: Heart,
+  star: Star,
+};
+
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+type Slide = {
+  icon: LucideIcon;
+  text: string;
+  accent: boolean;
+  code: string | null;
+  endsSoon: boolean;
+  message: string | null;
+};
+
+const FALLBACK_SLIDES: Slide[] = ANNOUNCEMENTS.map((a) => ({
+  icon: a.icon,
+  text: a.text,
+  accent: a.accent,
+  code: null,
+  endsSoon: false,
+  message: null,
+}));
+
+function offerToSlide(o: Offer): Slide {
+  const endsAt = o.ends_at ? new Date(o.ends_at).getTime() : NaN;
+  return {
+    icon: ICON_MAP[(o.icon ?? "").toLowerCase()] ?? Sparkles,
+    text: o.title,
+    accent: o.accent,
+    code: o.code,
+    endsSoon: Number.isFinite(endsAt) && endsAt - Date.now() < THREE_DAYS_MS,
+    message: o.message || null,
+  };
+}
+
+/** Accent highlight: everything from the first ₹ glows gold. */
+function AccentText({ text }: { text: string }) {
+  const i = text.indexOf("\u20b9");
+  if (i === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="font-extrabold text-yellow-200">{text.slice(i)}</span>
+    </>
+  );
+}
+
 export default function AnnouncementBar() {
+  const { data: offers, loading: offersLoading } = useActiveOffers();
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const advance = useCallback(() => {
-    setIdx((i) => (i + 1) % ANNOUNCEMENTS.length);
-  }, []);
+  /* DB offers while loaded; hardcoded announcements while loading/empty. */
+  const slides = useMemo<Slide[]>(() => {
+    if (offersLoading || offers.length === 0) return FALLBACK_SLIDES;
+    return offers.map(offerToSlide);
+  }, [offers, offersLoading]);
+
+  const advance = useCallback(() => setIdx((i) => i + 1), []);
 
   useEffect(() => {
     if (paused) return;
@@ -46,8 +119,8 @@ export default function AnnouncementBar() {
     return () => clearInterval(id);
   }, [paused, advance]);
 
-  const a = ANNOUNCEMENTS[idx];
-  const Icon = a.icon;
+  const slide = slides[idx % slides.length];
+  const Icon = slide.icon;
 
   return (
     <div
@@ -78,18 +151,20 @@ export default function AnnouncementBar() {
           className="relative flex items-center justify-center gap-2 text-center text-xs font-bold text-white/90 sm:text-sm"
         >
           <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          <span>
-            {a.accent ? (
-              <>
-                {a.text.slice(0, a.text.indexOf("\u20b9"))}
-                <span className="font-extrabold text-yellow-200">
-                  {a.text.slice(a.text.indexOf("\u20b9"))}
-                </span>
-                {a.text.includes(" ") &&
-                  a.text.slice(a.text.indexOf("\u20b9") + 3)}
-              </>
-            ) : (
-              a.text
+          <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+            <span>{slide.accent ? <AccentText text={slide.text} /> : slide.text}</span>
+            {slide.code && (
+              <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-[10px] font-extrabold uppercase tracking-widest text-white">
+                {slide.code}
+              </span>
+            )}
+            {slide.endsSoon && (
+              <span className="font-extrabold text-yellow-200">Ends soon!</span>
+            )}
+            {slide.message && (
+              <span className="hidden font-medium text-white/60 sm:inline">
+                {slide.message}
+              </span>
             )}
           </span>
         </motion.p>
@@ -97,11 +172,11 @@ export default function AnnouncementBar() {
 
       {/* dot indicators */}
       <div className="absolute right-3 top-1/2 flex -translate-y-1/2 gap-1 sm:right-6">
-        {ANNOUNCEMENTS.map((_, i) => (
+        {slides.map((_, i) => (
           <span
             key={i}
             className={
-              i === idx
+              i === idx % slides.length
                 ? "h-1.5 w-1.5 rounded-full bg-white/80"
                 : "h-1.5 w-1.5 rounded-full bg-white/30"
             }

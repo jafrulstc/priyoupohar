@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     # --- Database ---
     database_url: str
+    # SQLite fallback: directory holding one <schema>.db file per schema.
+    sqlite_dir: str = "/home/z/my-project/db/fastapi"
 
     # --- JWT ---
     jwt_secret: str
@@ -38,12 +40,25 @@ class Settings(BaseSettings):
     admin_password: str = "Admin@12345"
     admin_name: str = "Site Admin"
 
-    # --- S3-compatible object storage (Filebase) ---
+    # --- S3-compatible object storage ---
+    # Primary: Cloudflare R2 (user-confirmed bucket "priyoupohar").
     s3_endpoint: str = "https://s3.filebase.io"
     s3_region: str = "auto"
     s3_access_key_id: str = ""
     s3_secret_access_key: str = ""
-    s3_bucket: str = "bloombliss-media"
+    s3_bucket: str = "priyoupohar"
+
+    # Secondary fallback (Filebase): tried automatically when the primary
+    # PUT fails, before resorting to the local disk.
+    s3_fallback_endpoint: str = ""
+    s3_fallback_region: str = "auto"
+    s3_fallback_access_key_id: str = ""
+    s3_fallback_secret_access_key: str = ""
+    s3_fallback_bucket: str = ""
+
+    # Local fallback store for uploads when S3 is unavailable; also served
+    # publicly via GET /api/media/{key}.
+    media_dir: str = "/home/z/my-project/db/fastapi/media"
 
     # --- CORS ---
     cors_origins: str = "*"

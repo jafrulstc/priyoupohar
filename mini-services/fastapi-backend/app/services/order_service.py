@@ -7,12 +7,23 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Order, OrderItem, Product, User
+from app.models import Order, OrderEvent, OrderItem, Product, User
 from app.models.timestamps import utc_now
+from app.services import location_service
 
-FREE_SHIPPING_THRESHOLD = Decimal("999")
-# Aligned with the legacy storefront checkout fee (₹99).
-DELIVERY_FEE = Decimal("99")
+# Fallbacks when site settings / locations tables are unavailable.
+FALLBACK_FREE_SHIPPING_THRESHOLD = Decimal("999")
+FALLBACK_DELIVERY_FEE = Decimal("99")
+
+# Default notes for the tracking timeline (Task 2.3).
+_STATUS_NOTES: dict[str, str] = {
+    "pending": "Order placed — awaiting confirmation",
+    "confirmed": "Order confirmed by our team",
+    "preparing": "Your gift is being prepared with love",
+    "shipped": "Package handed to the delivery partner",
+    "delivered": "Delivered — we hope it made someone smile!",
+    "cancelled": "Order cancelled",
+}
 
 
 def generate_order_number() -> str:
@@ -27,6 +38,24 @@ async def get_by_order_number(db: AsyncSession, order_number: str) -> Order | No
 
 async def get_order(db: AsyncSession, order_id: int) -> Order | None:
     return await db.get(Order, order_id)
+
+
+async def get_timeline(db: AsyncSession, order: Order) -> list[OrderEvent]:
+    """Status history for the tracking timeline (Task 2.3)."""
+    stmt = (
+        select(OrderEvent)
+        .where(OrderEvent.order_id == order.id)
+        .order_by(OrderEvent.created_at.asc(), OrderEvent.id.asc())
+    )
+    return list((await db.scalars(stmt)).all())
+
+
+def _fallback_fee(items_total: Decimal) -> Decimal:
+    return (
+        Decimal("0")
+        if items_total >= FALLBACK_FREE_SHIPPING_THRESHOLD
+        else FALLBACK_DELIVERY_FEE
+    )
 
 
 async def create_order(
@@ -65,9 +94,14 @@ async def create_order(
         (unit_price * Decimal(quantity) for _, quantity, unit_price in lines),
         Decimal("0"),
     ).quantize(Decimal("0.01"))
-    delivery_fee = (
-        Decimal("0") if items_total >= FREE_SHIPPING_THRESHOLD else DELIVERY_FEE
-    )
+    # Task 2.1/2.2 — admin-configured threshold & fee with per-location
+    # override from delivery_locations; fallback keeps checkout resilient.
+    try:
+        delivery_fee = await location_service.delivery_fee_for(
+            db, data["pincode"].strip(), items_total
+        )
+    except Exception:  # pragma: no cover — settings/location tables unavailable
+        delivery_fee = _fallback_fee(items_total)
     # Client-computed discount (loyalty coupons); clamped to a sane range.
     raw_discount = Decimal(str(data.get("discount") or 0)).quantize(Decimal("0.01"))
     discount = max(Decimal("0"), min(raw_discount, items_total))
@@ -105,7 +139,17 @@ async def create_order(
         )
         product.stock -= quantity  # decrement stock, same transaction
     db.add(order)
-    await db.commit()  # single atomic transaction (stock + order + items)
+    await db.flush()  # assign order.id before creating the event child
+    # Task 2.3 — first timeline event.
+    db.add(
+        OrderEvent(
+            order_id=order.id,
+            status="pending",
+            note=_STATUS_NOTES["pending"],
+            created_at=utc_now(),
+        )
+    )
+    await db.commit()  # single atomic transaction (stock + order + items + event)
     await db.refresh(order)
     return order
 
@@ -128,14 +172,37 @@ async def admin_list_orders(
     return items, int(total)
 
 
+async def list_orders_for_user(
+    db: AsyncSession, user_id: int, *, limit: int = 20
+) -> list[Order]:
+    """Customer's own orders (Task 2.4 account drawer)."""
+    stmt = (
+        select(Order)
+        .where(Order.user_id == user_id)
+        .order_by(Order.created_at.desc(), Order.id.desc())
+        .limit(limit)
+    )
+    return list((await db.scalars(stmt)).all())
+
+
 async def update_order_status(
-    db: AsyncSession, order_id: int, status: str
+    db: AsyncSession, order_id: int, status: str, note: str | None = None
 ) -> Order | None:
     order = await get_order(db, order_id)
     if order is None:
         return None
-    order.status = status
-    order.updated_at = utc_now()
+    if order.status != status:  # no duplicate events for no-op updates
+        order.status = status
+        order.updated_at = utc_now()
+        note_text = (note or _STATUS_NOTES.get(status) or "")[:300] or None
+        db.add(
+            OrderEvent(
+                order_id=order.id,
+                status=status,
+                note=note_text,
+                created_at=utc_now(),
+            )
+        )
     await db.commit()
     await db.refresh(order)
     return order
