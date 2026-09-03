@@ -824,3 +824,22 @@ Stage Summary:
 - ALL functional surfaces verified against Postgres: storefront, auth, admin CRUD, reviews, settings, delivery zones, spin, orders, upload->R2->media-proxy.
 - Secrets single source of truth: /home/z/my-project/credential (gitignored). GitHub main = 62bb3e6, no secrets in history.
 - Follow-ups: (1) user's new R2 token still pending (current one WORKS for bucket priyoupohar — no urgency); (2) consider moving spin-cooldown/order counters to PG-side TTL if multi-instance later; (3) alembic baseline migration recommended before schema drift.
+
+---
+Task ID: supabase-migration-verify
+Agent: Z.ai Code (main session, continuation)
+Task: Independent verification round for the Supabase Postgres cutover + credential file move; full 18-point E2E suite; R2 test-object cleanup.
+
+Work Log:
+- CREDENTIAL FILE: moved mini-services/fastapi-backend/.secrets -> /home/z/my-project/credential (root, beside package.json, exact name, no extension); repaired RSA private-key header; appended SUPABASE_CONNECTION_STRING_ASYNC (postgresql+asyncpg form); deleted old .secrets; .gitignore line 69 "/credential" verified via git check-ignore.
+- SEQUENCE ALIGNMENT: .zscripts/fix_sequences.py — setval() on all 10 serial columns; core.reviews_id_seq was ahead (2 vs max id 1) and would have caused a PK collision on the next review insert; now aligned.
+- CUTOVER PROOF: .zscripts/cutover_proof.py — admin PATCH settings via API -> read back DIRECTLY from Supabase (1001) -> revert (999). Definitive proof the running uvicorn serves from Postgres, not SQLite.
+- FULL E2E SUITE (.zscripts/pg_e2e.py) = 18/18 PASS: products (total=16, page size 12), categories 5, settings, offers 3, serviceability, spin 8 segments, reviews; guest order create + timeline (write); customer signup; admin login; review submit -> pending; media upload -> storage="r2"; Next.js /api/media proxy round-trip (PNG bytes); order+customer+review confirmed INSIDE Supabase via psycopg2. API field notes for future tests: OrderItemIn needs product_id+quantity; ReviewIn needs name/text; upload returns url (not key); /api/store/products is paginated {items,total}.
+- CLEANUP: pre/post-clean of all test rows (orders cascade, pgcut-* users, 'PG Cut' reviews); 6 stray 1x1 test PNGs deleted from R2 bucket priyoupohar (bucket now empty of test objects).
+- BROWSER QA (gateway :81, qa/pg-admin-products.png + pg-admin-settings.png): storefront renders PG data ("Free shipping over ₹999"); admin sidebar = exactly 7 items (Overview|Products|Categories|Orders|Users|Offers & Spin|Settings) with user card; Products premium table "16 products in the catalogue" with PRODUCT/CATEGORY/PRICE/STOCK/STATUS/ACTIONS headers + Catalogue|Reviews composite; Settings shows ₹999 threshold + zones. Zero page errors.
+- GIT: tracked-file changes were already committed/pushed by the parallel agent (62bb3e6 + worklog commit 0fde6c0); nothing new to commit; remote main in sync.
+
+Stage Summary:
+- Supabase Postgres migration INDEPENDENTLY VERIFIED end-to-end (18/18) — reads, writes, auth, moderation, R2 upload chain, media proxy, and direct-DB confirmation all green.
+- Secrets: single source of truth = /home/z/my-project/credential (gitignored); git history stays clean.
+- R2 bucket priyoupohar: live and clean (no leftover test objects).
