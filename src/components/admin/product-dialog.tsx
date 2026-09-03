@@ -362,7 +362,7 @@ export default function ProductDialog({
               <Input
                 id="p-image"
                 className="rounded-xl font-mono text-xs"
-                placeholder="https://… or /images/products/rose.jpg"
+                placeholder="https://… or /api/media/products/rose.jpg"
                 {...register("image_url")}
               />
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />

@@ -16,12 +16,12 @@ type RailCategory = {
 };
 
 const CATEGORIES: RailCategory[] = [
-  { label: "Flowers", image: "/images/products/roses.jpg", emoji: "🌸" },
-  { label: "Cakes", image: "/images/products/choccake.jpg", emoji: "🍰" },
-  { label: "Personalised", image: "/images/products/mug.jpg", emoji: "🎁" },
-  { label: "Plants", image: "/images/products/plants.jpg", emoji: "🪴" },
-  { label: "Combos", image: "/images/products/combo1.jpg", emoji: "🎀" },
-  { label: "Teddy & More", image: "/images/products/teddy.jpg", emoji: "🧸" },
+  { label: "Flowers", image: "/api/media/products/roses.jpg", emoji: "🌸" },
+  { label: "Cakes", image: "/api/media/products/choccake.jpg", emoji: "🍰" },
+  { label: "Personalised", image: "/api/media/products/mug.jpg", emoji: "🎁" },
+  { label: "Plants", image: "/api/media/products/plants.jpg", emoji: "🪴" },
+  { label: "Combos", image: "/api/media/products/combo1.jpg", emoji: "🎀" },
+  { label: "Teddy & More", image: "/api/media/products/teddy.jpg", emoji: "🧸" },
 ];
 
 export default function CategoryRail() {

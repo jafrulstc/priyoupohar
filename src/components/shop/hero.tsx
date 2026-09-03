@@ -32,8 +32,8 @@ const SHOWCASE = [
     mrp: 899,
     rating: 4.9,
     reviews: "2.3k",
-    image: "/images/products/roses.jpg",
-    back: ["/images/products/gerbera.jpg", "/images/products/lily.jpg"],
+    image: "/api/media/products/roses.jpg",
+    back: ["/api/media/products/gerbera.jpg", "/api/media/products/lily.jpg"],
   },
   {
     tab: "Cakes 🍰",
@@ -43,8 +43,8 @@ const SHOWCASE = [
     mrp: 899,
     rating: 4.9,
     reviews: "3.5k",
-    image: "/images/products/choccake.jpg",
-    back: ["/images/products/velvetcake.jpg", "/images/products/forestcake.jpg"],
+    image: "/api/media/products/choccake.jpg",
+    back: ["/api/media/products/velvetcake.jpg", "/api/media/products/forestcake.jpg"],
   },
   {
     tab: "Gifts 🎁",
@@ -54,8 +54,8 @@ const SHOWCASE = [
     mrp: 599,
     rating: 4.6,
     reviews: "986",
-    image: "/images/products/mug.jpg",
-    back: ["/images/products/teddy.jpg", "/images/products/choco.jpg"],
+    image: "/api/media/products/mug.jpg",
+    back: ["/api/media/products/teddy.jpg", "/api/media/products/choco.jpg"],
   },
 ] as const;
 

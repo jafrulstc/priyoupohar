@@ -42,9 +42,9 @@ const MAIN_TYPES: { id: MainType; label: string }[] = [
 ];
 
 const ADD_ONS: AddOn[] = [
-  { id: "teddy", name: "Cuddle Teddy", price: 349, image: "/images/products/teddy.jpg" },
-  { id: "choco", name: "Chocolate Box", price: 499, image: "/images/products/choco.jpg" },
-  { id: "mug", name: "Photo Mug", price: 399, image: "/images/products/mug.jpg" },
+  { id: "teddy", name: "Cuddle Teddy", price: 349, image: "/api/media/products/teddy.jpg" },
+  { id: "choco", name: "Chocolate Box", price: 499, image: "/api/media/products/choco.jpg" },
+  { id: "mug", name: "Photo Mug", price: 399, image: "/api/media/products/mug.jpg" },
   { id: "card", name: "Handmade Card", price: 149, image: null },
 ];
 
