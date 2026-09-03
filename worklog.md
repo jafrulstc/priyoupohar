@@ -863,3 +863,20 @@ Stage Summary:
 - Media serving chain: browser → Next `/api/media/[...key]` proxy → FastAPI `/api/media/{key}` → R2 private-bucket stream (immutable cache headers).
 - Codebase is Prisma-free and @aws-sdk-free on the Next.js side; all storage logic lives in FastAPI (boto3).
 - Commit: <see git log> — pushed to main.
+
+---
+Task ID: gallery-populate-arch-explain
+Agent: Z.ai Code (main session)
+Task: User follow-up — explain product image architecture; verify DB paths; populate empty `gallery` column.
+
+Work Log:
+- Verified `core.products.image_url` is correctly populated for ALL 16 rows with `/api/media/products/<file>.jpg` (migration persisted; user had likely inspected the empty `gallery` column or the dropped Prisma ghost table `public."Product"`, which used a different column name `image`).
+- Confirmed `gallery` is a JSON-encoded Text column (model default `[]`, parsed to `images` in store API). Frontend consumes it: gift page thumbnails + lightbox (`gift-page-actions.tsx` falls back to single image when empty), admin product editor allows up to 8 gallery images. Seed data never populated it (was `[]` even pre-migration).
+- Populated gallery for all 16 products with same-category companion image URLs (1–3 each, never self-referencing): flowers 3, cakes 2, personalised 2, plants 1, combos 3. Zero empty galleries after update.
+- Verification: store API `images` arrays return `/api/media/...` URLs; all 16 unique media URLs resolve 200 image/* through FastAPI→R2 chain; browser QA on /gift/eternal-red-roses shows main image + 3 gallery thumbnails (roses/gerbera/lily/orchid) all loaded from R2, 0 failures (qa/r2-gallery-gift-page.png, qa/r2-gallery-thumbs.png). Note: one transient mid-paint screenshot looked unstyled; fresh eval confirmed stylesheet loaded and DOM correct.
+- Gallery content is curated demo data (category companions) — admin can replace per-product via Product editor; uploads land in R2.
+
+Stage Summary:
+- DB state now: image_url = main R2 proxy URL (16/16), gallery = 1–3 R2 proxy URLs (16/16).
+- Architecture (final): R2 bucket `priyoupohar` = media authority; DB stores origin-relative `/api/media/<key>` paths; browser → Next /api/media proxy → FastAPI → R2 private-bucket stream; next/image optimizer wraps URLs (that's why raw paths aren't visible in page source).
+- No code changes this round (DB data only + docs).
