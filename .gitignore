@@ -65,10 +65,11 @@ server.log
 !.env.example
 
 # Local secrets — NEVER commit or push
+# Master credential file lives at repo ROOT (next to package.json), exact name "credential"
+/credential
 .secret
 .secrect
 .env.local.secrets
-mini-services/fastapi-backend/.secrets
 mini-services/fastapi-backend/uvicorn.log
 
 # QA screenshots (sandbox artifacts)

@@ -18,11 +18,14 @@ from app.core.database import IS_SQLITE, SCHEMA_NAMES, Base, engine
 SCHEMAS: tuple[str, ...] = SCHEMA_NAMES
 
 # (schema, table, column, DDL) — columns added after a table's first release.
+# DDL must be valid on BOTH dialects: PostgreSQL rejects DEFAULT 0 for BOOLEAN
+# (needs DEFAULT FALSE); SQLite >= 3.23 accepts TRUE/FALSE keywords, so the
+# boolean spellings below are portable.
 COLUMN_BACKFILLS: tuple[tuple[str, str, str, str], ...] = (
     ("core", "products", "same_day", "BOOLEAN NOT NULL DEFAULT TRUE"),
     ("core", "products", "pairs_with", "VARCHAR(300)"),
     ("core", "products", "sort_order", "INTEGER NOT NULL DEFAULT 0"),
-    ("core", "products", "is_combo", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("core", "products", "is_combo", "BOOLEAN NOT NULL DEFAULT FALSE"),
     ("core", "products", "combo_items", "TEXT NOT NULL DEFAULT '[]'"),
 )
 
