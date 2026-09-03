@@ -763,3 +763,19 @@ Work Log:
 
 Stage Summary:
 - Sidebar-first admin layout RESTORED per client feedback (tables kept), header cart clip fixed, uploads now LAND ON CLOUDFLARE R2 (bucket priyoupohar) with Filebase fallback, project PUSHED to github.com/jafrulstc/priyoupohar (main=36c8071), zero secrets in git history. Both services 200/200.
+
+---
+Task ID: round-3b (continuation verification + standalone rebuild)
+Agent: Z.ai Code (main)
+Task: After context continuation, verify round-3 deliverables (sidebar revert, header fix, secrets, GitHub push) are actually in place; restore production serving
+
+Work Log:
+- VERIFIED round-3 work was fully committed (36c8071) before context end: admin-overlay.tsx has full 7-item vertical sidebar + zero global pill tabs; header cart fix present (plus later micro-tweak min-[1600px]:max-w-[1560px] in 6dcdd58); mini-services/fastapi-backend/.secrets exists (4KB, all creds); .gitignore line 71 covers it; origin=git@github.com:jafrulstc/priyoupohar.git.
+- DISCOVERY: .next contained ONLY dev/ — the production standalone was GONE and :3000 was served by Turbopack dev (fallback branch of watchdog-safe dev script). Rebuilt standalone (bun run build, 47s) and restarted.
+- OPS FORENSICS: node/bun/chrome processes (including the concurrent webDevReview agent's Chrome) are reaped by the sandbox within ~1-6 min of agent-session activity ending; only PID-1-ancestry processes (uvicorn via .zscripts/dev.sh, Caddy) persist. The 5-min watchdog revival (bun run dev -> standalone branch, Ready in 66ms) IS the designed persistence mechanism. Server confirmed stable 18x200 over 3 min in one window; deaths correlate with cron agent-loop handoffs, not code faults.
+- BROWSER QA (agent-browser via gateway :81, 1470px viewport, admin JWT injected): (1) Sidebar layout CONFIRMED — vertical nav Overview/Products/Categories/Orders/Users/Offers & Spin/Settings, active item highlighted, user card at bottom; (2) ZERO global pill tabs — top is clean breadcrumb "Store Management > {Section} — {sub}" + Ctrl-K search + close; (3) Premium tables intact — Products table with avatar cells, compare-at prices, Live badges, circular action menus, "Result 1–16 of 16" pager, in-panel Catalogue|Reviews segmented control; (4) Header cart clip fix CONFIRMED — gift-bag button box x=1320.5 w=44 (right edge 1364.5) fully inside max-w-7xl container edge (1375) at 1470px. Screenshots: qa/r3b-admin-sidebar-1470.png, qa/r3b-admin-products-1470.png, qa/r3b-storefront-header-1470.png.
+- GIT: pushed via paramiko GIT_SSH shim (had lost +x bit; restored; installed paramiko 5.0.0). ls-remote confirms GitHub main = a15a1e7 = local (previous session had already pushed the 2 cron commits).
+
+Stage Summary:
+- ALL round-3 client requests verified live in browser: sidebar restored, tabs removed, premium tables kept, cart clip fixed, secrets stored+ignored, GitHub in sync (a15a1e7).
+- Production standalone rebuilt and serving; brief :3000 gaps during agent-loop handoffs are sandbox reaping and self-heal via watchdog within <=5 min (no code fault).
