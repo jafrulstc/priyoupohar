@@ -843,3 +843,23 @@ Stage Summary:
 - Supabase Postgres migration INDEPENDENTLY VERIFIED end-to-end (18/18) — reads, writes, auth, moderation, R2 upload chain, media proxy, and direct-DB confirmation all green.
 - Secrets: single source of truth = /home/z/my-project/credential (gitignored); git history stays clean.
 - R2 bucket priyoupohar: live and clean (no leftover test objects).
+
+---
+Task ID: cleanup-storage-r2
+Agent: Z.ai Code (main session)
+Task: User follow-up after Supabase migration — (1) verify root `credential` file, (2) delete Prisma leftovers, (3) explain empty R2 bucket + migrate all catalog media to R2.
+
+Work Log:
+- Verified `credential` exists at repo root (4,136 bytes, RSA key intact, gitignored via .gitignore line 69). User's file panel mirrors the git-tracked tree, which is why the file is invisible there — by design.
+- Deleted `.secret` (leftover from the old `bloombliss-media` bucket era; its R2 secret key already present in `credential`).
+- Prisma cleanup: removed `prisma/` (schema.prisma + seed.ts), `src/lib/db.ts` (dead, no importers), `src/lib/s3.ts` (dead — its only consumer `/api/upload/route.ts` no longer exists; admin uploads go through FastAPI), deps `prisma`, `@prisma/client`, `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, and the 4 `db:*` scripts from package.json. bun install refreshed lockfile (4 pkgs removed). Rewrote root `.env.example` (now documents FASTAPI_URL); replaced root `.env` (it only held the dead Prisma DATABASE_URL) with FASTAPI_URL.
+- Storage investigation: DB media URLs were `/images/products/*.jpg` — Next.js STATIC files from `public/`, which is why the site rendered with an empty R2 bucket. R2 only ever held ad-hoc admin uploads (test objects were cleaned earlier). Frontend fallbacks (hero/category-rail/combo-builder) intentionally stay app-bundled static assets.
+- Migration (`.zscripts/migrate_products_to_r2.py`, idempotent): uploaded all 16 catalog images to R2 bucket `priyoupohar` under stable keys `products/<basename>.jpg` (same namespace as admin uploads), then updated `core.products.image_url` to `/api/media/products/<basename>.jpg`. Verified head_object sizes + HTTP 200 image/jpeg through FastAPI media router AND the Next.js `/api/media` proxy chain.
+- Dropped the ghost Prisma table `public."Product"` (16 stale rows re-seeded by an earlier automated agent) from Supabase — `public` schema now empty; `core.products` intact (16 rows).
+- Browser QA (agent-browser): homepage renders 16/16 R2-backed product images (0 failures, incl. lazy-loaded below-fold after scroll); screenshots `qa/r2-migration-home-scrolled.png`, `qa/r2-migration-product-grid.png`. Logs clean.
+
+Stage Summary:
+- R2 bucket `priyoupohar` is now the single media authority for all 16 catalog images; admin uploads continue to land there via FastAPI upload service (R2 primary → Filebase fallback → local disk).
+- Media serving chain: browser → Next `/api/media/[...key]` proxy → FastAPI `/api/media/{key}` → R2 private-bucket stream (immutable cache headers).
+- Codebase is Prisma-free and @aws-sdk-free on the Next.js side; all storage logic lives in FastAPI (boto3).
+- Commit: <see git log> — pushed to main.
