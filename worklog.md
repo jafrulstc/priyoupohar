@@ -779,3 +779,23 @@ Work Log:
 Stage Summary:
 - ALL round-3 client requests verified live in browser: sidebar restored, tabs removed, premium tables kept, cart clip fixed, secrets stored+ignored, GitHub in sync (a15a1e7).
 - Production standalone rebuilt and serving; brief :3000 gaps during agent-loop handoffs are sandbox reaping and self-heal via watchdog within <=5 min (no code fault).
+
+---
+Task ID: 9
+Agent: Z.ai Code (main session)
+Task: Client round-3 — (a) revert admin to full sidebar nav (remove global tabs, keep premium tables), (b) fix storefront header shopping-bag icon landing outside the menubar, (c) store ALL credentials in mini-services/fastapi-backend/.secrets + gitignore, (d) storage switch with confirmed bucket "priyoupohar" (R2 + Filebase), (e) push project to github.com/jafrulstc/priyoupohar with new deploy key.
+
+Work Log:
+- Secrets: wrote mini-services/fastapi-backend/.secrets (GitHub deploy key pair, Supabase pooler, Filebase keys, Cloudflare R2 keys); .gitignore += that path + uvicorn.log; verified ignored.
+- Storage: probes proved BOTH R2 and Filebase WRITABLE with bucket "priyoupohar" — earlier 403s were a wrong bucket name (bloombliss-media). config.py: R2 primary (s3_*) + s3_fallback_* (Filebase); upload_service.py rewritten as target chain R2 → Filebase → local; media.py streams from first target holding the object; .env updated. E2E test: upload → storage:"r2", object confirmed in R2 bucket, /api/media proxy 200, test object cleaned up.
+- Admin revert: admin-overlay.tsx rewritten — sidebar carries all 7 sections vertically (Overview, Products, Categories, Orders, Users, Offers & Spin, Settings) with active accent bar + mobile icon rail; global pill-tab row REMOVED; header is clean breadcrumb; composite sub-tabs preserved (Catalogue|Reviews, Offers & Banners|Spin Wheel, General|Delivery Zones); command palette mounted once.
+- Header fix: root cause = menubar content overflowing the capped max-w-7xl container at ≥1440 logical widths, pushing the bag button outside the bar. Moved full-tier upgrades (search pill, DELIVER TO label, nav padding, gap-4) from 1440→1600; widened header container to max-w-[1560px] at ≥1600. Browser width sweep 1280/1366/1512/1680/1890/2560: cart inside bar + zero horizontal overflow at ALL widths.
+- Git: sandbox has no ssh binary → apt-get download openssh-client + dpkg -x (persistent copy at /home/z/.ssh/bin/ssh); deploy key at ~/.ssh/priyoupohar_deploy (600) + ~/.ssh/config; auth OK ("Hi jafrulstc/priyoupohar"); full-history credential scan → only the string "priyoupohar" (repo/bucket name), 0 real keys; pushed a15a1e7..44f0474 main -> main.
+- QA via gateway :81: admin login → sidebar exactly 7 items, premium Products table (Product/Category/Price/Stock/Status/Actions), composites intact, no page errors. Screenshots: tool-results/final-admin-sidebar.png, final-admin-products.png, final-header-1512.png, final-header-1890.png.
+
+Stage Summary:
+- Admin = sidebar shell (7 vertical nav items, no global tabs) + premium tables preserved.
+- Storefront header bag icon inside the menubar at every viewport width.
+- Uploads live: R2 "priyoupohar" primary → Filebase fallback → local last resort; /api/media proxies private objects.
+- All credentials centralized in mini-services/fastapi-backend/.secrets (git-ignored, never commit).
+- GitHub main in sync (44f0474). If ssh disappears after a sandbox reset: /home/z/.ssh/bin/ssh persists, or re-extract via `apt-get download openssh-client && dpkg -x`.
