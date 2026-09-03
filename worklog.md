@@ -921,3 +921,9 @@ Stage Summary:
 - NEW ARCHITECTURE: R2 public bucket = direct CDN authority; DB stores absolute `https://pub-…r2.dev/products/<key>` URLs; storefront + admin render raw src (unoptimized) and browsers fetch straight from Cloudflare edge; Next/FastAPI media proxy kept only as fallback. Zero image-processing load on the app server.
 - Known trade-off: if R2 AND Filebase both fail, a local-fallback upload's `/api/media/` URL would be rewritten to the CDN by `resolveMediaUrl` and 404 (object isn't in the bucket) — narrow window, acceptable; suggested future fix: backend stamps storage origin so the resolver can skip non-bucket objects.
 - If the user later attaches a custom domain to the bucket: update R2_PUBLIC_BASE_URL (backend .env), DB rows (re-run adapted migration), and R2_PUBLIC_BASE in src/lib/media.ts.
+
+Correction (r2-direct-cdn, post-commit verification):
+- The parallel agent had ALREADY rewritten core.products to absolute CDN URLs before going quiet (16/16 image_url + gallery = https://pub-…r2.dev/products/<key>; verified live via asyncpg). Its commit 2f20f97 (worklog only) documents this; the code landed in my 0e183ea. My "DB stays origin-relative" note above is superseded: DB now stores absolute r2.dev URLs.
+- resolveMediaUrl handles both worlds: absolute URLs pass through (current DB state), legacy relative /api/media/<key> paths (old localStorage cart/wishlist entries, any proxy-era references) rewrite to the CDN, with the proxy chain as last-resort fallback. New uploads store absolute CDN URLs (public probe with browser UA — Cloudflare 403s Python-urllib — landed in upload_service.py).
+- core.categories has no image_url data (all NULL) — nothing to migrate there.
+- Storefront + gift-page browser QA ran against the final absolute-URL state: 26/26 CDN home, 10/10 gift page, 0 broken.
