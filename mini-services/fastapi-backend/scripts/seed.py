@@ -9,24 +9,24 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from sqlalchemy import select  # noqa: E402
+from sqlalchemy import select
 
-from app.core.database import SessionLocal  # noqa: E402
-from app.core.init_db import init_db  # noqa: E402
-from app.models import Category, Order, Product, User  # noqa: E402
-from app.services.order_service import create_order  # noqa: E402
-from app.utils.security import hash_password  # noqa: E402
-from scripts.seed_data import (  # noqa: E402
+from app.core.database import SessionLocal
+from app.core.init_db import init_db
+from app.models import Category, Order, Product, User
+from app.services.order_service import create_order
+from app.utils.security import hash_password
+from scripts.seed_data import (
     CATEGORIES,
     CUSTOMER_PROFILES,
     DEMO_CUSTOMERS,
     DESCRIPTIONS,
-    P,
     PAIRS_WITH,
     SAME_DAY,
     SAMPLE_ORDERS,
     SEED_ORDER_NOTE,
     STOCK,
+    P,
 )
 
 

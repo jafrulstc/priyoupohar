@@ -117,7 +117,7 @@ function QuickViewBody({ product }: { product: QuickProduct }) {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${product.name} — Bloom & Bliss`,
+          title: `${product.name} — PriyoUpohar`,
           text: `Look at this lovely gift: ${product.name} 🎁`,
           url,
         });

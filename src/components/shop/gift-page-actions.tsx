@@ -247,7 +247,7 @@ export default function GiftPageActions({ product }: { product: LegacyProduct })
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
-    const text = `${product.name} — ${formatINR(product.price)} | Bloom & Bliss`;
+    const text = `${product.name} — ${formatINR(product.price)} | PriyoUpohar`;
     try {
       await navigator.share({ title: product.name, text, url });
     } catch (err) {

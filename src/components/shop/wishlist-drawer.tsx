@@ -217,7 +217,7 @@ export default function WishlistDrawer() {
           `🌸 ${i.name} — ${formatINR(i.price)}\n   ${origin}/gift/${i.slug}`
       )
       .join("\n\n");
-    const text = `My Bloom & Bliss wishlist 💐\n\n${lines}\n\nSurprise me? 🎁`;
+    const text = `My PriyoUpohar wishlist 💐\n\n${lines}\n\nSurprise me? 🎁`;
 
     /* legacy copy path — works even when the async Clipboard API is denied */
     const legacyCopy = () => {
@@ -241,7 +241,7 @@ export default function WishlistDrawer() {
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({
-          title: "My Bloom & Bliss wishlist 💐",
+          title: "My PriyoUpohar wishlist 💐",
           text,
         });
         petalConfetti();

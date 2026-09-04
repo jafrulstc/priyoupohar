@@ -24,7 +24,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Bloom & Bliss — Fresh Flowers, Cakes & Personalised Gifts",
+  title: "PriyoUpohar — Fresh Flowers, Cakes & Personalised Gifts",
   description:
     "Send joy in minutes! Same-day & midnight delivery of fresh flowers, delicious cakes, personalised gifts and curated combos across 400+ cities.",
   keywords: [
@@ -37,12 +37,12 @@ export const metadata: Metadata = {
     "anniversary",
   ],
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo.jpg",
   },
   openGraph: {
-    title: "Bloom & Bliss — Gifts that make hearts bloom",
+    title: "PriyoUpohar — Gifts that make hearts bloom",
     description: "Fresh flowers, cakes & personalised gifts with same-day delivery.",
-    siteName: "Bloom & Bliss",
+    siteName: "PriyoUpohar",
     type: "website",
   },
 };
@@ -54,7 +54,7 @@ export const viewport: Viewport = {
 };
 
 /** Runs before paint: reads the persisted zustand store and applies the dark class (no FOUC). */
-const themeInitScript = `(function(){try{var raw=localStorage.getItem("bloom-bliss-shop");var t=raw?(JSON.parse(raw).state||{}).theme:null;if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+const themeInitScript = `(function(){try{var raw=localStorage.getItem("priyo-upohar-shop");var t=raw?(JSON.parse(raw).state||{}).theme:null;if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
 export default function RootLayout({
   children,

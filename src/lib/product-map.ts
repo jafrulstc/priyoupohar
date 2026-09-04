@@ -59,8 +59,8 @@ export interface LegacyProduct {
   gallery: string[];
 }
 
-/** Server-side base URL for the FastAPI mini-service (port 8000). */
-export const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
+import { FASTAPI_URL } from "@/lib/config";
+export { FASTAPI_URL };
 
 export function mapProduct(p: FastApiProduct): LegacyProduct {
   return {

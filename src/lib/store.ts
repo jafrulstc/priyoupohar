@@ -65,9 +65,9 @@ export type DeliverySlot = {
 export const FREE_SHIPPING_THRESHOLD = 999;
 /** Loyalty: every 3rd order unlocks a reward; the reward tiers up each cycle. */
 export const LOYALTY_TARGET = 3;
-export const LOYALTY_COUPON = "BLOOM100";
-/** Reward ladder — cycle 1 → BLOOM100, cycle 2 → SHIPFREE, cycle 3 → SPIN15, repeats. */
-export const LOYALTY_TIERS = ["BLOOM100", "SHIPFREE", "SPIN15"] as const;
+export const LOYALTY_COUPON = "PRIYO100";
+/** Reward ladder — cycle 1 → PRIYO100, cycle 2 → SHIPFREE, cycle 3 → SPIN15, repeats. */
+export const LOYALTY_TIERS = ["PRIYO100", "SHIPFREE", "SPIN15"] as const;
 export const loyaltyRewardFor = (completedCycles: number) =>
   LOYALTY_TIERS[(Math.max(completedCycles, 1) - 1) % LOYALTY_TIERS.length];
 
@@ -308,7 +308,7 @@ export const useShopStore = create<ShopState>()(
       setGiftPhoto: (p) => set({ giftPhoto: p }),
     }),
     {
-      name: "bloom-bliss-shop",
+      name: "priyo-upohar-shop",
       version: 9,
       // v1 wishlist string[] → v2 snapshots; v3 adds spin-wheel fields;
       // v4 adds order history + loyalty stamps + cart upsell prefs;

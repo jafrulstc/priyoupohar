@@ -74,7 +74,7 @@ export default function LoyaltyProgress({
           <div className="flex items-center gap-2">
             <Crown className="h-4 w-4 text-gold" aria-hidden />
             <span className="text-xs font-extrabold text-foreground">
-              Bloom Club
+              Priyo Club
             </span>
           </div>
           <span className="text-[10px] font-bold text-stone-400">

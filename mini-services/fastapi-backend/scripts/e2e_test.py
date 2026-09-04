@@ -69,7 +69,7 @@ def main() -> int:
     order_payload = {
         "customer_name": "Test Guest", "customer_phone": "9999888877",
         "customer_email": "guest@example.test",
-        "shipping_address": "21 Test Lane, Andheri", "city": "Mumbai", "pincode": "400053",
+        "shipping_address": "21 Test Lane, Gulshan", "city": "Dhaka", "pincode": "1212",
         "items": [{"product_id": roses["id"], "quantity": 1}, {"product_id": client.get("/api/store/products/photo-mug").json()["id"], "quantity": 2}],
         "notes": "ring the bell twice",
     }
@@ -176,7 +176,7 @@ def main() -> int:
     check("deactivated login → 403", client.post("/api/auth/login", json={"email": email, "password": "Passw0rd!23"}).status_code == 403, "")
     check("deactivated me → 401", client.get("/api/auth/me", headers={"Authorization": f"Bearer {user_token}"}).status_code == 401, "")
     client.patch(f"/api/admin/users/{test_user['id']}", headers=H, json={"is_active": True, "role": "admin"})
-    check("user patch role", client.get(f"/api/admin/users", headers=H).json() and next(u for u in client.get("/api/admin/users", headers=H).json() if u["id"] == test_user["id"])["role"] == "admin", "")
+    check("user patch role", client.get("/api/admin/users", headers=H).json() and next(u for u in client.get("/api/admin/users", headers=H).json() if u["id"] == test_user["id"])["role"] == "admin", "")
     check("delete self → 409", client.delete(f"/api/admin/users/{admin_user['id']}", headers=H).status_code == 409, "")
     check("delete test user", client.delete(f"/api/admin/users/{test_user['id']}", headers=H).json().get("ok") is True, "")
 

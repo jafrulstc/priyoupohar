@@ -26,9 +26,9 @@ export default function PincodeChecker({ compact = false }: { compact?: boolean 
 
   const check = async () => {
     setError(null);
-    if (!/^\d{6}$/.test(code)) {
+    if (!/^\d{4}$/.test(code)) {
       setState("shake");
-      setError("Enter a valid 6-digit pincode");
+      setError("Enter a valid 4-digit postal code");
       setTimeout(() => setState("idle"), 500);
       return;
     }

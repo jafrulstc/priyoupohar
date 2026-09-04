@@ -1,7 +1,7 @@
 """Order business logic: guest checkout, tracking, admin listing/updates."""
 
 import secrets
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -12,8 +12,8 @@ from app.models.timestamps import utc_now
 from app.services import location_service
 
 # Fallbacks when site settings / locations tables are unavailable.
-FALLBACK_FREE_SHIPPING_THRESHOLD = Decimal("999")
-FALLBACK_DELIVERY_FEE = Decimal("99")
+FALLBACK_FREE_SHIPPING_THRESHOLD = Decimal(999)
+FALLBACK_DELIVERY_FEE = Decimal(99)
 
 # Default notes for the tracking timeline (Task 2.3).
 _STATUS_NOTES: dict[str, str] = {
@@ -28,7 +28,7 @@ _STATUS_NOTES: dict[str, str] = {
 
 def generate_order_number() -> str:
     """BB-{YYMMDD}-{4 random hex uppercase}."""
-    stamp = datetime.now(timezone.utc).strftime("%y%m%d")
+    stamp = datetime.now(UTC).strftime("%y%m%d")
     return f"BB-{stamp}-{secrets.token_hex(2).upper()}"
 
 
@@ -52,7 +52,7 @@ async def get_timeline(db: AsyncSession, order: Order) -> list[OrderEvent]:
 
 def _fallback_fee(items_total: Decimal) -> Decimal:
     return (
-        Decimal("0")
+        Decimal(0)
         if items_total >= FALLBACK_FREE_SHIPPING_THRESHOLD
         else FALLBACK_DELIVERY_FEE
     )
@@ -92,7 +92,7 @@ async def create_order(
 
     items_total = sum(
         (unit_price * Decimal(quantity) for _, quantity, unit_price in lines),
-        Decimal("0"),
+        Decimal(0),
     ).quantize(Decimal("0.01"))
     # Task 2.1/2.2 — admin-configured threshold & fee with per-location
     # override from delivery_locations; fallback keeps checkout resilient.
@@ -104,9 +104,9 @@ async def create_order(
         delivery_fee = _fallback_fee(items_total)
     # Client-computed discount (loyalty coupons); clamped to a sane range.
     raw_discount = Decimal(str(data.get("discount") or 0)).quantize(Decimal("0.01"))
-    discount = max(Decimal("0"), min(raw_discount, items_total))
+    discount = max(Decimal(0), min(raw_discount, items_total))
     # Optional add-on fees from the storefront (e.g. ₹49 premium velvet wrap).
-    extra_fees = max(Decimal("0"), Decimal(str(data.get("extra_fees") or 0)))
+    extra_fees = max(Decimal(0), Decimal(str(data.get("extra_fees") or 0)))
     total = items_total + delivery_fee + extra_fees - discount
 
     order = Order(

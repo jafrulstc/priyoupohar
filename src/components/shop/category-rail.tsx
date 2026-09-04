@@ -121,6 +121,7 @@ export default function CategoryRail() {
                       alt={cat.label}
                       fill
                       sizes="96px"
+                      priority={index < 4}
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>

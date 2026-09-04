@@ -220,7 +220,7 @@ export default function AuthSheet({
               <SheetDescription>
                 {mode === "login"
                   ? "Sign in to track orders and earn rewards."
-                  : "Join Bloom & Bliss for a personalised experience."}
+                  : "Join PriyoUpohar for a personalised experience."}
               </SheetDescription>
             </SheetHeader>
 

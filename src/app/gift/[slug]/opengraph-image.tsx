@@ -8,7 +8,7 @@ import {
   type LegacyProduct,
 } from "@/lib/product-map";
 
-export const alt = "Bloom & Bliss — fresh flowers, cakes & personalised gifts";
+export const alt = "PriyoUpohar — fresh flowers, cakes & personalised gifts";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -123,7 +123,7 @@ export default async function OgImage({
               B
             </div>
             <div style={{ display: "flex", fontSize: 26, fontWeight: 700, letterSpacing: 1 }}>
-              Bloom &amp; Bliss
+              PriyoUpohar
             </div>
           </div>
 

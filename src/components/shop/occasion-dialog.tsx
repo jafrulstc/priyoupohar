@@ -37,7 +37,7 @@ const OCCASION_CATEGORIES: Record<string, string[]> = {
 
 const TAGLINE: Record<string, string> = {
   "Midnight Surprise": "Delivered while the clocks strike 12 🌙",
-  Birthday: "Cake, blooms & joy — candles not included 😉",
+  Birthday: "Cake, gifts & joy — candles not included 😉",
   Anniversary: "Say 'still in love' without saying a word 💞",
   "Mother's Day": "For the queen who deserves the world 🌷",
   Wedding: "Gifts as grand as the occasion 💍",

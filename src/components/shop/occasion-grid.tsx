@@ -157,7 +157,7 @@ export default function OccasionGrid() {
             Shop by <span className="text-gradient-brand">Occasion</span>
           </h2>
           <p className="mt-3 text-sm text-stone-500 dark:text-stone-400 md:text-base">
-            From midnight cake drops to wedding-day blooms — handpicked hampers,
+            From midnight cake drops to wedding-day gifts — handpicked hampers,
             cakes &amp; gifts for every moment that matters.
           </p>
         </div>

@@ -31,13 +31,13 @@ const TEMPLATES: Template[] = [
     id: "birthday",
     label: "Birthday",
     icon: Cake,
-    text: "Happy Birthday! 🎂 May your year bloom with joy, laughter and sweet surprises.",
+    text: "Happy Birthday! 🎂 May your year fill with joy, laughter and sweet surprises.",
   },
   {
     id: "anniversary",
     label: "Anniversary",
     icon: HeartHandshake,
-    text: "Happy Anniversary! 💕 Here's to the love that keeps blooming, year after year.",
+    text: "Happy Anniversary! 💕 Here's to the love that keeps growing, year after year.",
   },
   {
     id: "congrats",
@@ -61,7 +61,7 @@ const TEMPLATES: Template[] = [
 
 const MAX_LEN = 280;
 const PHOTO_MAX_MB = 5;
-const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 /* ---------- card designer palettes (exported for the checkout success view) ---------- */
 export const WASHI_STYLES: Record<WashiId, { label: string; strip: string; dot: string }> = {
@@ -500,7 +500,7 @@ export default function GiftMessageEditor() {
                     </p>
                     <p className="relative mt-2.5 flex items-center justify-center gap-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-stone-400">
                       <Flower2 className="h-2.5 w-2.5 text-brand" aria-hidden />
-                      Bloom &amp; Bliss
+                      PriyoUpohar
                     </p>
                     {/* wax seal — chosen colour */}
                     <motion.span
@@ -526,7 +526,7 @@ export default function GiftMessageEditor() {
                     className="rounded-xl border border-dashed border-stone-200 bg-cream/50 px-4 py-5 text-center dark:border-stone-700 dark:bg-stone-900/50"
                   >
                     <p className="text-[11px] font-semibold text-stone-400">
-                      Your card preview blooms here 🌷
+                      Your card preview appears here 🌷
                     </p>
                   </motion.div>
                 )}

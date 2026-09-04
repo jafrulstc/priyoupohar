@@ -252,7 +252,7 @@ export default function Hero() {
               </motion.span>
             ))}
             <motion.span variants={wordVariants} className="relative mr-2 inline-block">
-              <span className="text-gradient-brand">bloom.</span>
+              <span className="text-gradient-brand">priyo.</span>
               <svg
                 className="absolute -bottom-2 left-0 w-full"
                 viewBox="0 0 200 14"
@@ -579,8 +579,7 @@ export default function Hero() {
                         </p>
                         <p className="flex items-center gap-1 text-[10px] font-bold text-stone-500 dark:text-stone-400">
                           <Star className="h-3 w-3 fill-gold text-gold" aria-hidden />
-                          {product.rating} · {product.reviews}{" "}
-                          {product.reviews === "1" ? "review" : "reviews"}
+                          {product.rating} · {product.reviews} reviews
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

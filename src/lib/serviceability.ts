@@ -8,37 +8,42 @@ export const ZONES: Record<
   string,
   { state: string; metro: string[]; tier: 1 | 2 }
 > = {
-  "1": { state: "Delhi / Haryana / Punjab", metro: ["New Delhi", "Gurugram", "Noida"], tier: 1 },
-  "2": { state: "Uttar Pradesh / Uttarakhand", metro: ["Lucknow", "Kanpur", "Dehradun"], tier: 2 },
-  "3": { state: "Rajasthan / Gujarat", metro: ["Jaipur", "Ahmedabad", "Surat"], tier: 1 },
-  "4": { state: "Maharashtra / Goa / Madhya Pradesh", metro: ["Mumbai", "Pune", "Nagpur"], tier: 1 },
-  "5": {
-    state: "Telangana / Andhra Pradesh / Karnataka",
-    metro: ["Hyderabad", "Bengaluru"],
-    tier: 1,
-  },
-  "6": { state: "Tamil Nadu / Kerala", metro: ["Chennai", "Kochi", "Coimbatore"], tier: 1 },
-  "7": { state: "West Bengal / Odisha / North-East", metro: ["Kolkata", "Guwahati"], tier: 2 },
-  "8": { state: "Bihar / Jharkhand / Chhattisgarh", metro: ["Patna", "Ranchi"], tier: 2 },
+  "1": { state: "Dhaka Division", metro: ["Dhaka", "Gazipur", "Narayanganj"], tier: 1 },
+  "2": { state: "Mymensingh Division", metro: ["Mymensingh", "Jamalpur"], tier: 2 },
+  "3": { state: "Sylhet Division", metro: ["Sylhet", "Moulvibazar"], tier: 1 },
+  "4": { state: "Chittagong Division", metro: ["Chittagong", "Comilla", "Cox's Bazar"], tier: 1 },
+  "5": { state: "Rajshahi Division", metro: ["Rajshahi", "Bogra", "Pabna"], tier: 1 },
+  "6": { state: "Rangpur Division", metro: ["Rangpur", "Dinajpur"], tier: 2 },
+  "7": { state: "Khulna Division", metro: ["Khulna", "Jessore", "Kushtia"], tier: 1 },
+  "8": { state: "Barisal Division", metro: ["Barisal", "Patuakhali"], tier: 2 },
+  "9": { state: "Dhaka Suburbs", metro: ["Savar", "Keraniganj"], tier: 2 },
 };
 
-/** Well-known 3-digit prefixes → their iconic city (beats a random metro pick). */
+/** Well-known 2-digit prefixes → their iconic city (beats a random metro pick). */
 export const CITY_PREFIX: Record<string, string> = {
-  "110": "New Delhi",
-  "400": "Mumbai",
-  "411": "Pune",
-  "440": "Nagpur",
-  "560": "Bengaluru",
-  "500": "Hyderabad",
-  "600": "Chennai",
-  "700": "Kolkata",
-  "380": "Ahmedabad",
-  "302": "Jaipur",
-  "226": "Lucknow",
-  "682": "Kochi",
+  "10": "Dhaka",
+  "11": "Dhaka",
+  "12": "Dhaka",
+  "13": "Dhaka",
+  "14": "Narayanganj",
+  "17": "Gazipur",
+  "22": "Mymensingh",
+  "31": "Sylhet",
+  "40": "Chittagong",
+  "41": "Chittagong",
+  "42": "Chittagong",
+  "43": "Chittagong",
+  "35": "Comilla",
+  "60": "Rajshahi",
+  "58": "Bogra",
+  "54": "Rangpur",
+  "90": "Khulna",
+  "91": "Khulna",
+  "92": "Khulna",
+  "82": "Barisal",
 };
 
-export const isValidPincode = (code: string) => /^\d{6}$/.test(code);
+export const isValidPincode = (code: string) => /^\d{4}$/.test(code);
 
 /** Stable hash — same pincode → same verdict, every time. */
 export const pincodeHash = (code: string) => {
@@ -57,7 +62,7 @@ export type Serviceability = {
   etaHours: number;
 };
 
-/** Full serviceability verdict for a valid 6-digit pincode. */
+/** Full serviceability verdict for a valid 4-digit pincode. */
 export function serviceabilityFor(code: string): Serviceability {
   const zone = ZONES[code[0]];
   const hash = pincodeHash(code);
@@ -77,7 +82,7 @@ export function serviceabilityFor(code: string): Serviceability {
 
   // ~85% of pincodes serviceable; the rest are "outside our direct network".
   const serviceable = hash % 7 !== 3;
-  const city = CITY_PREFIX[code.slice(0, 3)] ?? zone.metro[hash % zone.metro.length];
+  const city = CITY_PREFIX[code.slice(0, 2)] ?? zone.metro[hash % zone.metro.length];
   const metro = zone.tier === 1;
 
   if (!serviceable) {

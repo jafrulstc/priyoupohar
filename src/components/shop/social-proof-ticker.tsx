@@ -5,12 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
 const NAMES = [
-  "Aarav", "Priya", "Meera", "Rohan", "Ananya", "Kabir", "Ishita", "Vihaan",
-  "Sneha", "Arjun", "Diya", "Aditya", "Nisha", "Farhan",
+  "Rakib", "Sadia", "Tahmid", "Nusrat", "Arafat", "Mahiya", "Shakil", "Fariha",
+  "Hasan", "Riya", "Jisan", "Mithila", "Tarik", "Farhan",
 ];
 const CITIES = [
-  "Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Chennai", "Pune",
-  "Kolkata", "Jaipur", "Ahmedabad", "Kochi",
+  "Dhaka", "Chittagong", "Sylhet", "Rajshahi", "Khulna", "Barisal",
+  "Rangpur", "Mymensingh", "Comilla", "Gazipur",
 ];
 const ACTIONS = [
   { emoji: "🌹", name: "Velvet Red Roses" },

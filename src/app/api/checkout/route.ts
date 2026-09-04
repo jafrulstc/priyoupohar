@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { resolveCoupon, couponDiscount } from "@/lib/coupons";
 
-const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
+import { FASTAPI_URL } from "@/lib/config";
 
 let _settingsCache: { threshold: number; fee: number; at: number } | null = null;
 

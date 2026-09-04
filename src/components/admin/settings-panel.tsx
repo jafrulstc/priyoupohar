@@ -75,7 +75,7 @@ export default function SettingsPanel() {
               <Input id="s-phone" className="rounded-xl" placeholder="+91 98765 43210" {...register("support_phone", { value: settings?.support_phone ?? "" })} />
             </Field>
             <Field label="Support Email" htmlFor="s-email" error={errors.support_email?.message}>
-              <Input id="s-email" type="email" className="rounded-xl" placeholder="help@bloombliss.in" {...register("support_email", { value: settings?.support_email ?? "" })} />
+              <Input id="s-email" type="email" className="rounded-xl" placeholder="help@priyoupohar.com" {...register("support_email", { value: settings?.support_email ?? "" })} />
             </Field>
           </div>
 

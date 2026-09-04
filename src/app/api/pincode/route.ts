@@ -6,7 +6,7 @@ import {
   serviceabilityFor,
 } from "@/lib/serviceability";
 
-const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
+import { FASTAPI_URL } from "@/lib/config";
 
 type DbVerdict = {
   serviceable: boolean;
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
   if (!isValidPincode(code)) {
     return NextResponse.json(
-      { error: "Enter a valid 6-digit Indian pincode." },
+      { error: "Enter a valid 4-digit postal code." },
       { status: 400 }
     );
   }

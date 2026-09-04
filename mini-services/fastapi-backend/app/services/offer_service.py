@@ -1,6 +1,6 @@
 """Offers/banners business logic (Task 2.6) — validity-aware."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +10,7 @@ from app.models.timestamps import utc_now
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _within_validity(offer: Offer, now: datetime) -> bool:

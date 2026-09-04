@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Flower2, LogIn } from "lucide-react";
@@ -60,11 +61,11 @@ export default function AdminLogin() {
       >
         {/* Brand mark */}
         <div className="flex flex-col items-center text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-brand text-white shadow-lift">
-            <Flower2 className="h-7 w-7" aria-hidden />
-          </span>
+          <div className="relative h-14 w-14 overflow-hidden rounded-2xl shadow-lift">
+            <Image src="/logo.jpg" alt="PriyoUpohar Admin" fill className="object-cover" />
+          </div>
           <h1 className="mt-4 text-xl font-extrabold tracking-tight text-foreground">
-            Bloom <span className="text-gold">&amp;</span> Bliss{" "}
+            PriyoUpohar{" "}
             <span className="text-brand dark:text-rose-400">Admin</span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -87,7 +88,7 @@ export default function AdminLogin() {
               id="admin-email"
               type="email"
               autoComplete="email"
-              placeholder="admin@bloombliss.test"
+              placeholder="admin@priyoupohar.com"
               className="rounded-xl"
               aria-invalid={!!errors.email}
               {...register("email")}
@@ -138,7 +139,7 @@ export default function AdminLogin() {
             Demo credentials
           </p>
           <code className="mt-1 inline-block rounded-md bg-muted px-2 py-1 font-mono text-[11px] text-muted-foreground">
-            admin@bloombliss.test / Admin@12345
+            admin@priyoupohar.com / Admin@12345
           </code>
         </div>
       </motion.div>

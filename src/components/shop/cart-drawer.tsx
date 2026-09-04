@@ -469,7 +469,7 @@ export default function CartDrawer() {
               </div>
             ) : (
               <>
-                {/* ---------- BLOOM REWARDS ---------- */}
+                {/* ---------- Priyo Rewards ---------- */}
                 <div className="border-b border-rose-100 bg-card px-5 py-3 dark:border-stone-800">
                   <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 px-3.5 py-2.5 ring-1 ring-rose-100 dark:from-rose-950/40 dark:via-stone-900 dark:to-amber-950/30 dark:ring-stone-700/80">
                     <div className="flex items-center gap-2.5">
@@ -483,7 +483,7 @@ export default function CartDrawer() {
                       </motion.span>
                       <div>
                         <p className="text-xs font-extrabold text-foreground">
-                          Bloom Rewards{" "}
+                          Priyo Rewards{" "}
                           <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-brand dark:bg-rose-950/50 dark:text-rose-300">
                             {stamps}/{LOYALTY_TARGET} stamps
                           </span>

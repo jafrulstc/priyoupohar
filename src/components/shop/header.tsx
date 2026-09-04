@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
+
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import {
@@ -30,7 +33,7 @@ const NAV_LINKS = [
   { label: "Gift Finder", href: "#gift-finder" },
   { label: "Combo Builder", href: "#combo-builder" },
   { label: "Occasions", href: "#occasions" },
-  { label: "Bloom Club", href: "#bloom-club" },
+  { label: "Priyo Club", href: "#priyo-club" },
   { label: "Reviews", href: "#reviews" },
 ];
 
@@ -148,18 +151,17 @@ export default function Header() {
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="group flex items-center gap-2.5"
-            aria-label="Bloom & Bliss home"
+            aria-label="PriyoUpohar home"
           >
-            <motion.span
-              whileHover={{ rotate: -8, scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
-              className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-brand text-white shadow-lift"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative h-10 w-10 overflow-hidden rounded-xl shadow-lift"
             >
-              <Flower2 className="h-5 w-5" aria-hidden />
-            </motion.span>
+              <Image src="/logo.jpg" alt="PriyoUpohar Logo" fill className="object-cover" />
+            </motion.div>
             <span className="hidden whitespace-nowrap text-[15px] font-extrabold tracking-tight text-foreground min-[360px]:block sm:text-lg">
-              Bloom <span className="text-gold">&amp;</span>{" "}
-              <span className="text-brand dark:text-rose-400">Bliss</span>
+              Priyo<span className="text-brand dark:text-rose-400">Upohar</span>
             </span>
           </button>
 
@@ -205,14 +207,14 @@ export default function Header() {
             </motion.button>
 
             {/* Admin panel trigger */}
-            <button
-              onClick={() => useAdminStore.getState().openAdmin()}
+            <Link
+              href="/admin"
               className="hidden h-10 w-10 place-items-center rounded-2xl border border-transparent text-stone-400 transition-all hover:border-rose-200 hover:bg-brand-soft hover:text-brand md:inline-flex dark:text-stone-500 dark:hover:border-rose-500/40 dark:hover:bg-stone-800 dark:hover:text-rose-300"
               aria-label="Open admin panel"
               title="Admin"
             >
               <ShieldCheck className="h-[18px] w-[18px]" aria-hidden />
-            </button>
+            </Link>
 
             {/* Search trigger */}
             <motion.button
@@ -434,11 +436,9 @@ export default function Header() {
                 </button>
 
                 {/* Admin panel entry (mobile) */}
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    useAdminStore.getState().openAdmin();
-                  }}
+                <Link
+                  href="/admin"
+                  onClick={() => setMenuOpen(false)}
                   className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold text-stone-700 hover:bg-rose-50 dark:text-stone-200 dark:hover:bg-stone-800"
                 >
                   <span className="flex items-center gap-2">
@@ -448,7 +448,7 @@ export default function Header() {
                   <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-extrabold text-stone-500 dark:bg-stone-800 dark:text-stone-400">
                     STAFF
                   </span>
-                </button>
+                </Link>
 
                 {/* Loyalty stamps in mobile menu */}
                 {mounted && (
@@ -456,7 +456,7 @@ export default function Header() {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-xs font-extrabold text-foreground">
                         <Gift className="h-4 w-4 text-gold" aria-hidden />
-                        Bloom Club
+                        Priyo Club
                       </span>
                       <span className="text-[10px] font-bold text-stone-400">
                         {ordersCount} order{ordersCount !== 1 ? "s" : ""}

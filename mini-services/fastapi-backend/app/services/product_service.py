@@ -11,7 +11,7 @@ from app.models.timestamps import utc_now
 from app.utils.slugify import ensure_unique_slug, slugify
 
 
-def _to_money(value: float | int | Decimal | None) -> Decimal | None:
+def _to_money(value: float | Decimal | None) -> Decimal | None:
     if value is None:
         return None
     return Decimal(str(value)).quantize(Decimal("0.01"))

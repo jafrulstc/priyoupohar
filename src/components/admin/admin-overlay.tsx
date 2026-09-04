@@ -76,7 +76,7 @@ const NAV_ITEMS: { id: SectionId; label: string; icon: LucideIcon }[] = [
 ];
 
 const SECTION_META: Record<SectionId, { title: string; sub: string }> = {
-  overview: { title: "Admin Overview", sub: "Bloom & Bliss at a glance" },
+  overview: { title: "Admin Overview", sub: "PriyoUpohar at a glance" },
   products: { title: "Products", sub: "Curate the catalogue & moderate reviews" },
   categories: { title: "Categories", sub: "Organise collections" },
   orders: { title: "Orders", sub: "Fulfil & track deliveries" },
@@ -131,16 +131,13 @@ export default function AdminOverlay() {
   );
 }
 
-function AdminShell() {
-  const isOpen = useAdminStore((s) => s.isOpen);
+export function AdminShell() {
   const token = useAdminStore((s) => s.token);
   const adminUser = useAdminStore((s) => s.adminUser);
-  const closeAdmin = useAdminStore((s) => s.closeAdmin);
   const logout = useAdminStore((s) => s.logout);
 
   const [section, setSection] = useState<SectionId>("overview");
   const [subTab, setSubTab] = useState<AdminTabId>("products");
-  const containerRef = useRef<HTMLDivElement>(null);
 
   /* Sidebar navigation — picks a section and its default sub-tab. */
   const openSection = (id: SectionId) => {
@@ -159,7 +156,7 @@ function AdminShell() {
   const meQuery = useQuery({
     queryKey: ["admin", "me", token],
     queryFn: () => pyFetch<AdminUser>("/api/auth/me", { token }),
-    enabled: isOpen && !!token,
+    enabled: !!token,
     retry: false,
     refetchInterval: 120_000,
   });
@@ -167,50 +164,8 @@ function AdminShell() {
     meQuery.isError && meQuery.error instanceof ApiError && meQuery.error.status === 401;
   const showLogin = !token || sessionExpired;
 
-  /* Body scroll lock while the overlay is open. */
-  useEffect(() => {
-    if (!isOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    const prevPadding = document.body.style.paddingRight;
-    document.body.style.overflow = "hidden";
-    containerRef.current?.focus();
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPadding;
-    };
-  }, [isOpen]);
-
-  /* Escape closes the overlay — but lets inner dialogs/popovers win first. */
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      const innerLayer = document.querySelector(
-        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-radix-popper-content-wrapper]'
-      );
-      if (innerLayer) return;
-      closeAdmin();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, closeAdmin]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          key="bb-admin-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Bloom & Bliss admin panel"
-          ref={containerRef}
-          tabIndex={-1}
-        >
+    <div className="flex h-screen w-full bg-background text-foreground">
           {showLogin ? (
             <AdminLogin />
           ) : (
@@ -259,12 +214,14 @@ function AdminShell() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={closeAdmin}
-                      aria-label="Close admin panel"
-                      title="Close (Esc)"
+                      asChild
+                      aria-label="Back to store"
+                      title="Back to store"
                       className="h-9 w-9 shrink-0 rounded-full"
                     >
-                      <X className="h-5 w-5" aria-hidden />
+                      <a href="/">
+                        <X className="h-5 w-5" aria-hidden />
+                      </a>
                     </Button>
                   </div>
                 </header>
@@ -299,7 +256,7 @@ function AdminShell() {
                 </main>
 
                 <footer className="flex h-9 shrink-0 items-center justify-center border-t border-border/70 bg-card text-[11px] font-semibold text-muted-foreground dark:bg-stone-900/40">
-                  © 2026 Bloom &amp; Bliss · Admin workspace
+                  © 2026 PriyoUpohar · Admin workspace
                 </footer>
               </div>
             </div>
@@ -307,9 +264,7 @@ function AdminShell() {
 
           {/* Global command palette (mounted once, outside section motion) */}
           {!showLogin && <AdminCommandPalette onNavigate={navigate} />}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </div>
   );
 }
 
@@ -340,7 +295,7 @@ function AdminSidebar({
         </span>
         <span className="hidden min-w-0 md:block">
           <span className="block truncate text-sm font-extrabold leading-tight text-foreground">
-            Bloom &amp; Bliss
+            PriyoUpohar
           </span>
           <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-brand dark:text-rose-400">
             <ShieldCheck className="h-3 w-3" aria-hidden /> Admin panel

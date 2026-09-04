@@ -138,7 +138,7 @@ export default function Bestsellers() {
             <Flower2 aria-hidden className="h-10 w-10 animate-wiggle text-rose-300" />
             <p className="font-bold text-foreground">No gifts here yet</p>
             <p className="text-sm text-stone-500 dark:text-stone-400">
-              Try another category — something lovely is always blooming.
+              Try another category — something lovely is always waiting.
             </p>
           </div>
         ) : (

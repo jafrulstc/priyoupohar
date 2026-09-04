@@ -24,8 +24,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   delivery_fee: 99,
   cod_enabled: true,
   support_phone: "+91 98765 43210",
-  support_email: "care@bloombliss.test",
-  store_name: "Bloom & Bliss",
+  support_email: "care@priyoupohar.com",
+  store_name: "PriyoUpohar",
   announcement_enabled: true,
 };
 

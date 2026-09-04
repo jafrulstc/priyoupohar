@@ -46,7 +46,7 @@ function UspList({ hidden = false }: { hidden?: boolean }) {
 export default function UspMarquee() {
   return (
     <section
-      aria-label="Why shoppers love Bloom & Bliss"
+      aria-label="Why shoppers love PriyoUpohar"
       className="bg-gradient-brand text-white py-3 overflow-hidden border-y border-white/10"
     >
       {/* Two identical copies + pr matching the gap => seamless -50% loop */}

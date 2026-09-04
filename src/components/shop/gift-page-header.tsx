@@ -113,7 +113,7 @@ export default function GiftPageHeader({
                 >
                   <Link href="/" className="flex items-center gap-1 text-sm font-extrabold text-foreground transition-colors hover:text-brand">
                     <Flower2 className="h-4 w-4 text-brand" aria-hidden />
-                    <span>Bloom <span className="text-brand">&</span> Bliss</span>
+                    <span>PriyoUpohar</span>
                   </Link>
                 </motion.div>
               )}

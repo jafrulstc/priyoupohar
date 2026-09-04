@@ -1,12 +1,14 @@
 /**
- * Bloom & Bliss — FastAPI admin backend client.
+ * PriyoUpohar — FastAPI admin backend client.
  *
  * The Python API runs on port 8000 behind the Caddy gateway. The ONLY way to
  * reach it is by appending `XTransformPort=8000` to a RELATIVE path — never
  * write an absolute URL or an explicit port anywhere.
  */
 
-export const PY_PORT = 8000;
+import { NEXT_PUBLIC_FASTAPI_PORT } from "@/lib/config";
+
+export const PY_PORT = parseInt(NEXT_PUBLIC_FASTAPI_PORT, 10) || 8000;
 
 /** FastAPI error payload shape: {"detail": "..."} */
 export class ApiError extends Error {

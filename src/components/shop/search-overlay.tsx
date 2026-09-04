@@ -223,7 +223,7 @@ export default function SearchOverlay() {
           close
           <span className="mx-1">·</span>
           <Search className="h-3 w-3" aria-hidden />
-          Bloom &amp; Bliss search
+          PriyoUpohar search
         </span>
       </div>
     </CommandDialog>

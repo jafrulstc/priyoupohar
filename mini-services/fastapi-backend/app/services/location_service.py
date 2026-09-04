@@ -139,10 +139,10 @@ async def delivery_fee_for(
     """Fee used by order_service.create_order — location-aware."""
     verdict = await serviceability(db, pincode)
     if not verdict["serviceable"]:
-        return Decimal("0")
+        return Decimal(0)
     threshold = verdict.get("free_above") or verdict.get("free_delivery_threshold") or 999
     if items_total >= Decimal(str(threshold)):
-        return Decimal("0")
+        return Decimal(0)
     return Decimal(str(verdict["delivery_fee"])).quantize(Decimal("0.01"))
 
 

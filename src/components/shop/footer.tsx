@@ -86,7 +86,7 @@ export default function Footer() {
                 <Flower2 size={22} aria-hidden="true" />
               </span>
               <span className="font-extrabold text-white text-lg">
-                Bloom &amp; Bliss
+                PriyoUpohar
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-stone-400 max-w-xs">
@@ -98,7 +98,7 @@ export default function Footer() {
                 <button
                   key={label}
                   type="button"
-                  aria-label={`Bloom & Bliss on ${label}`}
+                  aria-label={`PriyoUpohar on ${label}`}
                   onClick={() => toast({ title: message })}
                   className="rounded-full bg-white/5 hover:bg-brand p-2.5 transition active:scale-90"
                 >
@@ -176,7 +176,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-stone-400">
-            © 2025 Bloom &amp; Bliss. Made with{" "}
+            © 2025 PriyoUpohar. Made with{" "}
             <span aria-label="love" className="text-brand">
               ♥
             </span>{" "}

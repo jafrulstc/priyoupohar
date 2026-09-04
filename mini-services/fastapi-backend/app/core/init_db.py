@@ -7,7 +7,7 @@
 """
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
@@ -90,42 +90,42 @@ async def _seed_defaults() -> None:
             session.add_all(
                 [
                     DeliveryLocation(
-                        pincode_prefix="110", city="New Delhi", state="Delhi",
+                        pincode_prefix="10", city="Dhaka", state="Dhaka Division",
                         delivery_fee=0, free_above=499, same_day=True,
                         midnight_available=True, cod_available=True, eta_hours=4,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="400", city="Mumbai", state="Maharashtra",
+                        pincode_prefix="40", city="Chittagong", state="Chittagong Division",
                         delivery_fee=0, free_above=499, same_day=True,
                         midnight_available=True, cod_available=True, eta_hours=4,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="560", city="Bengaluru", state="Karnataka",
+                        pincode_prefix="31", city="Sylhet", state="Sylhet Division",
                         delivery_fee=49, free_above=999, same_day=True,
                         midnight_available=False, cod_available=True, eta_hours=8,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="600", city="Chennai", state="Tamil Nadu",
+                        pincode_prefix="60", city="Rajshahi", state="Rajshahi Division",
                         delivery_fee=49, free_above=999, same_day=False,
                         midnight_available=False, cod_available=True, eta_hours=24,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="700", city="Kolkata", state="West Bengal",
+                        pincode_prefix="90", city="Khulna", state="Khulna Division",
                         delivery_fee=79, free_above=1499, same_day=False,
                         midnight_available=False, cod_available=True, eta_hours=36,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="500", city="Hyderabad", state="Telangana",
+                        pincode_prefix="82", city="Barisal", state="Barisal Division",
                         delivery_fee=49, free_above=999, same_day=True,
                         midnight_available=False, cod_available=True, eta_hours=12,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="411", city="Pune", state="Maharashtra",
+                        pincode_prefix="54", city="Rangpur", state="Rangpur Division",
                         delivery_fee=49, free_above=999, same_day=True,
                         midnight_available=False, cod_available=True, eta_hours=8,
                     ),
                     DeliveryLocation(
-                        pincode_prefix="302", city="Jaipur", state="Rajasthan",
+                        pincode_prefix="22", city="Mymensingh", state="Mymensingh Division",
                         delivery_fee=79, free_above=1499, same_day=False,
                         midnight_available=False, cod_available=True, eta_hours=36,
                     ),
@@ -134,7 +134,7 @@ async def _seed_defaults() -> None:
 
         # -- Offers / banners (Task 2.6) ---------------------------------
         if (await session.scalar(select(Offer.id).limit(1))) is None:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             session.add_all(
                 [
                     Offer(

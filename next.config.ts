@@ -15,6 +15,22 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "pub-e04790e99b0d41109ffc73b5345f35cd.r2.dev" },
     ],
   },
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: "/api/auth/:path*",
+  //       destination: "http://127.0.0.1:8000/api/auth/:path*",
+  //     },
+  //     {
+  //       source: "/api/admin/:path*",
+  //       destination: "http://127.0.0.1:8000/api/admin/:path*",
+  //     },
+  //     {
+  //       source: "/api/store/:path*",
+  //       destination: "http://127.0.0.1:8000/api/store/:path*",
+  //     },
+  //   ];
+  // },
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,

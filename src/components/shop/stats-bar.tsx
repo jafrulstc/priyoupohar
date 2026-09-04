@@ -89,7 +89,7 @@ function CountUp({
 export default function StatsBar() {
   return (
     <section
-      aria-label="Bloom & Bliss in numbers"
+      aria-label="PriyoUpohar in numbers"
       className="bg-gradient-brand py-10 text-white"
     >
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 md:grid-cols-4">

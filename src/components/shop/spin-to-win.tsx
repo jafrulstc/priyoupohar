@@ -93,7 +93,8 @@ export default function SpinToWin() {
     return SEGMENTS.map((_, i) => segmentPathForAngle(i, angle));
   }, [SEGMENTS]);
   const cooling = mounted && spinAt > 0 && Date.now() - spinAt < SPIN_COOLDOWN;
-  const canSpin = mounted && !cooling && phase !== "spinning";
+  // Fall back to true (enabled) during SSR/hydration to avoid disabled=true vs disabled=null mismatch.
+  const canSpin = !mounted ? true : (!cooling && phase !== "spinning");
 
   /* Keep the cooldown countdown live (30s tick) */
   useEffect(() => {

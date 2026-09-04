@@ -11,7 +11,7 @@ import { NextRequest } from "next/server";
  * long-lived immutable caching (keys are content-addressed UUIDs).
  */
 
-const FASTAPI_URL = process.env.FASTAPI_URL ?? "http://localhost:8000";
+import { FASTAPI_URL } from "@/lib/config";
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ key: string[] }> }) {
   const { key: segments } = await ctx.params;

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Shared primitives for the Bloom & Bliss admin panel.
+ * Shared primitives for the PriyoUpohar admin panel.
  * Small, styled building blocks so every panel looks consistent.
  */
 

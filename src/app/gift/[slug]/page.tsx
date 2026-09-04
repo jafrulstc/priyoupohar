@@ -37,21 +37,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
-  if (!product) return { title: "Gift not found \u00B7 Bloom & Bliss" };
+  if (!product) return { title: "Gift not found \u00B7 PriyoUpohar" };
   const off = Math.max(0, Math.round(((product.mrp - product.price) / product.mrp) * 100));
   const blurb = `${product.description.slice(0, 140)} \u00B7 ${formatINR(product.price)}${off > 0 ? ` (${off}% off)` : ""}${product.sameDay ? " \u00B7 Same-day delivery" : ""}`;
   return {
-    title: `${product.name} \u2014 ${formatINR(product.price)} \u00B7 Bloom & Bliss`,
+    title: `${product.name} \u2014 ${formatINR(product.price)} \u00B7 PriyoUpohar`,
     description: blurb,
     openGraph: {
-      title: `${product.name} \u00B7 Bloom & Bliss`,
+      title: `${product.name} \u00B7 PriyoUpohar`,
       description: blurb,
       type: "website",
-      siteName: "Bloom & Bliss",
+      siteName: "PriyoUpohar",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} \u00B7 Bloom & Bliss`,
+      title: `${product.name} \u00B7 PriyoUpohar`,
       description: blurb,
     },
     alternates: { canonical: `/gift/${product.slug}` },

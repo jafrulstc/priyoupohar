@@ -16,18 +16,18 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const CITIES: { city: string; state: string; pincode: string }[] = [
-  { city: "Mumbai", state: "Maharashtra", pincode: "400001" },
-  { city: "Delhi", state: "NCT", pincode: "110001" },
-  { city: "Bengaluru", state: "Karnataka", pincode: "560001" },
-  { city: "Hyderabad", state: "Telangana", pincode: "500001" },
-  { city: "Chennai", state: "Tamil Nadu", pincode: "600001" },
-  { city: "Pune", state: "Maharashtra", pincode: "411001" },
-  { city: "Kolkata", state: "West Bengal", pincode: "700001" },
-  { city: "Ahmedabad", state: "Gujarat", pincode: "380001" },
-  { city: "Jaipur", state: "Rajasthan", pincode: "302001" },
-  { city: "Lucknow", state: "Uttar Pradesh", pincode: "226001" },
-  { city: "Indore", state: "Madhya Pradesh", pincode: "452001" },
-  { city: "Kochi", state: "Kerala", pincode: "682001" },
+  { city: "Dhaka", state: "Dhaka Division", pincode: "1000" },
+  { city: "Chittagong", state: "Chittagong Division", pincode: "4000" },
+  { city: "Sylhet", state: "Sylhet Division", pincode: "3100" },
+  { city: "Rajshahi", state: "Rajshahi Division", pincode: "6000" },
+  { city: "Khulna", state: "Khulna Division", pincode: "9000" },
+  { city: "Barisal", state: "Barisal Division", pincode: "8200" },
+  { city: "Rangpur", state: "Rangpur Division", pincode: "5400" },
+  { city: "Mymensingh", state: "Mymensingh Division", pincode: "2200" },
+  { city: "Comilla", state: "Chittagong Division", pincode: "3500" },
+  { city: "Gazipur", state: "Dhaka Division", pincode: "1700" },
+  { city: "Narayanganj", state: "Dhaka Division", pincode: "1400" },
+  { city: "Bogra", state: "Rajshahi Division", pincode: "5800" },
 ];
 
 export default function LocationModal() {

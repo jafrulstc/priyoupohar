@@ -219,7 +219,7 @@ export default function ProductsPanel() {
           description={
             q || categoryId !== "all" || status !== "all"
               ? "Try clearing the search or filters."
-              : "Add your first gift to get the catalogue blooming."
+              : "Add your first gift to get the catalogue ready."
           }
           action={
             <Button onClick={openCreate} className="gap-1.5 rounded-xl bg-brand text-white hover:bg-rose-700">

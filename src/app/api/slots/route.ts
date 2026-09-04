@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
 
   if (!isValidPincode(code)) {
     return NextResponse.json(
-      { error: "Enter a valid 6-digit Indian pincode." },
+      { error: "Enter a valid 4-digit postal code." },
       { status: 400 }
     );
   }

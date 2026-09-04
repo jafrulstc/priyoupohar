@@ -97,14 +97,14 @@ SAMPLE_ORDERS: list[tuple[int, str, list[tuple[str, int]]]] = [
 
 CUSTOMER_PROFILES: list[dict] = [
     {
-        "phone": "9876543210", "email_to": "ravi@demo.test",
-        "address": "12 Rose Villa, Linking Road, Bandra West",
-        "city": "Mumbai", "pincode": "400001",
+        "phone": "01712345678", "email_to": "ravi@demo.test",
+        "address": "12 Rose Villa, Gulshan 1",
+        "city": "Dhaka", "pincode": "1212",
     },
     {
-        "phone": "9123456780", "email_to": "priya@demo.test",
-        "address": "48 Lotus Enclave, 12th Main, Indiranagar",
-        "city": "Bengaluru", "pincode": "560001",
+        "phone": "01812345678", "email_to": "priya@demo.test",
+        "address": "48 Lotus Enclave, Nasirabad",
+        "city": "Chittagong", "pincode": "4000",
     },
 ]
 
